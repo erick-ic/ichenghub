@@ -1,6 +1,6 @@
 'use client'
 
-import { Eye, MousePointerClick, Copy, Globe, QrCode, Download, Type, Link as LinkIcon, AlertCircle, FileImage } from 'lucide-react'
+import { Eye, MousePointerClick, Copy, Globe, QrCode, Download, Type, Link as LinkIcon, AlertCircle, FileImage, Heart, Star } from 'lucide-react'
 
 interface ActivityItem {
   id: string
@@ -24,6 +24,10 @@ function getActionIcon(actionType: string) {
       return <Copy className="w-3 h-3 text-green-500" />
     case 'VIEW':
       return <Eye className="w-3 h-3 text-purple-500" />
+    case 'LIKE':
+      return <Heart className="w-3 h-3 text-rose-500" />
+    case 'FAVORITE':
+      return <Star className="w-3 h-3 text-amber-500" />
     // QR Code actions
     case 'QR_MODE_TEXT':
       return <Type className="w-3 h-3 text-indigo-500" />
@@ -71,7 +75,18 @@ function getActionLabel(actionType: string, resourceType: string) {
     }
   }
   if (resourceType === 'PROMPT') {
-    return actionType === 'COPY' ? '复制提示词' : actionType === 'VIEW' ? '浏览提示词' : actionType
+    switch (actionType) {
+      case 'COPY':
+        return '复制提示词'
+      case 'VIEW':
+        return '浏览提示词'
+      case 'LIKE':
+        return '点赞提示词'
+      case 'FAVORITE':
+        return '收藏提示词'
+      default:
+        return actionType
+    }
   }
   if (resourceType === 'BLOG') {
     return actionType === 'COPY' ? '复制代码' : actionType === 'VIEW' ? '访问博客' : actionType

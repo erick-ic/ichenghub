@@ -32,6 +32,13 @@ export async function toggleLike(promptId: string) {
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax'
       });
+
+      // 记录点赞事件（用于后台环比统计），必须 await：action 返回后未完成的异步任务可能被运行时丢弃
+      try {
+        await logAnalytics(promptId, 'PROMPT', 'LIKE', '');
+      } catch (err) {
+        console.error('点赞日志记录失败:', err);
+      }
     }
 
     return {
@@ -75,10 +82,8 @@ export async function incrementViews(promptId: string, path: string = '') {
         sameSite: 'lax'
       });
 
-    logAnalytics(promptId, 'PROMPT', 'VIEW', path).catch(err => {
-      console.error('日志记录失败:', err);
-    });
-
+    // 注意：浏览事件日志由客户端在计数实际递增后单独 await 上报
+    // （server action 内未 await 的异步任务在函数返回后可能被运行时丢弃，导致日志断流）
     return { success: true };
   } catch (error) {
     console.error('统计更新失败:', error);
@@ -137,6 +142,19 @@ async function logAnalytics(
     const headerList = headers();
     const userAgent = headerList.get('user-agent') || null;
 
+    // 未显式传入 path 时，从 referer 提取路径部分
+    let logPath = path;
+    if (!logPath) {
+      const referer = headerList.get('referer');
+      if (referer) {
+        try {
+          logPath = new URL(referer).pathname;
+        } catch {
+          logPath = '';
+        }
+      }
+    }
+
     const isDuplicate = await checkDuplicateLog(ipHash, resourceId, actionType, resourceType);
     if (isDuplicate) {
       console.log(`Skipped duplicated log: ${actionType} - ${resourceType} - ${resourceId || 'null'}`);
@@ -148,7 +166,7 @@ async function logAnalytics(
         actionType,
         resourceType,
         resourceId,
-        path,
+        path: logPath,
         ipHash,
         userAgent
       }

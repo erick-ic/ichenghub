@@ -46,9 +46,9 @@ import { SystemStatusCard } from "@/components/SystemStatusCard"
 
 export default async function AdminDashboard() {
   const now = new Date()
-  const currentMonthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1))
-  const lastMonthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1))
-  const lastMonthEnd = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 0))
+  // 月份边界（本地时区，与行为日志的按天去重口径一致），区间统一左闭右开
+  const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+  const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1)
 
   // 从数据库获取真实数据
   const [
@@ -68,8 +68,11 @@ export default async function AdminDashboard() {
     submissionCountLastMonth,
     demandCountLastMonth,
     blogCountLastMonth,
+    viewsThisMonth,
     viewsLastMonth,
+    likesThisMonth,
     likesLastMonth,
+    favoritesThisMonth,
     favoritesLastMonth,
     systemMetrics,
   ] = await Promise.all([
@@ -97,92 +100,96 @@ export default async function AdminDashboard() {
     prisma.toolCard.count({
       where: {
         createdAt: {
-          lte: lastMonthEnd,
+          lt: currentMonthStart,
         },
       },
     }),
     prisma.prompt.count({
       where: {
         createdAt: {
-          lte: lastMonthEnd,
+          lt: currentMonthStart,
         },
       },
     }),
     prisma.navLink.count({
       where: {
         createdAt: {
-          lte: lastMonthEnd,
+          lt: currentMonthStart,
         },
       },
     }),
     prisma.toolSubmission.count({
       where: {
         createdAt: {
-          lte: lastMonthEnd,
+          lt: currentMonthStart,
         },
       },
     }),
     prisma.toolDemand.count({
       where: {
         createdAt: {
-          lte: lastMonthEnd,
+          lt: currentMonthStart,
         },
       },
     }),
     prisma.blog.count({
       where: {
         createdAt: {
-          lte: lastMonthEnd,
+          lt: currentMonthStart,
         },
       },
     }),
-    prisma.prompt.aggregate({
-      _sum: { views: true },
-      where: {
-        createdAt: {
-          gte: lastMonthStart,
-          lte: lastMonthEnd,
-        },
-      },
+    // 互动环比基于带时间戳的行为日志：本月 vs 上月的提示词浏览/点赞/收藏事件
+    prisma.analyticsLog.count({
+      where: { actionType: 'VIEW', resourceType: 'PROMPT', timestamp: { gte: currentMonthStart } },
     }),
-    prisma.prompt.aggregate({
-      _sum: { likes: true },
-      where: {
-        createdAt: {
-          gte: lastMonthStart,
-          lte: lastMonthEnd,
-        },
-      },
+    prisma.analyticsLog.count({
+      where: { actionType: 'VIEW', resourceType: 'PROMPT', timestamp: { gte: lastMonthStart, lt: currentMonthStart } },
     }),
-    prisma.prompt.aggregate({
-      _sum: { favorites: true },
-      where: {
-        createdAt: {
-          gte: lastMonthStart,
-          lte: lastMonthEnd,
-        },
-      },
+    prisma.analyticsLog.count({
+      where: { actionType: 'LIKE', resourceType: 'PROMPT', timestamp: { gte: currentMonthStart } },
+    }),
+    prisma.analyticsLog.count({
+      where: { actionType: 'LIKE', resourceType: 'PROMPT', timestamp: { gte: lastMonthStart, lt: currentMonthStart } },
+    }),
+    prisma.analyticsLog.count({
+      where: { actionType: 'FAVORITE', resourceType: 'PROMPT', timestamp: { gte: currentMonthStart } },
+    }),
+    prisma.analyticsLog.count({
+      where: { actionType: 'FAVORITE', resourceType: 'PROMPT', timestamp: { gte: lastMonthStart, lt: currentMonthStart } },
     }),
     getSystemMetrics(),
   ])
 
+  // 头部大数字：全时累计总量
   const views = totalViews._sum.views || 0
   const likes = totalLikes._sum.likes || 0
   const favorites = totalFavorites._sum.favorites || 0
-  const viewsLast = viewsLastMonth._sum.views || 0
-  const likesLast = likesLastMonth._sum.likes || 0
-  const favoritesLast = favoritesLastMonth._sum.favorites || 0
 
-  // 计算环比变化
-  const toolChange = toolCount - toolCountLastMonth
-  const promptChange = promptCount - promptCountLastMonth
-  const linkChange = linkCount - linkCountLastMonth
-  const submissionChange = submissionCount - submissionCountLastMonth
-  const demandChange = demandCount - demandCountLastMonth
-  const blogChange = blogCount - blogCountLastMonth
-  const viewsChangePercent = viewsLast > 0 ? ((views - viewsLast) / viewsLast * 100).toFixed(1) : '0'
-  const likesChangePercent = likesLast > 0 ? ((likes - likesLast) / likesLast * 100).toFixed(1) : '0'
-  const favoritesChangePercent = favoritesLast > 0 ? ((favorites - favoritesLast) / favoritesLast * 100).toFixed(1) : '0'
+  // 互动数据环比：直接展示本月与上月互动量的绝对差值（基于行为日志计数，无事件即为 0）
+  // 增加显示 +N（绿色），减少显示 -N（红色），持平显示 0（灰色）
+  type TrendTone = 'up' | 'down' | 'flat'
+  const getMonthTrend = (current: number, previous: number): { text: string; tone: TrendTone } => {
+    const delta = current - previous
+    if (delta > 0) return { text: `较上月 +${delta}`, tone: 'up' }
+    if (delta < 0) return { text: `较上月 ${delta}`, tone: 'down' }
+    return { text: '较上月 0', tone: 'flat' }
+  }
+  const viewsTrend = getMonthTrend(viewsThisMonth, viewsLastMonth)
+  const likesTrend = getMonthTrend(likesThisMonth, likesLastMonth)
+  const favoritesTrend = getMonthTrend(favoritesThisMonth, favoritesLastMonth)
+
+  // 内容数据环比：本月新增 = 当前总量 − 上月末总量，展示规则与互动数据一致
+  const toolTrend = getMonthTrend(toolCount, toolCountLastMonth)
+  const blogTrend = getMonthTrend(blogCount, blogCountLastMonth)
+  const linkTrend = getMonthTrend(linkCount, linkCountLastMonth)
+  const promptTrend = getMonthTrend(promptCount, promptCountLastMonth)
+  const submissionTrend = getMonthTrend(submissionCount, submissionCountLastMonth)
+  const demandTrend = getMonthTrend(demandCount, demandCountLastMonth)
+
+  // 环比文案配色：上升绿色、下降红色、持平灰色
+  const trendClass = (tone: TrendTone) =>
+    tone === 'up' ? 'text-green-600' : tone === 'down' ? 'text-red-600' : 'text-slate-400'
 
   const rawErrors: unknown[] = Array.isArray((systemMetrics as any)?.errorLogs) ? ((systemMetrics as any).errorLogs as unknown[]) : []
   const apiFailed = systemMetrics?.apiFailed ?? 0
@@ -201,13 +208,6 @@ export default async function AdminDashboard() {
     const d = new Date(date)
     const pad = (n: number) => n.toString().padStart(2, '0')
     return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`
-  }
-
-  // 格式化变化值显示
-  const formatChange = (value: number | string, isPercent: boolean = false): string => {
-    const num = typeof value === 'string' ? parseFloat(value) : value
-    const sign = num > 0 ? '+' : ''
-    return `较上月 ${sign}${isPercent ? num + '%' : num}`
   }
 
   return (
@@ -234,8 +234,8 @@ export default async function AdminDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="text-3xl font-bold">{toolCount}</div>
-                <p className={`text-[10px] mt-1 ${toolChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  {formatChange(toolChange)}
+                <p className={`text-[10px] mt-1 ${trendClass(toolTrend.tone)}`}>
+                  {toolTrend.text}
                 </p>
               </CardContent>
             </Card>
@@ -247,8 +247,8 @@ export default async function AdminDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="text-3xl font-bold">{blogCount}</div>
-                <p className={`text-[10px] mt-1 ${blogChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  {formatChange(blogChange)}
+                <p className={`text-[10px] mt-1 ${trendClass(blogTrend.tone)}`}>
+                  {blogTrend.text}
                 </p>
               </CardContent>
             </Card>
@@ -260,8 +260,8 @@ export default async function AdminDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="text-3xl font-bold">{linkCount}</div>
-                <p className={`text-[10px] mt-1 ${linkChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  {formatChange(linkChange)}
+                <p className={`text-[10px] mt-1 ${trendClass(linkTrend.tone)}`}>
+                  {linkTrend.text}
                 </p>
               </CardContent>
             </Card>
@@ -273,8 +273,8 @@ export default async function AdminDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="text-3xl font-bold">{promptCount}</div>
-                <p className={`text-[10px] mt-1 ${promptChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  {formatChange(promptChange)}
+                <p className={`text-[10px] mt-1 ${trendClass(promptTrend.tone)}`}>
+                  {promptTrend.text}
                 </p>
               </CardContent>
             </Card>
@@ -286,8 +286,8 @@ export default async function AdminDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="text-3xl font-bold">{submissionCount}</div>
-                <p className={`text-[10px] mt-1 ${submissionChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  {formatChange(submissionChange)}
+                <p className={`text-[10px] mt-1 ${trendClass(submissionTrend.tone)}`}>
+                  {submissionTrend.text}
                 </p>
               </CardContent>
             </Card>
@@ -299,8 +299,8 @@ export default async function AdminDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="text-3xl font-bold">{demandCount}</div>
-                <p className={`text-[10px] mt-1 ${demandChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  {formatChange(demandChange)}
+                <p className={`text-[10px] mt-1 ${trendClass(demandTrend.tone)}`}>
+                  {demandTrend.text}
                 </p>
               </CardContent>
             </Card>
@@ -321,8 +321,11 @@ export default async function AdminDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="text-3xl font-bold">{formatNumber(views)}</div>
-                <p className={`text-[10px] mt-1 ${parseFloat(viewsChangePercent) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  {formatChange(viewsChangePercent, true)}
+                <p
+                  className={`text-[10px] mt-1 ${trendClass(viewsTrend.tone)}`}
+                  title="本月浏览量相比上月的变化（按行为日志统计）"
+                >
+                  {viewsTrend.text}
                 </p>
               </CardContent>
             </Card>
@@ -334,8 +337,11 @@ export default async function AdminDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="text-3xl font-bold">{formatNumber(likes)}</div>
-                <p className={`text-[10px] mt-1 ${parseFloat(likesChangePercent) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  {formatChange(likesChangePercent, true)}
+                <p
+                  className={`text-[10px] mt-1 ${trendClass(likesTrend.tone)}`}
+                  title="本月点赞量相比上月的变化（按行为日志统计）"
+                >
+                  {likesTrend.text}
                 </p>
               </CardContent>
             </Card>
@@ -347,8 +353,11 @@ export default async function AdminDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="text-3xl font-bold">{formatNumber(favorites)}</div>
-                <p className={`text-[10px] mt-1 ${parseFloat(favoritesChangePercent) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  {formatChange(favoritesChangePercent, true)}
+                <p
+                  className={`text-[10px] mt-1 ${trendClass(favoritesTrend.tone)}`}
+                  title="本月收藏量相比上月的变化（按行为日志统计）"
+                >
+                  {favoritesTrend.text}
                 </p>
               </CardContent>
             </Card>
