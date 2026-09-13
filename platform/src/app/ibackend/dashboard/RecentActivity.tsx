@@ -70,6 +70,18 @@ function getActionLabel(actionType: string, resourceType: string) {
         return '下载 PNG'
       case 'IMAGE_COMPRESS_SUCCESS':
         return '压缩图片'
+      case 'AI_QUOTA_ADD_PLATFORM':
+        return '新增平台'
+      case 'AI_QUOTA_EDIT_PLATFORM':
+        return '编辑平台'
+      case 'AI_QUOTA_DELETE_PLATFORM':
+        return '删除平台'
+      case 'AI_QUOTA_RESET_PLATFORM':
+        return '重置平台额度'
+      case 'AI_QUOTA_RESET_ALL':
+        return '一键重置全部额度'
+      case 'AI_QUOTA_IMPORT':
+        return '导入数据'
       default:
         return actionType
     }

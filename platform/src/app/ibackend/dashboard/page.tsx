@@ -68,6 +68,7 @@ const STATIC_TOOL_NAME_MAP: Record<string, string> = {
   '/qrcode': '极简二维码生成器',
   '/tools/image-compressor': '图片压缩器',
   '/imgcompress': '图片压缩器',
+  '/aiquota': 'AI 额度追踪器',
 }
 
 function resolveStaticToolName(path: string | null): string {

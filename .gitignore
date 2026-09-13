@@ -1,0 +1,4 @@
+# LLVM 覆盖率插桩产物（IDE/沙箱环境执行任意命令时自动生成）
+*.profraw
+
+.DS_Store

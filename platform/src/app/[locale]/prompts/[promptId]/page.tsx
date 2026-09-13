@@ -112,52 +112,52 @@ export default async function PromptDetailPage({ params }: PageProps) {
       />
       <ViewsTracker promptId={promptId} path={`/${locale}/prompts/${promptId}`} />
       <div className="min-h-screen bg-background">
-        <section className="container mx-auto px-4 py-16 max-w-6xl">
-          <nav className="flex items-center gap-2 mb-12 text-sm text-zinc-500">
-            <Link href="/" className="hover:text-zinc-800 transition-colors font-medium">
+        <section className="container mx-auto px-4 py-8 sm:py-16 max-w-6xl">
+          <nav className="flex flex-wrap items-center gap-x-2 gap-y-1 mb-6 sm:mb-12 text-xs sm:text-sm text-zinc-500">
+            <Link href="/" className="shrink-0 hover:text-zinc-800 transition-colors font-medium">
               {isEnglish ? 'Home' : '首页'}
             </Link>
             <span className="text-zinc-400">/</span>
-            <Link href="/prompts" className="hover:text-zinc-800 transition-colors font-medium">
+            <Link href="/prompts" className="shrink-0 hover:text-zinc-800 transition-colors font-medium">
               {isEnglish ? 'Prompt List' : '提示词列表'}
             </Link>
             <span className="text-zinc-400">/</span>
-            <span className="text-zinc-800 font-semibold">{promptTitle}</span>
+            <span className="text-zinc-800 font-semibold min-w-0 break-words">{promptTitle}</span>
           </nav>
 
-          <div className="mb-8">
-            <h1 className="text-4xl md:text-5xl font-bold text-zinc-900 tracking-tight">
+          <div className="mb-5 sm:mb-8">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-zinc-900 tracking-tight">
               {promptTitle}
             </h1>
           </div>
 
-          {/* 标签区域：分类和推荐平台 */}
-          <div className="flex items-center gap-3 mb-6">
+          {/* 标签区域：分类和推荐平台（移动端保持同一行，靠缩小字号/内边距容纳） */}
+          <div className="flex flex-nowrap items-center gap-0.5 sm:gap-3 mb-6">
             {category && (
-              <span className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 rounded-full px-4 py-2">
-                <div className="w-5 h-5 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center">
-                  <Tag className="w-3 h-3 text-white" />
+              <span className="inline-flex items-center gap-0.5 sm:gap-2 min-w-0 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 rounded-full px-1 sm:px-4 py-1.5 sm:py-2">
+                <div className="w-3.5 h-3.5 sm:w-5 sm:h-5 shrink-0 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center">
+                  <Tag className="w-2 h-2 sm:w-3 sm:h-3 text-white" />
                 </div>
-                <span className="text-sm font-semibold text-blue-600">{category}</span>
+                <span className="text-[10px] sm:text-sm font-semibold text-blue-600 truncate">{category}</span>
               </span>
             )}
             {prompt.platform && (
-              <span className="inline-flex items-center gap-2 bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-100 rounded-full px-4 py-2">
-                <div className="w-5 h-5 rounded-full bg-gradient-to-br from-orange-400 to-amber-500 flex items-center justify-center">
-                  <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <span className="inline-flex items-center gap-0.5 sm:gap-2 min-w-0 bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-100 rounded-full px-1 sm:px-4 py-1.5 sm:py-2">
+                <div className="w-3.5 h-3.5 sm:w-5 sm:h-5 shrink-0 rounded-full bg-gradient-to-br from-orange-400 to-amber-500 flex items-center justify-center">
+                  <svg className="w-2 h-2 sm:w-3 sm:h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                   </svg>
                 </div>
-                <span className="text-sm font-medium text-orange-700">{isEnglish ? 'Recommended Platform:' : '推荐平台'}</span>
+                <span className="text-[10px] sm:text-sm font-medium text-orange-700 shrink-0">{isEnglish ? 'Recommended Platform:' : '推荐平台'}</span>
                 {prompt.platformUrl && (
-                  <a 
-                    href={prompt.platformUrl} 
-                    target="_blank" 
+                  <a
+                    href={prompt.platformUrl}
+                    target="_blank"
                     rel="noopener noreferrer"
-                    className="text-orange-600 font-semibold hover:text-orange-800 transition-colors flex items-center gap-1"
+                    className="text-orange-600 font-semibold hover:text-orange-800 transition-colors flex items-center gap-0 sm:gap-1 min-w-0 text-[10px] sm:text-sm"
                   >
-                    {platformName}
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <span className="truncate">{platformName}</span>
+                    <svg className="w-3 h-3 sm:w-4 sm:h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                     </svg>
                   </a>
