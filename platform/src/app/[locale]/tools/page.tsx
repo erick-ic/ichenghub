@@ -14,7 +14,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'ToolsPage' });
   return {
-    title: `${t('metaTitle')} | iChengHub`,
+    title: t('metaTitle'),
     description: t('metaDescription'),
     keywords: ['AI工具', '工具导航', '效率工具', 'AI工具推荐', 'AI tools', 'productivity tools', 'AI directory'],
     alternates: {
@@ -26,12 +26,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       },
     },
     openGraph: {
-      title: `${t('metaTitle')} | iChengHub`,
+      title: t('metaTitle'),
       description: t('metaDescription'),
       url: `https://ichenghub.cn/${locale}/tools`,
     },
     twitter: {
-      title: `${t('metaTitle')} | iChengHub`,
+      title: t('metaTitle'),
       description: t('metaDescription'),
     },
   };

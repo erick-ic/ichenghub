@@ -16,7 +16,7 @@ export async function generateMetadata(
   const tool = await prisma.toolCard.findUnique({ where: { id } });
 
   if (!tool || tool.status !== 1) {
-    return { title: locale === 'en' ? 'Tool Not Found | iChengHub' : '工具未找到 | iChengHub 热荐工坊' };
+    return { title: locale === 'en' ? 'Tool Not Found' : '工具未找到' };
   }
 
   const isEnglish = locale === 'en';
@@ -25,7 +25,7 @@ export async function generateMetadata(
   const siteName = isEnglish ? 'iChengHub' : 'iChengHub 热荐工坊';
 
   return {
-    title: `${title} | ${siteName}`,
+    title: title,
     description: description,
     openGraph: {
       title: `${title} - ${siteName}`,
