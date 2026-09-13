@@ -45,6 +45,8 @@
   "ToolsPage": {
     "title": "AI 工具分类",
     "description": "探索各类 AI 工具，提升您的工作效率",
+    "metaTitle": "AI 工具导航 - 精选高质量效率工具",
+    "metaDescription": "iChengHub 精选收录高质量 AI 工具与效率软件，覆盖图像生成、文本处理、开发工具等分类，无广告无套壳，纯粹高效提升生产力。",
     "categories": "工具分类",
     "noTools": "暂无工具",
     "noToolsDesc": "敬请期待更多 AI 工具即将上线"
@@ -156,6 +158,8 @@
   "ImageCompressor": {
     "title": "极速图片压缩器",
     "description": "基于浏览器本地算力处理，图片零上传。像素级压缩，绝对隐私保护，极速体积优化。",
+    "metaTitle": "极速图片压缩 - 100%本地算力零隐私泄露",
+    "metaDescription": "免费在线图片压缩工具，基于浏览器本地算力处理，支持 JPG、PNG、WebP、BMP 等格式，像素级压缩零上传服务器，绝对隐私保护，极速体积优化无需安装。",
     "dropZone": "拖拽图片到此处",
     "dropZoneDragging": "释放以上传图片",
     "orClick": "或点击选择文件",
@@ -181,6 +185,8 @@
   "QrCode": {
     "title": "极简二维码生成器",
     "description": "纯浏览器本地生成，内容零上传。支持文本与链接，一键导出高清 SVG / PNG。",
+    "metaTitle": "极简二维码生成器 - 纯本地零上传",
+    "metaDescription": "免费在线二维码生成器，纯浏览器本地生成内容零上传，支持文本与链接编码，一键导出高清 SVG/PNG，隐私安全无忧，无需安装注册。",
     "tabs": {
       "text": "文本",
       "url": "链接"
@@ -206,6 +212,8 @@
   "AiQuota": {
     "title": "AI 额度追踪器",
     "description": "管理 Midjourney、ChatGPT Plus 等 AI 平台的每日额度，本地存储、每日自动重置。",
+    "metaTitle": "AI 额度追踪器 - 本地存储每日自动重置",
+    "metaDescription": "管理 Midjourney、ChatGPT Plus 等 AI 平台的每日额度消耗，纯本地存储零泄露，每日自动重置，支持多平台多指标监控与导入导出跨设备同步。",
     "addPlatform": "添加平台",
     "modalTitle": "新增 AI 平台配置",
     "editModalTitle": "修改 AI 平台配置",

@@ -45,6 +45,8 @@
   "ToolsPage": {
     "title": "AI Tools Directory",
     "description": "Explore various AI tools to boost your productivity",
+    "metaTitle": "AI Tools Directory - Curated High-Quality Tools",
+    "metaDescription": "iChengHub curates high-quality AI tools and productivity software across image generation, text processing, development tools and more. No ads, no bloatware, pure productivity.",
     "categories": "Categories",
     "noTools": "No tools available",
     "noToolsDesc": "Stay tuned for more AI tools coming soon"
@@ -156,6 +158,8 @@
   "ImageCompressor": {
     "title": "Local Image Compressor",
     "description": "Browser-native processing, zero server interaction. Pixel-perfect compression with total privacy.",
+    "metaTitle": "Fast Image Compressor - 100% Local, Zero Privacy Risk",
+    "metaDescription": "Free online image compressor with browser-local processing. Supports JPG, PNG, WebP, BMP formats. Pixel-perfect compression with zero server upload, total privacy protection, no installation required.",
     "dropZone": "Drag image here",
     "dropZoneDragging": "Release to upload",
     "orClick": "or click to select file",
@@ -181,6 +185,8 @@
   "QrCode": {
     "title": "Minimal QR Code Generator",
     "description": "100% browser-local generation, zero content upload. Supports text and URLs, one-click high-resolution SVG / PNG export.",
+    "metaTitle": "Minimal QR Code Generator - 100% Local, Zero Upload",
+    "metaDescription": "Free online QR code generator with 100% browser-local processing and zero content upload. Supports text and URL encoding, one-click high-resolution SVG/PNG export, total privacy, no signup required.",
     "tabs": {
       "text": "Text",
       "url": "URL"
@@ -206,6 +212,8 @@
   "AiQuota": {
     "title": "AI Quota Tracker",
     "description": "Manage daily quotas for Midjourney, ChatGPT Plus and more. Local storage with daily auto-reset.",
+    "metaTitle": "AI Quota Tracker - Local Storage, Daily Auto-Reset",
+    "metaDescription": "Track daily quotas for Midjourney, ChatGPT Plus and other AI platforms. Pure local storage with zero leaks, daily auto-reset, multi-platform multi-metric monitoring, import/export for cross-device sync.",
     "addPlatform": "Add Platform",
     "modalTitle": "New AI Platform Config",
     "editModalTitle": "Edit AI Platform Config",

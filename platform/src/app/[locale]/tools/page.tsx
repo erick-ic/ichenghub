@@ -7,16 +7,33 @@ import MobileCategorySelector from '@/components/tools/MobileCategorySelector';
 import PageViewTracker from '@/components/PageViewTracker';
 
 type Props = {
-  params: { locale: string };
+  params: Promise<{ locale: string }>;
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const isEn = params.locale === 'en';
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: 'ToolsPage' });
   return {
-    title: isEn ? 'AI Tools - Curated Collection' : 'AI 工具 - 精选收录',
-    description: isEn 
-      ? 'Discover our curated collection of high-quality AI tools. No ads, no bloatware, just pure productivity.' 
-      : '探索我们精心收录的高质量 AI 工具。无广告、无套壳，纯粹高效。',
+    title: `${t('metaTitle')} | iChengHub`,
+    description: t('metaDescription'),
+    keywords: ['AI工具', '工具导航', '效率工具', 'AI工具推荐', 'AI tools', 'productivity tools', 'AI directory'],
+    alternates: {
+      canonical: `/${locale}/tools`,
+      languages: {
+        zh: '/zh/tools',
+        en: '/en/tools',
+        'x-default': '/zh/tools',
+      },
+    },
+    openGraph: {
+      title: `${t('metaTitle')} | iChengHub`,
+      description: t('metaDescription'),
+      url: `https://ichenghub.cn/${locale}/tools`,
+    },
+    twitter: {
+      title: `${t('metaTitle')} | iChengHub`,
+      description: t('metaDescription'),
+    },
   };
 }
 

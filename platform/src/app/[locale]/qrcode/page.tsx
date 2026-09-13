@@ -11,8 +11,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'QrCode' });
   return {
-    title: `${t('title')} | iChengHub`,
-    description: t('description'),
+    title: `${t('metaTitle')} | iChengHub`,
+    description: t('metaDescription'),
+    keywords: ['二维码生成器', 'QR Code', '二维码', '在线生成', 'SVG', 'PNG', '本地生成', 'qr code generator'],
     alternates: {
       canonical: `/${locale}/qrcode`,
       languages: {
@@ -22,13 +23,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       },
     },
     openGraph: {
-      title: `${t('title')} | iChengHub`,
-      description: t('description'),
+      title: `${t('metaTitle')} | iChengHub`,
+      description: t('metaDescription'),
       url: `https://ichenghub.cn/${locale}/qrcode`,
     },
     twitter: {
-      title: `${t('title')} | iChengHub`,
-      description: t('description'),
+      title: `${t('metaTitle')} | iChengHub`,
+      description: t('metaDescription'),
     },
   };
 }

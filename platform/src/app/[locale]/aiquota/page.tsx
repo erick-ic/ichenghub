@@ -11,8 +11,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'AiQuota' });
   return {
-    title: `${t('title')} | iChengHub`,
-    description: t('description'),
+    title: `${t('metaTitle')} | iChengHub`,
+    description: t('metaDescription'),
+    keywords: ['AI额度', '额度追踪', 'Midjourney', 'ChatGPT', '每日额度', '本地存储', 'AI quota', 'quota tracker', 'Midjourney quota'],
     alternates: {
       canonical: `/${locale}/aiquota`,
       languages: {
@@ -20,6 +21,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         en: '/en/aiquota',
         'x-default': '/zh/aiquota',
       },
+    },
+    openGraph: {
+      title: `${t('metaTitle')} | iChengHub`,
+      description: t('metaDescription'),
+      url: `https://ichenghub.cn/${locale}/aiquota`,
+    },
+    twitter: {
+      title: `${t('metaTitle')} | iChengHub`,
+      description: t('metaDescription'),
     },
   };
 }

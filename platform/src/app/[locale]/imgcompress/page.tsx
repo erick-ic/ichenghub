@@ -11,8 +11,26 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const t = await getTranslations({ locale, namespace: 'ImageCompressor' });
   
   return {
-    title: `${t('title')} | iChengHub`,
-    description: t('description'),
+    title: `${t('metaTitle')} | iChengHub`,
+    description: t('metaDescription'),
+    keywords: ['图片压缩', '在线压缩', 'JPG压缩', 'PNG压缩', 'WebP压缩', '本地压缩', '隐私保护', 'image compressor', 'online image compression'],
+    alternates: {
+      canonical: `/${locale}/imgcompress`,
+      languages: {
+        zh: '/zh/imgcompress',
+        en: '/en/imgcompress',
+        'x-default': '/zh/imgcompress',
+      },
+    },
+    openGraph: {
+      title: `${t('metaTitle')} | iChengHub`,
+      description: t('metaDescription'),
+      url: `https://ichenghub.cn/${locale}/imgcompress`,
+    },
+    twitter: {
+      title: `${t('metaTitle')} | iChengHub`,
+      description: t('metaDescription'),
+    },
   };
 }
 

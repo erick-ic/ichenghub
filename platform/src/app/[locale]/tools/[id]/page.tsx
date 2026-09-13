@@ -16,23 +16,24 @@ export async function generateMetadata(
   const tool = await prisma.toolCard.findUnique({ where: { id } });
 
   if (!tool || tool.status !== 1) {
-    return { title: '工具未找到 | 热荐工坊' };
+    return { title: locale === 'en' ? 'Tool Not Found | iChengHub' : '工具未找到 | iChengHub 热荐工坊' };
   }
 
   const isEnglish = locale === 'en';
   const title = isEnglish && tool.nameEn ? tool.nameEn : tool.name;
   const description = isEnglish && tool.descEn ? tool.descEn : tool.desc;
+  const siteName = isEnglish ? 'iChengHub' : 'iChengHub 热荐工坊';
 
   return {
-    title: `${title} | 热荐工坊`,
+    title: `${title} | ${siteName}`,
     description: description,
     openGraph: {
-      title: `${title} - 热荐工坊`,
+      title: `${title} - ${siteName}`,
       description: description,
       url: `https://ichenghub.cn/${locale}/tools/${id}`,
     },
     twitter: {
-      title: `${title} - 热荐工坊`,
+      title: `${title} - ${siteName}`,
       description: description,
     },
   };
