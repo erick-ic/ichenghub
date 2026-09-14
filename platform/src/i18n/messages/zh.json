@@ -1,4 +1,93 @@
 {
+  "Profile": {
+    "metaTitle": "个人主页",
+    "metaDescription": "登录 iChengHub 账户，管理你的收藏、提交与使用足迹。",
+    "login": {
+      "title": "登录",
+      "subtitle": "继续进入你的个人空间",
+      "privacy": "我们仅获取完成登录所需的基础账户信息。",
+      "providers": {
+        "github": "使用 GitHub 登录"
+      },
+      "redirecting": {
+        "github": "正在跳转…"
+      },
+      "error": {
+        "message": "登录未完成，请重试。",
+        "close": "关闭"
+      }
+    },
+    "signOut": "退出登录",
+    "signOutConfirmTitle": "确认退出登录？",
+    "signOutConfirmDesc": "退出后需要重新登录才能使用收藏和提交功能。",
+    "confirmSignOut": "确认退出",
+    "cancel": "取消",
+    "joinedAt": "加入时间",
+    "tabs": {
+      "overview": "个人概览",
+      "favorites": "我的收藏",
+      "submissions": "我的提交"
+    },
+    "overview": {
+      "toolsTitle": "最近使用的工具",
+      "blogsTitle": "最近阅读的博客",
+      "promptsTitle": "最近复制的提示词",
+      "recentHint": "仅显示最近 5 条",
+      "toolsEmpty": "还没有工具使用记录",
+      "blogsEmpty": "还没有阅读过博客",
+      "promptsEmpty": "还没有复制过提示词",
+      "toolsCta": "去工具分类",
+      "blogsCta": "去技术博客",
+      "promptsCta": "去提示词库",
+      "sectionError": "该内容暂时加载失败，请稍后再试"
+    },
+    "favorites": {
+      "title": "我的收藏",
+      "allDataHint": "展示全部个人收藏数据",
+      "filterAll": "全部",
+      "filterPrompts": "提示词",
+      "filterBlogs": "博客",
+      "empty": "还没有收藏内容，去发现一些值得保留的内容吧。",
+      "browsePrompts": "浏览提示词",
+      "readBlogs": "阅读博客",
+      "typePrompt": "提示词",
+      "typeBlog": "博客",
+      "open": "查看",
+      "remove": "取消收藏",
+      "removeFail": "操作失败，请稍后重试"
+    },
+    "submissions": {
+      "title": "我的提交",
+      "allDataHint": "展示全部个人提交数据",
+      "empty": "还没有提交记录",
+      "cta": "去提交 / 许愿",
+      "typeTool": "工具提交",
+      "typeDemand": "需求许愿",
+      "status": {
+        "PENDING": "审核中",
+        "APPROVED": "已通过",
+        "REJECTED": "已拒绝"
+      }
+    },
+    "stats": {
+      "title": "数据概览",
+      "favorites": "收藏",
+      "submissions": "提交",
+      "recentTools": "最近使用工具",
+      "recentBlogs": "最近阅读博客"
+    },
+    "quickLinks": {
+      "title": "快捷入口",
+      "tools": "工具分类",
+      "prompts": "提示词库",
+      "blog": "技术博客",
+      "submit": "提交 / 许愿"
+    },
+    "privacy": {
+      "title": "隐私说明",
+      "text": "仅记录与你账户相关的主要使用足迹，不保存复制内容、二维码内容或上传文件。"
+    }
+  },
   "navbar": {
     "logo": "iChengHub（热荐工坊）",
     "home": "首页",
@@ -7,7 +96,9 @@
     "about": "关于",
     "blog": "技术博客",
     "searchPlaceholder": "开始搜索",
-    "submitButton": "提交 / 许愿"
+    "submitButton": "提交 / 许愿",
+    "profile": "个人主页",
+    "login": "登录"
   },
   "layout": {
     "title": "AI 工具卡片门户",

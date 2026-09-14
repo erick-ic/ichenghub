@@ -6,7 +6,7 @@ import { trackResourceAction } from '@/app/actions/statsActions';
 
 interface PageViewTrackerProps {
   path?: string;
-  resourceId?: string;
+  resourceId?: string | null;
   resourceType?: string;
 }
 
@@ -23,10 +23,16 @@ function setCookie(name: string, maxAge: number) {
   document.cookie = `${name}=1; max-age=${maxAge}; path=/; samesite=lax`;
 }
 
-export default function PageViewTracker({ path = '', resourceId = '', resourceType = 'PAGE' }: PageViewTrackerProps) {
+export default function PageViewTracker({ path = '', resourceId = null, resourceType = 'PAGE' }: PageViewTrackerProps) {
   const locale = useLocale();
 
   useEffect(() => {
+    // PAGE 级浏览无需资源 ID；TOOL/BLOG/PROMPT 等资源事件必须携带稳定资源 ID，
+    // 缺失时直接跳过，避免写入无法关联的脏数据。
+    if (resourceType !== 'PAGE' && !resourceId) {
+      return;
+    }
+
     const cookieName = `view_lock_${resourceType}_${resourceId || 'home'}`;
 
     if (getCookie(cookieName)) {

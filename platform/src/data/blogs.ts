@@ -1,4 +1,5 @@
 import prisma from '@/lib/prisma';
+import { getBeijingDayKey } from '@/lib/time';
 import { unified } from 'unified';
 import remarkParse from 'remark-parse';
 import remarkGfm from 'remark-gfm';
@@ -19,6 +20,7 @@ export interface BlogPost {
   date: string;
   content: string;
   views: number;
+  favorites: number;
 }
 
 function generateSlug(text: string): string {
@@ -129,9 +131,10 @@ export async function getAllBlogs(): Promise<BlogPost[]> {
       title: { zh: blog.titleZh, en: blog.titleEn },
       excerpt: { zh: blog.excerptZh, en: blog.excerptEn },
       category: { zh: blog.categoryZh, en: blog.categoryEn },
-      date: blog.updatedAt.toISOString().split('T')[0],
+      date: getBeijingDayKey(blog.updatedAt),
       content: blog.contentZh,
       views: blog.views || 0,
+      favorites: blog.favorites || 0,
     }));
   } catch (error) {
     console.error('[blog] getAllBlogs failed:', error);
@@ -157,9 +160,10 @@ export async function getBlogById(id: string): Promise<BlogPost | null> {
       title: { zh: blog.titleZh, en: blog.titleEn },
       excerpt: { zh: blog.excerptZh, en: blog.excerptEn },
       category: { zh: blog.categoryZh, en: blog.categoryEn },
-      date: blog.updatedAt.toISOString().split('T')[0],
+      date: getBeijingDayKey(blog.updatedAt),
       content: blog.contentZh,
       views: (blog as any).views || 0,
+      favorites: blog.favorites || 0,
     };
   } catch (error) {
     console.error('[blog] getBlogById failed for id:', id, error);
@@ -183,6 +187,7 @@ export async function getBlogContentById(id: string, locale: string): Promise<{
   updatedAt: string;
   slug: string;
   views: number;
+  favorites: number;
 } | null> {
   try {
     const blog = await prisma.blog.findUnique({
@@ -201,10 +206,11 @@ export async function getBlogContentById(id: string, locale: string): Promise<{
       excerpt: isEnglish ? blog.excerptEn : blog.excerptZh,
       category: isEnglish ? blog.categoryEn : blog.categoryZh,
       content: rawContent,
-      date: blog.createdAt.toISOString().split('T')[0],
-      updatedAt: blog.updatedAt.toISOString().split('T')[0],
+      date: getBeijingDayKey(blog.createdAt),
+      updatedAt: getBeijingDayKey(blog.updatedAt),
       slug: blog.id,
       views: (blog as any).views || 0,
+      favorites: blog.favorites || 0,
     };
   } catch (error) {
     console.error('[blog] getBlogContentById failed for id:', id, error);

@@ -196,7 +196,8 @@ export default function AiQuotaTracker() {
   // ===== 保存平台：新增追加 / 编辑替换，统一持久化 =====
   const handleSavePlatform = (platform: Platform) => {
     const actionType = editingPlatform ? 'AI_QUOTA_EDIT_PLATFORM' : 'AI_QUOTA_ADD_PLATFORM';
-    trackResourceAction(platform.id, 'TOOL', actionType, ANALYTICS_PATH).catch(() => {});
+    // 本地 localStorage 平台 id 不是 ToolCard.id，资源 ID 留空；工具级归属由页面 VIEW 埋点承载
+    trackResourceAction(null, 'TOOL', actionType, ANALYTICS_PATH).catch(() => {});
     setPlatforms((prev) => {
       const exists = prev.some((p) => p.id === platform.id);
       const next = exists
@@ -218,7 +219,7 @@ export default function AiQuotaTracker() {
   // ===== 确认删除 =====
   const handleConfirmDelete = () => {
     const id = deletingPlatformId;
-    trackResourceAction(id, 'TOOL', 'AI_QUOTA_DELETE_PLATFORM', ANALYTICS_PATH).catch(() => {});
+    trackResourceAction(null, 'TOOL', 'AI_QUOTA_DELETE_PLATFORM', ANALYTICS_PATH).catch(() => {});
     setPlatforms((prev) => {
       const next = prev.filter((p) => p.id !== id);
       persist(next, lastResetDate);
@@ -239,7 +240,7 @@ export default function AiQuotaTracker() {
   // ===== 确认重置：将目标平台所有指标 used 归零 =====
   const handleConfirmReset = () => {
     const id = resettingPlatformId;
-    trackResourceAction(id, 'TOOL', 'AI_QUOTA_RESET_PLATFORM', ANALYTICS_PATH).catch(() => {});
+    trackResourceAction(null, 'TOOL', 'AI_QUOTA_RESET_PLATFORM', ANALYTICS_PATH).catch(() => {});
     setPlatforms((prev) => {
       const next = prev.map((p) =>
         p.id !== id

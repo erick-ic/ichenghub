@@ -53,7 +53,12 @@ const runInIdle = (callback: () => void) => {
   }
 };
 
-export default function ImageCompressor() {
+interface ImageCompressorProps {
+  // 对应 ToolCard 的稳定 ID，由服务端页面按 /imgcompress 解析注入
+  toolId?: string | null;
+}
+
+export default function ImageCompressor({ toolId = null }: ImageCompressorProps) {
   const t = useTranslations('ImageCompressor');
   const [isCompressing, setIsCompressing] = useState(false);
   const [originalImage, setOriginalImage] = useState<ImageInfo | null>(null);
@@ -283,8 +288,8 @@ export default function ImageCompressor() {
     link.click();
     document.body.removeChild(link);
 
-    await trackResourceAction(null, 'TOOL', 'IMAGE_COMPRESS_SUCCESS', '/tools/image-compressor');
-  }, [compressedImage, originalImage]);
+    await trackResourceAction(toolId, 'TOOL', 'IMAGE_COMPRESS_SUCCESS', '/imgcompress');
+  }, [compressedImage, originalImage, toolId]);
 
   const handleReset = useCallback(() => {
     if (abortControllerRef.current) {

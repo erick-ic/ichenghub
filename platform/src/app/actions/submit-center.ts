@@ -1,10 +1,23 @@
 'use server';
 
 import prisma from '@/lib/prisma';
+import { auth } from '../../../auth';
 
 interface SubmitState {
   success: boolean;
   error?: string;
+}
+
+// 服务端解析当前用户 ID：登录则关联提交记录，游客返回 null（继续允许游客提交）。
+// 不从 contact 或表单字段推断用户身份。
+async function resolveCurrentUserId(): Promise<string | null> {
+  try {
+    const session = await auth();
+    return session?.user?.id ?? null;
+  } catch (error) {
+    console.error('[submit] resolve user id failed:', error);
+    return null;
+  }
 }
 
 export async function submitRecommendation(_prevState: SubmitState, formData: FormData): Promise<SubmitState> {
@@ -25,12 +38,15 @@ export async function submitRecommendation(_prevState: SubmitState, formData: Fo
       return { success: false, error: '请输入推荐理由' };
     }
 
+    const userId = await resolveCurrentUserId();
+
     await prisma.toolSubmission.create({
       data: {
         name: name.trim(),
         url: url.trim(),
         description: description.trim(),
         contact: contact?.trim() || null,
+        userId,
       },
     });
 
@@ -56,12 +72,15 @@ export async function submitDemand(_prevState: SubmitState, formData: FormData):
       return { success: false, error: '请输入详细描述' };
     }
 
+    const userId = await resolveCurrentUserId();
+
     await prisma.toolDemand.create({
       data: {
         title: title.trim(),
         detail: detail.trim(),
         referenceUrl: referenceUrl?.trim() || null,
         contact: contact?.trim() || null,
+        userId,
       },
     });
 

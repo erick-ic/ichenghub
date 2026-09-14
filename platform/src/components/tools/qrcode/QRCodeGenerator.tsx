@@ -17,7 +17,12 @@ import { trackResourceAction } from '@/app/actions/statsActions';
 // Analytics 路径标签（仅含页面路径，不含任何 payload）
 const ANALYTICS_PATH = '/qrcode';
 
-export default function QRCodeGenerator() {
+interface QRCodeGeneratorProps {
+  // 对应 ToolCard 的稳定 ID，由服务端页面按 url 解析后注入；可能为 null（未配置时跳过个性化关联）
+  toolId?: string | null;
+}
+
+export default function QRCodeGenerator({ toolId = null }: QRCodeGeneratorProps) {
   // ===== 核心状态模型 =====
   // draft：textarea 当前正在编辑的原始内容
   const [draft, setDraft] = useState<string>('');
@@ -37,7 +42,7 @@ export default function QRCodeGenerator() {
       setMode((prev) => {
         if (prev !== next) {
           trackResourceAction(
-            null,
+            toolId,
             'TOOL',
             next === 'text' ? 'QR_MODE_TEXT' : 'QR_MODE_URL',
             ANALYTICS_PATH
@@ -46,7 +51,7 @@ export default function QRCodeGenerator() {
         return next;
       });
     },
-    []
+    [toolId]
   );
 
   const handleDraftChange = useCallback((value: string) => {
@@ -71,11 +76,11 @@ export default function QRCodeGenerator() {
         // Step 3：成功 —— 仅此时更新 snapshot / result
         setGeneratedSnapshot(draft);
         setGeneratedResult(result);
-        trackResourceAction(null, 'TOOL', 'QR_GENERATE_SUCCESS', ANALYTICS_PATH).catch(() => {});
+        trackResourceAction(toolId, 'TOOL', 'QR_GENERATE_SUCCESS', ANALYTICS_PATH).catch(() => {});
       } catch (err) {
         // Step 4：失败 —— 不覆盖旧 snapshot / 不删除旧 result
         setErrorCode(err instanceof QrError ? err.code : 'CONTENT_TOO_LONG');
-        trackResourceAction(null, 'TOOL', 'QR_GENERATE_FAILURE', ANALYTICS_PATH).catch(() => {});
+        trackResourceAction(toolId, 'TOOL', 'QR_GENERATE_FAILURE', ANALYTICS_PATH).catch(() => {});
       } finally {
         setGenerating(false);
         generatingRef.current = false;
@@ -89,24 +94,24 @@ export default function QRCodeGenerator() {
     } else {
       setTimeout(run, 0);
     }
-  }, [draft]);
+  }, [draft, toolId]);
 
   // Download 数据源：仅读取 generatedResult（同源于 generatedSnapshot），禁止读取 draft
   const handleDownloadSvg = useCallback(() => {
     if (!generatedResult) return;
     downloadSvg(generatedResult.svgString);
-    trackResourceAction(null, 'TOOL', 'QR_DOWNLOAD_SVG', ANALYTICS_PATH).catch(() => {});
-  }, [generatedResult]);
+    trackResourceAction(toolId, 'TOOL', 'QR_DOWNLOAD_SVG', ANALYTICS_PATH).catch(() => {});
+  }, [generatedResult, toolId]);
 
   const handleDownloadPng = useCallback(async () => {
     if (!generatedResult) return;
     try {
       await downloadPng(generatedResult.svgString);
-      trackResourceAction(null, 'TOOL', 'QR_DOWNLOAD_PNG', ANALYTICS_PATH).catch(() => {});
+      trackResourceAction(toolId, 'TOOL', 'QR_DOWNLOAD_PNG', ANALYTICS_PATH).catch(() => {});
     } catch {
       // 导出失败不向用户暴露底层错误，静默处理
     }
-  }, [generatedResult]);
+  }, [generatedResult, toolId]);
 
   // generatedSnapshot 与 generatedResult 一一对应，形成「锁定快照」
   // 任何修改 draft 都不会影响已生成的结果，直至再次点击 Generate

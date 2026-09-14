@@ -20,10 +20,9 @@ interface ToolCardProps {
     displayName?: string;
     displayDesc?: string;
   };
-  isFirst?: boolean;
 }
 
-export default function ToolCard({ tool, isFirst = false }: ToolCardProps) {
+export default function ToolCard({ tool }: ToolCardProps) {
   const router = useRouter();
   const pathname = usePathname();
   const locale = useLocale();
@@ -58,9 +57,7 @@ export default function ToolCard({ tool, isFirst = false }: ToolCardProps) {
     <>
       <div
         onClick={handleClick}
-        className={`group flex flex-col overflow-hidden rounded-2xl border border-zinc-100 bg-white transition-all cursor-pointer ${
-          isFirst ? 'hover:shadow-xl hover:-translate-y-1' : 'hover:shadow-md'
-        }`}
+        className="group flex flex-col overflow-hidden rounded-2xl border border-zinc-100 bg-white transition-all duration-300 cursor-pointer hover:shadow-lg hover:-translate-y-1"
       >
         <div className="relative aspect-[4/3] w-full overflow-hidden rounded-t-2xl">
           <Image

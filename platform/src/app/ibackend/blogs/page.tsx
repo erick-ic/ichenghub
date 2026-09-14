@@ -86,7 +86,7 @@ const BlogPostCard = memo(({ blog, index, isDragOver, onDragStart, onDragOver, o
               {blog.excerptZh}
             </p>
             <p className="text-xs text-gray-500 dark:text-gray-500">
-              创建时间：{new Date(blog.createdAt).toLocaleString('zh-CN')}
+              创建时间：{new Date(blog.createdAt).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })}
             </p>
           </div>
           <div className="flex gap-2">

@@ -1,9 +1,9 @@
 import { Metadata } from 'next';
 import './../globals.css';
-import Navbar from '@/components/Navbar';
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages, setRequestLocale } from 'next-intl/server';
 import ClientLayout from './ClientLayout';
+import { auth } from '../../../auth';
 
 type Props = {
   params: { locale: string };
@@ -80,12 +80,18 @@ export default async function LocaleLayout({
   params: { locale: string };
 }) {
   setRequestLocale(params.locale);
-  const messages = await getMessages({ locale: params.locale });
+  const [messages, session] = await Promise.all([
+    getMessages({ locale: params.locale }),
+    auth(),
+  ]);
 
   return (
     <NextIntlClientProvider messages={messages} locale={params.locale}>
-      <ClientLayout>
-        <Navbar locale={params.locale} />
+      <ClientLayout
+        locale={params.locale}
+        isLoggedIn={!!session?.user}
+        userImage={session?.user?.image ?? null}
+      >
         <main className="flex-1">
           {children}
         </main>

@@ -41,24 +41,25 @@ model NavLink {
 }
 
 model Prompt {
-  id          String   @id @default(cuid())
+  id          String               @id @default(cuid())
   title       String
   category    String
   imageUrl    String
   promptText  String
-  views       Int      @default(0)
-  likes       Int      @default(0)
-  comments    Int      @default(0)
-  status      Int      @default(0)
-  sortOrder   Int      @default(0)
-  createdAt   DateTime @default(now()) @db.Timestamptz(0)
+  views       Int                  @default(0)
+  likes       Int                  @default(0)
+  comments    Int                  @default(0)
+  status      Int                  @default(0)
+  sortOrder   Int                  @default(0)
+  createdAt   DateTime             @default(now()) @db.Timestamptz(0)
   categoryEn  String?
   titleEn     String?
-  updatedAt   DateTime @updatedAt @db.Timestamptz(0)
+  updatedAt   DateTime             @updatedAt @db.Timestamptz(0)
   platform    String
   platformUrl String?
-  favorites   Int      @default(0)
+  favorites   Int                  @default(0)
   platformEn  String?
+  favoritedBy UserPromptFavorite[]
 }
 
 model ToolSubmission {
@@ -70,6 +71,10 @@ model ToolSubmission {
   status      String   @default("PENDING")
   createdAt   DateTime @default(now()) @db.Timestamptz(0)
   updatedAt   DateTime @updatedAt @db.Timestamptz(0)
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
 }
 
 model ToolDemand {
@@ -81,6 +86,10 @@ model ToolDemand {
   status       String   @default("PENDING")
   createdAt    DateTime @default(now()) @db.Timestamptz(0)
   updatedAt    DateTime @updatedAt @db.Timestamptz(0)
+  userId       String?
+  user         User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
 }
 
 model AnalyticsLog {
@@ -92,30 +101,64 @@ model AnalyticsLog {
   path         String
   ipHash       String?
   userAgent    String?
+  userId       String?
+  user         User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@index([actionType, resourceType])
   @@index([resourceId])
   @@index([timestamp])
+  @@index([userId, timestamp])
+  @@index([userId, resourceType, actionType, timestamp])
 }
 
 model Blog {
-  id         String   @id @default(cuid())
-  titleZh    String
-  titleEn    String
-  excerptZh  String
-  excerptEn  String
-  categoryZh String
-  categoryEn String
-  contentZh  String
-  contentEn  String
-  status     Int      @default(0)
-  sortOrder  Int      @default(0)
-  views      Int      @default(0)
-  createdAt  DateTime @default(now()) @db.Timestamptz(0)
-  updatedAt  DateTime @updatedAt @db.Timestamptz(0)
+  id          String             @id @default(cuid())
+  titleZh     String
+  titleEn     String
+  excerptZh   String
+  excerptEn   String
+  categoryZh  String
+  categoryEn  String
+  contentZh   String
+  contentEn   String
+  status      Int                @default(0)
+  sortOrder   Int                @default(0)
+  views       Int                @default(0)
+  favorites   Int                @default(0)
+  createdAt   DateTime           @default(now()) @db.Timestamptz(0)
+  updatedAt   DateTime           @updatedAt @db.Timestamptz(0)
+  favoritedBy UserBlogFavorite[]
 
   @@index([status])
   @@index([createdAt])
+}
+
+// 用户级提示词收藏（联合主键天然防重复收藏）
+model UserPromptFavorite {
+  userId    String
+  promptId  String
+  createdAt DateTime @default(now()) @db.Timestamptz(0)
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  prompt Prompt @relation(fields: [promptId], references: [id], onDelete: Cascade)
+
+  @@id([userId, promptId])
+  @@index([userId, createdAt])
+  @@index([promptId])
+}
+
+// 用户级博客收藏
+model UserBlogFavorite {
+  userId    String
+  blogId    String
+  createdAt DateTime @default(now()) @db.Timestamptz(0)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  blog Blog @relation(fields: [blogId], references: [id], onDelete: Cascade)
+
+  @@id([userId, blogId])
+  @@index([userId, createdAt])
+  @@index([blogId])
 }
 
 model SystemMetrics {
@@ -127,4 +170,61 @@ model SystemMetrics {
   resetAt    DateTime @default(now()) @db.Timestamptz(0)
   updatedAt  DateTime @default(now()) @updatedAt @db.Timestamptz(6)
   errorLogs  Json?
+}
+
+// ============ Auth.js (v5) 官方 Prisma Adapter 标准模型 ============
+
+model User {
+  id              String               @id @default(cuid())
+  name            String?
+  email           String?              @unique
+  emailVerified   DateTime?
+  image           String?
+  createdAt       DateTime             @default(now()) @db.Timestamptz(0)
+  updatedAt       DateTime             @updatedAt @db.Timestamptz(0)
+  accounts        Account[]
+  sessions        Session[]
+  analyticsLogs   AnalyticsLog[]
+  promptFavorites UserPromptFavorite[]
+  blogFavorites   UserBlogFavorite[]
+  toolSubmissions ToolSubmission[]
+  toolDemands     ToolDemand[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        BigInt?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
 }

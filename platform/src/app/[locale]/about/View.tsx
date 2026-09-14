@@ -52,7 +52,7 @@ export default function AboutView() {
         {/* 核心价值 Bento 卡片 */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {/* 核心理念 */}
-          <div className="md:col-span-2 p-8 bg-white border border-gray-100 rounded-3xl shadow-sm">
+          <div className="md:col-span-2 p-8 bg-white border border-gray-100 rounded-3xl shadow-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
             <div className="bg-red-50 w-12 h-12 rounded-2xl flex items-center justify-center text-[#e52129] mb-6">
               <ShieldCheck size={24} />
             </div>
@@ -63,7 +63,7 @@ export default function AboutView() {
           </div>
 
           {/* 实战提示词 */}
-          <div className="p-8 bg-gray-900 text-white rounded-3xl shadow-sm">
+          <div className="p-8 bg-gray-900 text-white rounded-3xl shadow-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
             <Wand2 className="text-red-400 mb-6" size={24} />
             <h3 className="text-xl font-bold mb-3 text-white">{t('feature2Title')}</h3>
             <p className="text-gray-400 text-sm">{t('feature2Desc')}</p>
@@ -129,7 +129,7 @@ export default function AboutView() {
         </div> */}
 
         {/* 底部共建按钮 */}
-        <div className="mt-16 bg-gray-50 rounded-3xl p-10 flex flex-col items-center text-center">
+        <div className="mt-16 bg-gray-50 rounded-3xl p-10 flex flex-col items-center text-center transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
           <p className="text-gray-600 leading-relaxed mb-6">
             {t('ctaText')}
           </p>

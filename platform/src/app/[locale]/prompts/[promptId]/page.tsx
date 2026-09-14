@@ -11,6 +11,7 @@ import { Eye, Tag } from 'lucide-react';
 import { Link } from '@/navigation';
 import ViewsTracker from '@/components/ViewsTracker';
 import { cookies } from 'next/headers';
+import { auth } from '../../../../../auth';
 
 export const revalidate = 0;
 
@@ -62,6 +63,17 @@ export default async function PromptDetailPage({ params }: PageProps) {
 
   if (!prompt || prompt.status !== 1) {
     notFound();
+  }
+
+  // 收藏态：所有收藏操作需登录，仅登录用户查 UserPromptFavorite，游客一律为 false
+  let isFavorited = false;
+  const session = await auth();
+  if (session?.user?.id) {
+    const fav = await prisma.userPromptFavorite.findUnique({
+      where: { userId_promptId: { userId: session.user.id, promptId } },
+      select: { userId: true },
+    });
+    isFavorited = !!fav;
   }
 
   const promptTitle = isEnglish ? (prompt.titleEn || prompt.title) : prompt.title;
@@ -195,18 +207,20 @@ export default async function PromptDetailPage({ params }: PageProps) {
                   </div>
                 </div>
 
-                <LikeButton 
+                <LikeButton
                   promptId={promptId}
                   initialLiked={isLiked}
                   initialCount={prompt.likes}
                   isEnglish={isEnglish}
                 />
 
-                <FavoriteButton 
-                  promptId={promptId}
-                  initialFavorited={false}
+                <FavoriteButton
+                  resourceType="PROMPT"
+                  resourceId={promptId}
+                  initialFavorited={isFavorited}
                   initialCount={prompt.favorites}
                   isEnglish={isEnglish}
+                  isLoggedIn={!!session?.user?.id}
                 />
               </div>
 

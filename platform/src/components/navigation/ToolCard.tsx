@@ -42,7 +42,7 @@ export function ToolCard({ tool, isEnglish }: ToolCardProps) {
         target="_blank"
         rel="noopener noreferrer"
         onClick={handleClick}
-        className="flex items-center gap-4 p-4 bg-white rounded-xl border border-zinc-200/50 shadow-sm hover:shadow-lg hover:-translate-y-1 hover:border-primary/50 transition-all duration-300 cursor-pointer"
+        className="flex items-center gap-4 p-4 bg-white rounded-xl border border-zinc-200/50 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer"
       >
         <ToolIcon url={tool.url} title={title} iconUrl={tool.iconUrl} />
 

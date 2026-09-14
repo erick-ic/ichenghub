@@ -4,6 +4,9 @@ import { cookies } from 'next/headers';
 import { headers } from 'next/headers';
 import crypto from 'crypto';
 import prisma from '@/lib/prisma';
+import { getBeijingTodayStart, getBeijingNextMidnight } from '@/lib/time';
+import { incrementCounter, decrementCounter } from '@/lib/counter';
+import { auth } from '../../../auth';
 
 export async function toggleLike(promptId: string) {
   if (!promptId) return { success: false, message: '缺少参数' };
@@ -14,13 +17,15 @@ export async function toggleLike(promptId: string) {
   const hasLock = cookieStore.has(cookieName);
 
   try {
-    const result = await prisma.prompt.update({
-      where: { id: promptId },
-      data: {
-        likes: hasLock ? { decrement: 1 } : { increment: 1 }
-      },
-      select: { likes: true }
-    });
+    // 只改 likes 计数，不触发 @updatedAt 刷新（保持与收藏/浏览计数同一口径）。
+    // 取消点赞沿用历史行为，不做 >0 守卫（guardPositive=false）。
+    const changedLikes = hasLock
+      ? await decrementCounter(prisma, 'Prompt', 'likes', promptId, 1, false)
+      : await incrementCounter(prisma, 'Prompt', 'likes', promptId);
+    if (changedLikes === null) {
+      return { success: false, message: '操作失败' };
+    }
+    const result = { likes: changedLikes };
 
     if (hasLock) {
       cookieStore.delete(cookieName);
@@ -65,13 +70,12 @@ export async function incrementViews(promptId: string, path: string = '') {
   }
 
   try {
-    await prisma.prompt.update({
-      where: { id: promptId },
-      data: { views: { increment: 1 } }
-    });
+    // 只改 views 计数，不触发 @updatedAt 刷新
+    await incrementCounter(prisma, 'Prompt', 'views', promptId);
 
     const now = new Date();
-      const midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0, 0);
+      // 浏览锁到「北京次日 00:00」失效；UTC 服务器用本地午夜会偏到北京早 8 点
+      const midnight = getBeijingNextMidnight(now);
       const maxAge = Math.floor((midnight.getTime() - now.getTime()) / 1000);
       
       cookieStore.set(cookieName, '1', {
@@ -108,8 +112,8 @@ async function checkDuplicateLog(
   actionType: string,
   resourceType: string
 ): Promise<boolean> {
-  const now = new Date();
-  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+  // 去重窗口以北京自然日 00:00 为界（服务器为 UTC 时本地构造会偏到北京 08:00）
+  const todayStart = getBeijingTodayStart();
   
   const query: any = {
     ipHash,
@@ -142,6 +146,16 @@ async function logAnalytics(
     const headerList = headers();
     const userAgent = headerList.get('user-agent') || null;
 
+    // 用户身份只在服务端从会话获取；游客 userId 为 null（继续兼容匿名统计）。
+    // 客户端无法也不允许传入 userId。auth() 失败时按游客处理，不阻断埋点。
+    let userId: string | null = null;
+    try {
+      const session = await auth();
+      userId = session?.user?.id ?? null;
+    } catch (authError) {
+      console.error('Analytics auth resolve failed:', authError);
+    }
+
     // 未显式传入 path 时，从 referer 提取路径部分
     let logPath = path;
     if (!logPath) {
@@ -168,7 +182,8 @@ async function logAnalytics(
         resourceId,
         path: logPath,
         ipHash,
-        userAgent
+        userAgent,
+        userId
       }
     });
 

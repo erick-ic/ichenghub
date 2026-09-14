@@ -63,8 +63,8 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
             <p className="text-slate-500">{t('noToolsDesc')}</p>
           </div>
         ) : (
-          displayTools.map((tool, index) => (
-            <ToolCard key={tool.id} tool={tool} isFirst={index === 0} />
+          displayTools.map((tool) => (
+            <ToolCard key={tool.id} tool={tool} />
           ))
         )}
       </div>

@@ -117,3 +117,118 @@ html {
 .animate-fade-in {
   animation: fade-in 0.2s ease-out;
 }
+
+/* 列表项切换时的轻微淡入上移（个人主页控制台） */
+@keyframes fade-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-slide-up {
+  animation: fade-slide-up 0.28s var(--ease-out-expo, cubic-bezier(0.22, 1, 0.36, 1)) both;
+}
+
+/* ======== 登录页动效缓动变量 ======== */
+:root {
+  --ease-out-expo: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Hub 描边循环揭示：不在完全隐藏或完全显示状态长时间停留 */
+@keyframes login-hub-reveal {
+  0% {
+    clip-path: inset(0 100% 0 0);
+    opacity: 0;
+  }
+  48% {
+    clip-path: inset(0 0% 0 0);
+    opacity: 1;
+  }
+  52% {
+    clip-path: inset(0 0% 0 0);
+    opacity: 1;
+  }
+  100% {
+    clip-path: inset(0 100% 0 0);
+    opacity: 0;
+  }
+}
+
+.login-hub-reveal {
+  animation: login-hub-reveal 8s ease-in-out infinite;
+}
+
+/* Hub 缓慢轻微呼吸（不使用缩放，只用 opacity） */
+@keyframes login-hub-breathe {
+  0%,
+  100% {
+    opacity: 0.85;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.login-hub-breathe {
+  animation: login-hub-breathe 10s ease-in-out infinite;
+}
+
+/* 提示词主卡红色状态线从左向右展开 */
+@keyframes login-status-line {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+.login-status-line {
+  transform-origin: left center;
+  animation: login-status-line 320ms var(--ease-out-expo) both;
+}
+
+/* 登录页背景淡入 */
+@keyframes login-bg-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.login-bg-fade {
+  animation: login-bg-fade 300ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fade-slide-up {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+  .login-hub-reveal {
+    animation: none;
+    clip-path: inset(0 0% 0 0);
+    opacity: 1;
+  }
+  .login-hub-breathe {
+    animation: none;
+    opacity: 1;
+  }
+  .login-status-line {
+    animation: none;
+    transform: scaleX(1);
+  }
+  .login-bg-fade {
+    animation: none;
+    opacity: 1;
+  }
+}

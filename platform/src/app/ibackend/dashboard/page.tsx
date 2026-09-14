@@ -1,4 +1,5 @@
 import prisma from '@/lib/prisma'
+import { getBeijingDayKey, getBeijingHour } from '@/lib/time'
 import { Eye, Users, MousePointerClick, Copy, Activity, Wrench, Lightbulb, Globe, Clock, FolderOpen, Smartphone, Monitor, Link2, FileText, Code } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -104,13 +105,25 @@ async function getAnalyticsData(): Promise<AnalyticsData> {
   const blogViews = logs.filter(l => l.actionType === 'VIEW' && l.resourceType === 'BLOG').length
   const blogCopies = logs.filter(l => l.actionType === 'COPY' && l.resourceType === 'BLOG').length
 
+  // 按北京时间（UTC+8）聚合日历日：服务器可能运行在 UTC，直接 toISOString() 截断
+  // 会把北京凌晨的访问归到前一天，统一走 src/lib/time 的北京日 key。
+  const getDayKey = getBeijingDayKey
+
+  // 趋势固定展示最近 7 个北京日历日（含今天），无访问的日期补 0，避免 X 轴缺天
+  const dayKeys: string[] = []
+  for (let i = 6; i >= 0; i--) {
+    dayKeys.push(getDayKey(new Date(Date.now() - i * 24 * 3600 * 1000)))
+  }
+
   const dailyStats = new Map<string, { pv: number; uv: Set<string>; clicks: number; copies: number; blogViews: number; blogCopies: number }>()
+  for (const key of dayKeys) {
+    dailyStats.set(key, { pv: 0, uv: new Set(), clicks: 0, copies: 0, blogViews: 0, blogCopies: 0 })
+  }
   logs.forEach(log => {
-    const date = log.timestamp.toISOString().split('T')[0]
-    if (!dailyStats.has(date)) {
-      dailyStats.set(date, { pv: 0, uv: new Set(), clicks: 0, copies: 0, blogViews: 0, blogCopies: 0 })
-    }
-    const stat = dailyStats.get(date)!
+    const date = getDayKey(log.timestamp)
+    const stat = dailyStats.get(date)
+    // 仅累计最近 7 个日历日内的日志，更早的数据不进趋势图
+    if (!stat) return
     stat.pv++
     if (log.ipHash) stat.uv.add(log.ipHash)
     if (log.actionType === 'CLICK' && log.resourceType === 'TOOL') stat.clicks++
@@ -119,15 +132,16 @@ async function getAnalyticsData(): Promise<AnalyticsData> {
     if (log.actionType === 'COPY' && log.resourceType === 'BLOG') stat.blogCopies++
   })
 
-  const chartData = Array.from(dailyStats.entries())
-    .sort((a, b) => a[0].localeCompare(b[0]))
-    .map(([date, stat]) => ({
+  const chartData = dayKeys.map((date) => {
+    const stat = dailyStats.get(date)!
+    return {
       date: date.substring(5),
       pv: stat.pv,
       uv: stat.uv.size,
       clicks: stat.clicks,
       copies: stat.copies
-    }))
+    }
+  })
 
   const toolClickMap = new Map<string, number>()
   const toolViewMap = new Map<string, number>()
@@ -314,7 +328,7 @@ async function getAnalyticsData(): Promise<AnalyticsData> {
     hourlyMap.set(i, 0)
   }
   logs.forEach(log => {
-    const hour = log.timestamp.getHours()
+    const hour = getBeijingHour(log.timestamp)
     hourlyMap.set(hour, (hourlyMap.get(hour) || 0) + 1)
   })
   const hourlyData = Array.from(hourlyMap.entries())

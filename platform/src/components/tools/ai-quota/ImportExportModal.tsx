@@ -4,6 +4,7 @@ import { useState, useRef } from 'react';
 import { Download, Copy, Check, Upload, ClipboardPaste, X, FileJson } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { Platform } from './AiQuotaTracker';
+import { getBeijingDayKey } from '@/lib/time';
 
 interface ExportData {
   version: number;
@@ -48,7 +49,7 @@ export default function ImportExportModal({
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `ai-quota-${lastResetDate || new Date().toISOString().slice(0, 10)}.json`;
+    a.download = `ai-quota-${lastResetDate || getBeijingDayKey(new Date())}.json`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);

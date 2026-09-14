@@ -1,6 +1,7 @@
 import Link from "next/link"
 import prisma from "@/lib/prisma"
 import { getSystemMetrics } from "@/app/actions/metricsActions"
+import { getBeijingMonthStart } from "@/lib/time"
 
 type RecentPromptRow = {
   id: string
@@ -46,9 +47,10 @@ import { SystemStatusCard } from "@/components/SystemStatusCard"
 
 export default async function AdminDashboard() {
   const now = new Date()
-  // 月份边界（本地时区，与行为日志的按天去重口径一致），区间统一左闭右开
-  const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1)
-  const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1)
+  // 月份边界统一按北京时间（UTC+8）1 日 00:00，与行为日志的按天去重口径一致；
+  // UTC 服务器用本地月初会偏到北京 1 日早 8 点，区间统一左闭右开
+  const currentMonthStart = getBeijingMonthStart(now, 0)
+  const lastMonthStart = getBeijingMonthStart(now, -1)
 
   // 从数据库获取真实数据
   const [

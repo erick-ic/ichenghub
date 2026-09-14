@@ -1,4 +1,93 @@
 {
+  "Profile": {
+    "metaTitle": "Profile",
+    "metaDescription": "Sign in to your iChengHub account to manage favorites, submissions and activity footprints.",
+    "login": {
+      "title": "Sign in",
+      "subtitle": "Continue to your personal space",
+      "privacy": "We only access the basic account information required to sign you in.",
+      "providers": {
+        "github": "Continue with GitHub"
+      },
+      "redirecting": {
+        "github": "Redirecting…"
+      },
+      "error": {
+        "message": "Sign-in could not be completed. Please try again.",
+        "close": "Dismiss"
+      }
+    },
+    "signOut": "Sign out",
+    "signOutConfirmTitle": "Confirm sign out?",
+    "signOutConfirmDesc": "You'll need to sign in again to use favorites and submissions.",
+    "confirmSignOut": "Sign out",
+    "cancel": "Cancel",
+    "joinedAt": "Joined",
+    "tabs": {
+      "overview": "Overview",
+      "favorites": "Favorites",
+      "submissions": "Submissions"
+    },
+    "overview": {
+      "toolsTitle": "Recently used tools",
+      "blogsTitle": "Recently read blogs",
+      "promptsTitle": "Recently copied prompts",
+      "recentHint": "Only the latest 5",
+      "toolsEmpty": "No tool activity yet",
+      "blogsEmpty": "No blogs read yet",
+      "promptsEmpty": "No prompts copied yet",
+      "toolsCta": "Browse tools",
+      "blogsCta": "Read blogs",
+      "promptsCta": "Open prompt library",
+      "sectionError": "This section is temporarily unavailable. Please try again later."
+    },
+    "favorites": {
+      "title": "My favorites",
+      "allDataHint": "Showing all personal favorites",
+      "filterAll": "All",
+      "filterPrompts": "Prompts",
+      "filterBlogs": "Blogs",
+      "empty": "No favorites yet. Discover something worth keeping.",
+      "browsePrompts": "Browse prompts",
+      "readBlogs": "Read blogs",
+      "typePrompt": "Prompt",
+      "typeBlog": "Blog",
+      "open": "Open",
+      "remove": "Remove",
+      "removeFail": "Action failed, please try again later"
+    },
+    "submissions": {
+      "title": "My submissions",
+      "allDataHint": "Showing all personal submissions",
+      "empty": "No submissions yet",
+      "cta": "Submit / Wish",
+      "typeTool": "Tool submission",
+      "typeDemand": "Feature request",
+      "status": {
+        "PENDING": "Pending",
+        "APPROVED": "Approved",
+        "REJECTED": "Rejected"
+      }
+    },
+    "stats": {
+      "title": "Overview",
+      "favorites": "Favorites",
+      "submissions": "Submissions",
+      "recentTools": "Tools used",
+      "recentBlogs": "Blogs read"
+    },
+    "quickLinks": {
+      "title": "Quick links",
+      "tools": "Tools",
+      "prompts": "Prompt library",
+      "blog": "Blogs",
+      "submit": "Submit / Wish"
+    },
+    "privacy": {
+      "title": "Privacy",
+      "text": "We only record major activity footprints tied to your account. We never store copied text, QR content or uploaded files."
+    }
+  },
   "navbar": {
     "logo": "iChengHub (Hot Recommend Workshop)",
     "home": "Home",
@@ -7,7 +96,9 @@
     "about": "About",
     "blog": "Blogs",
     "searchPlaceholder": "Start searching",
-    "submitButton": "Submit / Wish"
+    "submitButton": "Submit / Wish",
+    "profile": "Profile",
+    "login": "Sign in"
   },
   "layout": {
     "title": "AI Tool Card Portal",

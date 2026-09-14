@@ -1,9 +1,14 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { getRecentErrors } from '@/app/actions/metricsActions'
 
 export const dynamic = 'force-dynamic'
 
-export async function GET() {
+// 中间件显式放行 /api，后台专属的错误日志导出必须在路由内校验 admin_session
+export async function GET(request: NextRequest) {
+  if (!request.cookies.get('admin_session')?.value) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   const errors = await getRecentErrors(50)
   const now = new Date().toISOString().replace(/[:.]/g, '-')
   const body = JSON.stringify({

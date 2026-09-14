@@ -1,13 +1,15 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { Link } from '@/navigation';
-import PageViewTracker from '@/components/PageViewTracker';
 import BlogContent from '@/components/blog/BlogContent';
 import TableOfContents from '@/components/blog/TableOfContents';
 import CodeCopyHandler from '@/components/blog/CodeCopyHandler';
 import { getAllBlogs, getBlogContentById, extractHeadings, getPrevAndNextBlogs } from '@/data/blogs';
 import BlogNavigation from '@/components/blog/BlogNavigation';
 import ViewCounter from '@/components/blog/ViewCounter';
+import FavoriteButton from '@/components/stats/FavoriteButton';
+import prisma from '@/lib/prisma';
+import { auth } from '../../../../../auth';
 
 interface PageProps {
   params: Promise<{ locale: string; id: string }>;
@@ -72,11 +74,28 @@ export default async function BlogDetailPage({ params }: PageProps) {
   const headings = extractHeadings(blogPost.content);
   const { prev: prevBlog, next: nextBlog } = await getPrevAndNextBlogs(id);
 
+  // 当前用户是否已收藏该博客（服务端按会话判定）
+  let initialFavorited = false;
+  let isLoggedIn = false;
+  try {
+    const session = await auth();
+    isLoggedIn = !!session?.user?.id;
+    if (session?.user?.id) {
+      const favorite = await prisma.userBlogFavorite.findUnique({
+        where: { userId_blogId: { userId: session.user.id, blogId: id } },
+        select: { userId: true },
+      });
+      initialFavorited = !!favorite;
+    }
+  } catch (favoriteError) {
+    console.error('[blog] resolve favorite state failed:', favoriteError);
+  }
+
   return (
     <>
       <CodeCopyHandler blogId={id} locale={locale} />
-      <PageViewTracker path={`/${locale}/blog/${id}`} resourceId={id} resourceType="BLOG" />
-      <ViewCounter id={blogPost.slug} />
+      {/* 博客浏览唯一入口：/api/blog/view（事务内去重 + 写日志 + 增 views），不再叠加 PageViewTracker */}
+      <ViewCounter id={id} />
       <main className="bg-background min-h-[calc(100vh-4rem)]">
         <article className="max-w-7xl mx-auto px-4 md:px-8 py-12 grid grid-cols-1 lg:grid-cols-4 gap-10">
           {/* 左侧正文区：占 lg:col-span-3 */}
@@ -124,6 +143,15 @@ export default async function BlogDetailPage({ params }: PageProps) {
                   </svg>
                   {blogPost.views}
                 </span>
+                <FavoriteButton
+                  resourceType="BLOG"
+                  resourceId={id}
+                  initialFavorited={initialFavorited}
+                  initialCount={blogPost.favorites}
+                  isEnglish={isEnglish}
+                  isLoggedIn={isLoggedIn}
+                  variant="compact"
+                />
               </div>
             </header>
 

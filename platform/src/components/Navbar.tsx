@@ -1,16 +1,18 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { ArrowUpRight, Menu, X, Search } from 'lucide-react';
+import { ArrowUpRight, Menu, X, Search, User } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Link, usePathname } from '@/navigation';
 import { GlobalSearch, SearchItem } from './layout/GlobalSearch';
 
 interface NavbarProps {
   locale: string;
+  isLoggedIn: boolean;
+  userImage: string | null;
 }
 
-const Navbar: React.FC<NavbarProps> = ({ locale }) => {
+const Navbar: React.FC<NavbarProps> = ({ locale, isLoggedIn, userImage }) => {
   const t = useTranslations('navbar');
   const pathname = usePathname();
   const nextLocale = locale === 'en' ? 'zh' : 'en';
@@ -42,6 +44,9 @@ const Navbar: React.FC<NavbarProps> = ({ locale }) => {
     { href: '/links', label: t('links') },
     { href: '/about', label: t('about') },
   ];
+
+  const isProfileActive = pathname === '/profile';
+  const profileLabel = isLoggedIn ? t('profile') : t('login');
 
   return (
     <nav className="h-16 bg-background border-b border-border flex justify-between items-center px-4 md:px-8">
@@ -83,6 +88,34 @@ const Navbar: React.FC<NavbarProps> = ({ locale }) => {
 
         {/* 全局搜索组件 */}
         <GlobalSearch items={searchItems} isEnglish={locale === 'en'} />
+
+        {/* 个人主页入口：已登录显示头像，未登录显示用户图标 */}
+        <Link
+          href="/profile"
+          title={profileLabel}
+          aria-label={profileLabel}
+          className={`flex h-8 w-8 items-center justify-center rounded-full transition-all ${
+            isLoggedIn && userImage
+              ? `ring-2 ring-offset-2 ring-offset-background ${
+                  isProfileActive ? 'ring-[#e52129]' : 'ring-transparent hover:ring-[#e52129]'
+                }`
+              : isProfileActive
+                ? 'bg-[#e52129]/10 text-[#e52129]'
+                : 'text-muted-foreground hover:bg-[#e52129]/10 hover:text-[#e52129]'
+          }`}
+        >
+          {isLoggedIn && userImage ? (
+            <img
+              src={userImage}
+              alt=""
+              width={32}
+              height={32}
+              className="h-8 w-8 rounded-full object-cover"
+            />
+          ) : (
+            <User className="h-4 w-4" />
+          )}
+        </Link>
 
         {/* 行动按钮 */}
         <Link
@@ -136,6 +169,26 @@ const Navbar: React.FC<NavbarProps> = ({ locale }) => {
                 {link.label}
               </Link>
             ))}
+
+            {/* 移动端个人主页入口 */}
+            <Link
+              href="/profile"
+              className="flex items-center gap-3 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted px-3 py-2 rounded-md transition-colors"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              {isLoggedIn && userImage ? (
+                <img
+                  src={userImage}
+                  alt=""
+                  width={20}
+                  height={20}
+                  className="h-5 w-5 rounded-full object-cover"
+                />
+              ) : (
+                <User className="h-5 w-5" />
+              )}
+              {profileLabel}
+            </Link>
 
             {/* 移动端行动按钮 */}
             <Link
