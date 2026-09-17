@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getRecentErrors } from '@/app/actions/metricsActions'
+import { ADMIN_SESSION_COOKIE, verifyAdminSessionToken } from '@/lib/admin-session'
 
 export const dynamic = 'force-dynamic'
 
 // 中间件显式放行 /api，后台专属的错误日志导出必须在路由内校验 admin_session
 export async function GET(request: NextRequest) {
-  if (!request.cookies.get('admin_session')?.value) {
+  if (!await verifyAdminSessionToken(request.cookies.get(ADMIN_SESSION_COOKIE)?.value)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 

@@ -65,6 +65,7 @@ export interface SubmissionItem {
   title: string;
   url: string | null;
   status: string;
+  reviewNote: string | null;
   createdAt: string;
 }
 
@@ -405,13 +406,13 @@ async function getSubmissions(userId: string): Promise<SubmissionItem[]> {
       where: { userId },
       orderBy: { createdAt: 'desc' },
       take: SUBMISSIONS_LIMIT,
-      select: { id: true, name: true, url: true, status: true, createdAt: true },
+      select: { id: true, name: true, url: true, status: true, reviewNote: true, createdAt: true },
     }),
     prisma.toolDemand.findMany({
       where: { userId },
       orderBy: { createdAt: 'desc' },
       take: SUBMISSIONS_LIMIT,
-      select: { id: true, title: true, status: true, createdAt: true },
+      select: { id: true, title: true, status: true, reviewNote: true, createdAt: true },
     }),
   ]);
 
@@ -422,6 +423,7 @@ async function getSubmissions(userId: string): Promise<SubmissionItem[]> {
       title: row.name,
       url: row.url,
       status: row.status,
+      reviewNote: row.reviewNote,
       createdAt: row.createdAt.toISOString(),
     })),
     ...demands.map((row) => ({
@@ -430,6 +432,7 @@ async function getSubmissions(userId: string): Promise<SubmissionItem[]> {
       title: row.title,
       url: null,
       status: row.status,
+      reviewNote: row.reviewNote,
       createdAt: row.createdAt.toISOString(),
     })),
   ];

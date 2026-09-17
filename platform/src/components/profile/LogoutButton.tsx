@@ -22,6 +22,16 @@ export default function LogoutButton({ action }: LogoutButtonProps) {
 
   const handleConfirm = () => {
     startTransition(async () => {
+      // 退出前同步清理仅用于首屏防闪烁的头像缓存。
+      try {
+        window.localStorage.removeItem('ichenghub.session-avatar');
+        document.documentElement.classList.remove('has-session-avatar');
+        document.documentElement.style.removeProperty('--session-avatar-image');
+      } catch {
+        // 本地存储不可用不影响服务端退出。
+      }
+      // ClientLayout 在同一路径的服务端刷新中不会重新挂载，主动同步全局登录态。
+      window.dispatchEvent(new CustomEvent('ichenghub:session-changed', { detail: null }));
       await action();
     });
   };

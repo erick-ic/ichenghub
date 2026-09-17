@@ -63,6 +63,7 @@
       "cta": "去提交 / 许愿",
       "typeTool": "工具提交",
       "typeDemand": "需求许愿",
+      "reviewNote": "处理说明",
       "status": {
         "PENDING": "审核中",
         "APPROVED": "已通过",
@@ -217,6 +218,7 @@
     "submitDemand": "提交许愿",
     "toolSuccess": "推荐提交成功！",
     "demandSuccess": "许愿提交成功！",
+    "successHint": "内容已进入待审核列表，感谢你的提交。",
     "required": "*",
     "submitting": "提交中..."
   },

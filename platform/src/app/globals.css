@@ -2,6 +2,31 @@
 @tailwind components;
 @tailwind utilities;
 
+/* 会话头像在 hydration 前由 head 内联脚本恢复，避免默认用户图标闪现。 */
+.session-avatar-image {
+  display: none;
+  background-image: var(--session-avatar-image);
+  background-position: center;
+  background-size: cover;
+}
+
+html.has-session-avatar .session-avatar-image {
+  display: block;
+}
+
+html.has-session-avatar .session-default-user {
+  display: none;
+}
+
+/* Profile 首屏等待会话时：游客保持沉浸式登录页；有缓存会话的用户立即显示页面框架。 */
+.profile-session-pending {
+  display: none;
+}
+
+html.has-session-avatar .profile-session-pending {
+  display: contents;
+}
+
 /* Prism.js 代码高亮主题 */
 @import 'prismjs/themes/prism-tomorrow.css';
 

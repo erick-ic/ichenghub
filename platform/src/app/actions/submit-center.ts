@@ -2,6 +2,7 @@
 
 import prisma from '@/lib/prisma';
 import { auth } from '../../../auth';
+import { normalizePublicUrl } from '@/lib/url-normalization';
 
 interface SubmitState {
   success: boolean;
@@ -37,13 +38,20 @@ export async function submitRecommendation(_prevState: SubmitState, formData: Fo
     if (!description?.trim()) {
       return { success: false, error: '请输入推荐理由' };
     }
+    if (name.trim().length > 80 || description.trim().length > 2000 || (contact?.trim().length ?? 0) > 200) {
+      return { success: false, error: '提交内容过长，请精简后重试' };
+    }
+    const normalizedUrl = normalizePublicUrl(url);
+    if (!normalizedUrl) {
+      return { success: false, error: '请输入有效的 http 或 https 官网链接' };
+    }
 
     const userId = await resolveCurrentUserId();
 
     await prisma.toolSubmission.create({
       data: {
         name: name.trim(),
-        url: url.trim(),
+        url: normalizedUrl,
         description: description.trim(),
         contact: contact?.trim() || null,
         userId,
@@ -71,6 +79,13 @@ export async function submitDemand(_prevState: SubmitState, formData: FormData):
     if (!detail?.trim()) {
       return { success: false, error: '请输入详细描述' };
     }
+    if (title.trim().length > 120 || detail.trim().length > 3000 || (contact?.trim().length ?? 0) > 200) {
+      return { success: false, error: '提交内容过长，请精简后重试' };
+    }
+    const normalizedReferenceUrl = referenceUrl?.trim() ? normalizePublicUrl(referenceUrl) : null;
+    if (referenceUrl?.trim() && !normalizedReferenceUrl) {
+      return { success: false, error: '请输入有效的 http 或 https 参考链接' };
+    }
 
     const userId = await resolveCurrentUserId();
 
@@ -78,7 +93,7 @@ export async function submitDemand(_prevState: SubmitState, formData: FormData):
       data: {
         title: title.trim(),
         detail: detail.trim(),
-        referenceUrl: referenceUrl?.trim() || null,
+        referenceUrl: normalizedReferenceUrl,
         contact: contact?.trim() || null,
         userId,
       },

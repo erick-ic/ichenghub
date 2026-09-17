@@ -5,6 +5,7 @@ import { ArrowUpRight, Menu, X, Search, User } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Link, usePathname } from '@/navigation';
 import { GlobalSearch, SearchItem } from './layout/GlobalSearch';
+import NotificationBell from './layout/NotificationBell';
 
 interface NavbarProps {
   locale: string;
@@ -89,6 +90,8 @@ const Navbar: React.FC<NavbarProps> = ({ locale, isLoggedIn, userImage }) => {
         {/* 全局搜索组件 */}
         <GlobalSearch items={searchItems} isEnglish={locale === 'en'} />
 
+        {isLoggedIn && <NotificationBell locale={locale} />}
+
         {/* 个人主页入口：已登录显示头像，未登录显示用户图标 */}
         <Link
           href="/profile"
@@ -104,17 +107,12 @@ const Navbar: React.FC<NavbarProps> = ({ locale, isLoggedIn, userImage }) => {
                 : 'text-muted-foreground hover:bg-[#e52129]/10 hover:text-[#e52129]'
           }`}
         >
-          {isLoggedIn && userImage ? (
-            <img
-              src={userImage}
-              alt=""
-              width={32}
-              height={32}
-              className="h-8 w-8 rounded-full object-cover"
-            />
-          ) : (
-            <User className="h-4 w-4" />
-          )}
+          <span
+            aria-hidden="true"
+            className="session-avatar-image h-8 w-8 rounded-full"
+            style={userImage ? { display: 'block', backgroundImage: `url("${encodeURI(userImage).replace(/"/g, '%22')}")` } : undefined}
+          />
+          <User className={`session-default-user h-4 w-4 ${isLoggedIn && userImage ? 'hidden' : ''}`} />
         </Link>
 
         {/* 行动按钮 */}
@@ -171,22 +169,24 @@ const Navbar: React.FC<NavbarProps> = ({ locale, isLoggedIn, userImage }) => {
             ))}
 
             {/* 移动端个人主页入口 */}
+            {isLoggedIn && (
+              <div className="flex items-center justify-between px-3 py-2 text-sm font-medium text-muted-foreground">
+                <span>{locale === 'en' ? 'Notifications' : '消息通知'}</span>
+                <NotificationBell locale={locale} />
+              </div>
+            )}
+
             <Link
               href="/profile"
               className="flex items-center gap-3 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted px-3 py-2 rounded-md transition-colors"
               onClick={() => setMobileMenuOpen(false)}
             >
-              {isLoggedIn && userImage ? (
-                <img
-                  src={userImage}
-                  alt=""
-                  width={20}
-                  height={20}
-                  className="h-5 w-5 rounded-full object-cover"
-                />
-              ) : (
-                <User className="h-5 w-5" />
-              )}
+              <span
+                aria-hidden="true"
+                className="session-avatar-image h-5 w-5 shrink-0 rounded-full"
+                style={userImage ? { display: 'block', backgroundImage: `url("${encodeURI(userImage).replace(/"/g, '%22')}")` } : undefined}
+              />
+              <User className={`session-default-user h-5 w-5 ${isLoggedIn && userImage ? 'hidden' : ''}`} />
               {profileLabel}
             </Link>
 

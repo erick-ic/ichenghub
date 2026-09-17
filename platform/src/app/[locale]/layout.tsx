@@ -3,7 +3,6 @@ import './../globals.css';
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages, setRequestLocale } from 'next-intl/server';
 import ClientLayout from './ClientLayout';
-import { auth } from '../../../auth';
 
 type Props = {
   params: { locale: string };
@@ -80,18 +79,13 @@ export default async function LocaleLayout({
   params: { locale: string };
 }) {
   setRequestLocale(params.locale);
-  const [messages, session] = await Promise.all([
-    getMessages({ locale: params.locale }),
-    auth(),
-  ]);
+  // 公共 layout 不读取 Cookie/Session，避免所有前台页面因 auth() 被迫按请求动态渲染。
+  // 登录态由 ClientLayout 在浏览器端按需获取；真正需要鉴权的页面和 API 仍在服务端调用 auth()。
+  const messages = await getMessages({ locale: params.locale });
 
   return (
     <NextIntlClientProvider messages={messages} locale={params.locale}>
-      <ClientLayout
-        locale={params.locale}
-        isLoggedIn={!!session?.user}
-        userImage={session?.user?.image ?? null}
-      >
+      <ClientLayout locale={params.locale}>
         <main className="flex-1">
           {children}
         </main>

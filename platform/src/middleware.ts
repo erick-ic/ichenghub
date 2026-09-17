@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import createMiddleware from 'next-intl/middleware';
+import { ADMIN_SESSION_COOKIE, verifyAdminSessionToken } from '@/lib/admin-session';
 
 const intlMiddleware = createMiddleware({
   locales: ['en', 'zh'],
@@ -8,7 +9,7 @@ const intlMiddleware = createMiddleware({
   localePrefix: 'always'
 });
 
-export default function middleware(request: NextRequest) {
+export default async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
   // 排除 API 路径
@@ -23,9 +24,11 @@ export default function middleware(request: NextRequest) {
     response.headers.set('Pragma', 'no-cache');
     response.headers.set('Expires', 'Thu, 01 Jan 1970 00:00:00 GMT');
     response.headers.set('Vary', 'Cookie');
+    response.headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive');
 
     // 如果不是登录页面且没有登录，重定向到登录页
-    if (!pathname.startsWith('/ibackendlogin') && !request.cookies.has('admin_session')) {
+    const hasValidAdminSession = await verifyAdminSessionToken(request.cookies.get(ADMIN_SESSION_COOKIE)?.value);
+    if (!pathname.startsWith('/ibackendlogin') && !hasValidAdminSession) {
       // 获取协议
       const protocol = request.headers.get('x-forwarded-proto') || request.nextUrl.protocol;
 

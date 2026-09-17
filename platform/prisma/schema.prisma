@@ -63,31 +63,35 @@ model Prompt {
 }
 
 model ToolSubmission {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   name        String
   url         String
   description String
   contact     String?
-  status      String   @default("PENDING")
-  createdAt   DateTime @default(now()) @db.Timestamptz(0)
-  updatedAt   DateTime @updatedAt @db.Timestamptz(0)
+  status      String    @default("PENDING")
+  reviewNote  String?
+  reviewedAt  DateTime? @db.Timestamptz(0)
+  createdAt   DateTime  @default(now()) @db.Timestamptz(0)
+  updatedAt   DateTime  @updatedAt @db.Timestamptz(0)
   userId      String?
-  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  user        User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@index([userId, createdAt])
 }
 
 model ToolDemand {
-  id           String   @id @default(cuid())
+  id           String    @id @default(cuid())
   title        String
   detail       String
   referenceUrl String?
   contact      String?
-  status       String   @default("PENDING")
-  createdAt    DateTime @default(now()) @db.Timestamptz(0)
-  updatedAt    DateTime @updatedAt @db.Timestamptz(0)
+  status       String    @default("PENDING")
+  reviewNote   String?
+  reviewedAt   DateTime? @db.Timestamptz(0)
+  createdAt    DateTime  @default(now()) @db.Timestamptz(0)
+  updatedAt    DateTime  @updatedAt @db.Timestamptz(0)
   userId       String?
-  user         User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  user         User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@index([userId, createdAt])
 }
@@ -189,6 +193,23 @@ model User {
   blogFavorites   UserBlogFavorite[]
   toolSubmissions ToolSubmission[]
   toolDemands     ToolDemand[]
+  notifications   Notification[]
+}
+
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String
+  type      String
+  title     String
+  titleEn   String
+  message   String
+  messageEn String
+  href      String?
+  readAt    DateTime? @db.Timestamptz(0)
+  createdAt DateTime  @default(now()) @db.Timestamptz(0)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt, createdAt])
 }
 
 model Account {

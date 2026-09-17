@@ -3,6 +3,7 @@ import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import prisma from '@/lib/prisma'
 import UserManagement, { AdminUserRow } from '@/components/admin/UserManagement'
+import { ADMIN_SESSION_COOKIE, verifyAdminSessionToken } from '@/lib/admin-session'
 
 export const dynamic = 'force-dynamic'
 
@@ -16,7 +17,7 @@ type SearchParams = {
 }
 
 export default async function UsersPage({ searchParams }: { searchParams: SearchParams }) {
-  if (cookies().get('admin_session')?.value !== 'authenticated') {
+  if (!await verifyAdminSessionToken(cookies().get(ADMIN_SESSION_COOKIE)?.value)) {
     redirect('/ibackendlogin')
   }
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useFormState, useFormStatus } from 'react-dom';
 import { useTranslations } from 'next-intl';
 import { Loader2, CheckCircle, AlertCircle } from 'lucide-react';
@@ -108,6 +108,8 @@ export default function SubmitView() {
   const [showSuccess, setShowSuccess] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const successRef = useRef<HTMLDivElement>(null);
+  const handledStatesRef = useRef(new WeakSet<object>());
   
   const [formData, setFormData] = useState<FormData>({
     name: '',
@@ -146,31 +148,32 @@ export default function SubmitView() {
   };
 
   useEffect(() => {
+    if (!currentState.success && !currentState.error) return;
+    if (handledStatesRef.current.has(currentState)) return;
+    handledStatesRef.current.add(currentState);
+
     setError(null);
 
     if (currentState.success) {
+      setShowSuccess(true);
       setShowConfetti(true);
-      setTimeout(() => setShowConfetti(false), 3000);
+      resetForm();
 
-      setTimeout(() => {
-        setShowSuccess(true);
-        resetForm();
-        
-        if (mode === 'TOOL') {
-          toolAction(new FormData());
-        } else {
-          demandAction(new FormData());
-        }
-      }, 100);
+      const focusTimer = setTimeout(() => successRef.current?.focus(), 0);
+      const confettiTimer = setTimeout(() => setShowConfetti(false), 3000);
+      const successTimer = setTimeout(() => setShowSuccess(false), 6000);
 
-      const timer = setTimeout(() => setShowSuccess(false), 3000);
-      return () => clearTimeout(timer);
+      return () => {
+        clearTimeout(focusTimer);
+        clearTimeout(confettiTimer);
+        clearTimeout(successTimer);
+      };
     } else if (currentState.error) {
       setError(currentState.error);
       const timer = setTimeout(() => setError(null), 5000);
       return () => clearTimeout(timer);
     }
-  }, [currentState, mode, toolAction, demandAction]);
+  }, [currentState]);
 
   useEffect(() => {
     resetForm();
@@ -235,6 +238,7 @@ export default function SubmitView() {
                   </label>
                   <input
                     type="text"
+                    maxLength={80}
                     name="name"
                     value={formData.name}
                     onChange={handleInputChange}
@@ -249,7 +253,7 @@ export default function SubmitView() {
                     {t('urlLabel')} <span className="text-[#e52129]">{t('required')}</span>
                   </label>
                   <input
-                    type="text"
+                    type="url"
                     name="url"
                     value={formData.url}
                     onChange={handleInputChange}
@@ -269,6 +273,7 @@ export default function SubmitView() {
                     onChange={handleInputChange}
                     required
                     rows={3}
+                    maxLength={2000}
                     placeholder={t('descriptionPlaceholder')}
                     className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#e52129]/20 focus:border-[#e52129] transition-all resize-none"
                   />
@@ -280,6 +285,7 @@ export default function SubmitView() {
                   </label>
                   <input
                     type="text"
+                    maxLength={200}
                     name="contact"
                     value={formData.contact}
                     onChange={handleInputChange}
@@ -296,6 +302,7 @@ export default function SubmitView() {
                   </label>
                   <input
                     type="text"
+                    maxLength={120}
                     name="title"
                     value={formData.title}
                     onChange={handleInputChange}
@@ -315,6 +322,7 @@ export default function SubmitView() {
                     onChange={handleInputChange}
                     required
                     rows={4}
+                    maxLength={3000}
                     placeholder={t('detailPlaceholder')}
                     className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#e52129]/20 focus:border-[#e52129] transition-all resize-none"
                   />
@@ -325,7 +333,7 @@ export default function SubmitView() {
                     {t('referenceUrlLabel')} <span className="text-gray-400 font-normal">（{t('contactOptional')}）</span>
                   </label>
                   <input
-                    type="text"
+                    type="url"
                     name="referenceUrl"
                     value={formData.referenceUrl}
                     onChange={handleInputChange}
@@ -340,6 +348,7 @@ export default function SubmitView() {
                   </label>
                   <input
                     type="text"
+                    maxLength={200}
                     name="contact"
                     value={formData.contact}
                     onChange={handleInputChange}
@@ -353,9 +362,20 @@ export default function SubmitView() {
             <SubmitButton mode={mode} t={t} />
 
             {showSuccess && (
-              <div className="text-center text-sm py-3 bg-green-50 border border-green-200 rounded-lg flex items-center justify-center gap-2">
-                <CheckCircle className="h-4 w-4 text-green-600" />
-                <span className="text-green-700">{mode === 'TOOL' ? t('toolSuccess') : t('demandSuccess')}</span>
+              <div
+                ref={successRef}
+                tabIndex={-1}
+                role="status"
+                aria-live="polite"
+                className="rounded-xl border border-green-200 bg-green-50 px-5 py-4 outline-none focus:ring-2 focus:ring-green-500/30"
+              >
+                <div className="flex items-start gap-3">
+                  <CheckCircle className="mt-0.5 h-5 w-5 shrink-0 text-green-600" />
+                  <div>
+                    <p className="font-semibold text-green-800">{mode === 'TOOL' ? t('toolSuccess') : t('demandSuccess')}</p>
+                    <p className="mt-1 text-sm leading-5 text-green-700">{t('successHint')}</p>
+                  </div>
+                </div>
               </div>
             )}
           </form>

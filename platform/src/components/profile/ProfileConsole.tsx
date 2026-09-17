@@ -419,6 +419,11 @@ export default function ProfileConsole({ sidebar, data }: ProfileConsoleProps) {
                               <MetaBadge tone={statusTone}>{statusLabel}</MetaBadge>
                             </div>
                             <p className="mt-1.5 truncate text-sm font-semibold text-gray-900">{item.title}</p>
+                            {item.reviewNote && (
+                              <p className="mt-1 rounded-md bg-gray-50 px-2 py-1.5 text-xs leading-5 text-gray-600">
+                                {t('submissions.reviewNote')}：{item.reviewNote}
+                              </p>
+                            )}
                             <time className="mt-0.5 block text-xs tabular-nums text-gray-400">
                               {formatDate(item.createdAt, locale)}
                             </time>

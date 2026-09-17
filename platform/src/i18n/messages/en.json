@@ -63,6 +63,7 @@
       "cta": "Submit / Wish",
       "typeTool": "Tool submission",
       "typeDemand": "Feature request",
+      "reviewNote": "Review note",
       "status": {
         "PENDING": "Pending",
         "APPROVED": "Approved",
@@ -217,6 +218,7 @@
     "submitDemand": "Submit Wish",
     "toolSuccess": "Recommendation submitted successfully!",
     "demandSuccess": "Wish submitted successfully!",
+    "successHint": "Your submission is now pending review. Thank you for contributing.",
     "required": "*",
     "submitting": "Submitting..."
   },
