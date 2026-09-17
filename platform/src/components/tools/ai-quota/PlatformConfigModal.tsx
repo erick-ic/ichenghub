@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { X, Plus, Minus } from 'lucide-react';
 import { useTranslations, useLocale } from 'next-intl';
 import type { Platform, Indicator } from './AiQuotaTracker';
+import { normalizePlatformUrl } from './platform-url';
 
 // ===== 表单态指标 =====
 interface IndicatorForm {
@@ -59,10 +60,12 @@ export default function PlatformConfigModal({
 
   const [platformNameZh, setPlatformNameZh] = useState('');
   const [platformNameEn, setPlatformNameEn] = useState('');
+  const [platformUrl, setPlatformUrl] = useState('');
   const [indicators, setIndicators] = useState<IndicatorForm[]>([
     createEmptyIndicator(),
   ]);
   const [nameError, setNameError] = useState(false);
+  const [urlError, setUrlError] = useState(false);
   const [indicatorError, setIndicatorError] = useState(false);
 
   // 当前语言对应的平台名称值与 setter
@@ -75,13 +78,16 @@ export default function PlatformConfigModal({
     if (initialData) {
       setPlatformNameZh(initialData.nameZh);
       setPlatformNameEn(initialData.nameEn);
+      setPlatformUrl(initialData.url ?? '');
       setIndicators(toFormIndicators(initialData.indicators));
     } else {
       setPlatformNameZh('');
       setPlatformNameEn('');
+      setPlatformUrl('');
       setIndicators([createEmptyIndicator()]);
     }
     setNameError(false);
+    setUrlError(false);
     setIndicatorError(false);
   }, [isOpen, initialData]);
 
@@ -120,6 +126,13 @@ export default function PlatformConfigModal({
     }
     setNameError(false);
 
+    const normalizedUrl = platformUrl.trim() ? normalizePlatformUrl(platformUrl) : undefined;
+    if (platformUrl.trim() && !normalizedUrl) {
+      setUrlError(true);
+      return;
+    }
+    setUrlError(false);
+
     const nameField = isEn ? 'nameEn' : 'nameZh';
     const validIndicators = indicators.filter(
       (ind) => (ind[nameField] as string).trim() !== ''
@@ -135,6 +148,7 @@ export default function PlatformConfigModal({
       id: initialData?.id ?? crypto.randomUUID(),
       nameZh: isEn ? platformNameZh : trimmedName,
       nameEn: isEn ? trimmedName : platformNameEn,
+      url: normalizedUrl,
       indicators: validIndicators.map((ind) => ({
         id: ind.id,
         nameZh: ind.nameZh.trim(),
@@ -191,6 +205,30 @@ export default function PlatformConfigModal({
                 : 'border-gray-200 focus:border-[#e52129]'
             }`}
           />
+        </div>
+
+        {/* ===== 平台链接（可选） ===== */}
+        <div className="mb-5">
+          <label className="block text-sm text-gray-600 mb-1.5">{t('platformUrlLabel')}</label>
+          <input
+            type="url"
+            inputMode="url"
+            value={platformUrl}
+            onChange={(e) => {
+              setPlatformUrl(e.target.value);
+              if (urlError) setUrlError(false);
+            }}
+            placeholder={t('platformUrlPlaceholder')}
+            aria-invalid={urlError || undefined}
+            className={`w-full px-3 py-2 rounded-lg border bg-white text-base sm:text-sm text-gray-900 outline-none transition-colors ${
+              urlError
+                ? 'border-[#e52129] focus:border-[#e52129]'
+                : 'border-gray-200 focus:border-[#e52129]'
+            }`}
+          />
+          <p className={`mt-1.5 text-xs ${urlError ? 'text-[#e52129]' : 'text-gray-400'}`}>
+            {urlError ? t('errors.platformUrlInvalid') : t('platformUrlHint')}
+          </p>
         </div>
 
         {/* ===== 监控指标列表 ===== */}

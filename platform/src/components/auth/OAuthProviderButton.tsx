@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState, ReactNode } from 'react';
+import { FormEvent, useEffect, useRef, useState, ReactNode } from 'react';
 import { ArrowRight, Loader2 } from 'lucide-react';
 
 interface OAuthProviderButtonProps {
@@ -13,6 +13,8 @@ interface OAuthProviderButtonProps {
   variant?: 'primary' | 'secondary';
   // 可选的自定义按钮样式（用于未来不同 Provider 的品牌色微调）
   buttonClassName?: string;
+  // 外部 OAuth 服务不可达时留在当前页面，并交由父组件展示统一提示。
+  onAvailabilityError?: () => void;
 }
 
 // 单个 OAuth Provider 提交按钮。
@@ -33,9 +35,11 @@ export default function OAuthProviderButton({
   icon,
   variant = 'primary',
   buttonClassName = '',
+  onAvailabilityError,
 }: OAuthProviderButtonProps) {
   const [pending, setPending] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const preflightPassedRef = useRef(false);
 
   useEffect(() => {
     return () => {
@@ -43,11 +47,38 @@ export default function OAuthProviderButton({
     };
   }, []);
 
-  const handleSubmit = () => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    // requestSubmit() 触发的第二次提交已完成预检，直接交给 React Server Action。
+    if (preflightPassedRef.current) {
+      preflightPassedRef.current = false;
+      return;
+    }
+
+    event.preventDefault();
     if (pending) return;
+
+    const form = event.currentTarget;
     setPending(true);
-    // 安全兜底：12s 内未完成重定向则恢复可点击，避免按钮卡死
-    timerRef.current = setTimeout(() => setPending(false), 12000);
+    // 探测最多 8s；额外预留 Server Action 和页面跳转时间，避免过早解除锁定。
+    timerRef.current = setTimeout(() => setPending(false), 15000);
+
+    try {
+      const response = await fetch('/api/auth/github-health', {
+        method: 'GET',
+        cache: 'no-store',
+      });
+
+      if (!response.ok) throw new Error('GitHub OAuth is unavailable');
+
+      // 由 React 正常处理第二次 submit 事件，保留 Server Action 的内部提交协议。
+      preflightPassedRef.current = true;
+      form.requestSubmit();
+    } catch {
+      if (timerRef.current) clearTimeout(timerRef.current);
+      timerRef.current = null;
+      setPending(false);
+      onAvailabilityError?.();
+    }
   };
 
   // variant: primary = 深色实心（当前 GitHub）；secondary = 白色描边（未来次要 Provider）

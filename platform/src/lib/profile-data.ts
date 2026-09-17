@@ -59,15 +59,32 @@ export type FavoriteItem =
       createdAt: string;
     };
 
-export interface SubmissionItem {
+interface SubmissionBase {
   id: string;
-  kind: 'TOOL' | 'DEMAND';
   title: string;
-  url: string | null;
   status: string;
+  contact: string | null;
   reviewNote: string | null;
+  reviewedAt: string | null;
   createdAt: string;
+  updatedAt: string;
 }
+
+export type SubmissionItem =
+  | (SubmissionBase & {
+      kind: 'TOOL';
+      url: string;
+      description: string;
+      referenceUrl: null;
+      detail: null;
+    })
+  | (SubmissionBase & {
+      kind: 'DEMAND';
+      url: null;
+      description: null;
+      referenceUrl: string | null;
+      detail: string;
+    });
 
 export interface ProfileStats {
   favoritesCount: number;
@@ -406,13 +423,35 @@ async function getSubmissions(userId: string): Promise<SubmissionItem[]> {
       where: { userId },
       orderBy: { createdAt: 'desc' },
       take: SUBMISSIONS_LIMIT,
-      select: { id: true, name: true, url: true, status: true, reviewNote: true, createdAt: true },
+      select: {
+        id: true,
+        name: true,
+        url: true,
+        description: true,
+        contact: true,
+        status: true,
+        reviewNote: true,
+        reviewedAt: true,
+        createdAt: true,
+        updatedAt: true,
+      },
     }),
     prisma.toolDemand.findMany({
       where: { userId },
       orderBy: { createdAt: 'desc' },
       take: SUBMISSIONS_LIMIT,
-      select: { id: true, title: true, status: true, reviewNote: true, createdAt: true },
+      select: {
+        id: true,
+        title: true,
+        detail: true,
+        referenceUrl: true,
+        contact: true,
+        status: true,
+        reviewNote: true,
+        reviewedAt: true,
+        createdAt: true,
+        updatedAt: true,
+      },
     }),
   ]);
 
@@ -422,18 +461,30 @@ async function getSubmissions(userId: string): Promise<SubmissionItem[]> {
       kind: 'TOOL' as const,
       title: row.name,
       url: row.url,
+      description: row.description,
+      referenceUrl: null,
+      detail: null,
+      contact: row.contact,
       status: row.status,
       reviewNote: row.reviewNote,
+      reviewedAt: row.reviewedAt?.toISOString() ?? null,
       createdAt: row.createdAt.toISOString(),
+      updatedAt: row.updatedAt.toISOString(),
     })),
     ...demands.map((row) => ({
       id: row.id,
       kind: 'DEMAND' as const,
       title: row.title,
       url: null,
+      description: null,
+      referenceUrl: row.referenceUrl,
+      detail: row.detail,
+      contact: row.contact,
       status: row.status,
       reviewNote: row.reviewNote,
+      reviewedAt: row.reviewedAt?.toISOString() ?? null,
       createdAt: row.createdAt.toISOString(),
+      updatedAt: row.updatedAt.toISOString(),
     })),
   ];
 

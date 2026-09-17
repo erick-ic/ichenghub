@@ -13,7 +13,8 @@
         "github": "Redirecting…"
       },
       "error": {
-        "message": "Sign-in could not be completed. Please try again.",
+        "title": "GitHub sign-in wasn't completed",
+        "message": "The sign-in service may be experiencing a temporary network issue. Please try the button below again shortly.",
         "close": "Dismiss"
       }
     },
@@ -63,6 +64,13 @@
       "cta": "Submit / Wish",
       "typeTool": "Tool submission",
       "typeDemand": "Feature request",
+      "website": "Website",
+      "description": "Recommendation",
+      "detail": "Request details",
+      "referenceUrl": "Reference",
+      "contact": "Contact",
+      "submittedAt": "Submitted",
+      "reviewedAt": "Reviewed",
       "reviewNote": "Review note",
       "status": {
         "PENDING": "Pending",
@@ -312,6 +320,9 @@
     "editModalTitle": "Edit AI Platform Config",
     "platformNameLabel": "Platform Name",
     "platformNamePlaceholder": "e.g., Midjourney",
+    "platformUrlLabel": "Platform URL (optional)",
+    "platformUrlPlaceholder": "e.g., midjourney.com",
+    "platformUrlHint": "Save it to open the platform directly from its card",
     "indicatorLabel": "Monitoring Indicators",
     "indicatorName": "Indicator Name",
     "dailyLimit": "Daily Limit",
@@ -340,12 +351,14 @@
       "edit": "Edit",
       "delete": "Delete",
       "reset": "Reset",
+      "openPlatform": "Open {name}",
       "decrease": "Decrease usage",
       "increase": "Increase usage"
     },
     "errors": {
       "platformNameRequired": "Please enter both Chinese and English platform names",
-      "indicatorRequired": "Please add at least one valid indicator"
+      "indicatorRequired": "Please add at least one valid indicator",
+      "platformUrlInvalid": "Enter a valid HTTP or HTTPS URL"
     },
     "dataSync": "Data Sync",
     "exportTab": "Export",

@@ -29,7 +29,16 @@ export async function GET() {
     prisma.notification.count({ where: { userId, readAt: null } }),
   ]);
 
-  return NextResponse.json({ notifications, unreadCount });
+  // 兼容已经入库的旧审核通知：至少定位到“我的提交”；新通知会进一步定位到具体记录。
+  const normalizedNotifications = notifications.map((item) => ({
+    ...item,
+    href:
+      (item.type === 'SUBMISSION_REVIEW' || item.type === 'DEMAND_REVIEW') && (!item.href || item.href === '/profile')
+        ? '/profile?tab=submissions'
+        : item.href,
+  }));
+
+  return NextResponse.json({ notifications: normalizedNotifications, unreadCount });
 }
 
 export async function PATCH(request: NextRequest) {

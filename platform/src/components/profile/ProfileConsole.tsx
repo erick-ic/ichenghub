@@ -1,8 +1,9 @@
 'use client';
 
-import { ReactNode, useMemo, useState } from 'react';
+import { ReactNode, useEffect, useMemo, useState } from 'react';
 import { Link } from '@/navigation';
 import { useLocale, useTranslations } from 'next-intl';
+import { useSearchParams } from 'next/navigation';
 import {
   Wrench,
   BookOpen,
@@ -116,7 +117,12 @@ function SectionHeader({ icon, title, hint }: { icon: ReactNode; title: string; 
 export default function ProfileConsole({ sidebar, data }: ProfileConsoleProps) {
   const t = useTranslations('Profile');
   const locale = useLocale();
-  const [activeTab, setActiveTab] = useState<TabKey>('overview');
+  const searchParams = useSearchParams();
+  const requestedTab = searchParams.get('tab');
+  const requestedSubmission = searchParams.get('submission');
+  const [activeTab, setActiveTab] = useState<TabKey>(
+    requestedTab === 'favorites' || requestedTab === 'submissions' ? requestedTab : 'overview',
+  );
   const [favoriteFilter, setFavoriteFilter] = useState<FavoriteFilter>('ALL');
   const [favorites, setFavorites] = useState<FavoriteItem[]>(data.favorites);
   const [favoritesCount, setFavoritesCount] = useState(data.stats.favoritesCount);
@@ -132,6 +138,20 @@ export default function ProfileConsole({ sidebar, data }: ProfileConsoleProps) {
     if (favoriteFilter === 'ALL') return favorites;
     return favorites.filter((item) => item.kind === favoriteFilter);
   }, [favorites, favoriteFilter]);
+
+  // 支持通知及后续功能通过 ?tab=... 深链到对应区域。
+  useEffect(() => {
+    if (requestedTab === 'overview' || requestedTab === 'favorites' || requestedTab === 'submissions') {
+      setActiveTab(requestedTab);
+    }
+  }, [requestedTab]);
+
+  // 审核通知可进一步定位到具体提交记录。
+  useEffect(() => {
+    if (activeTab !== 'submissions' || !requestedSubmission) return;
+    const target = document.getElementById(`submission-${requestedSubmission}`);
+    target?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, [activeTab, requestedSubmission]);
 
   // 取消收藏：调用统一收藏接口，成功后本地移除，失败提示且不移除
   const handleRemoveFavorite = async (item: FavoriteItem) => {
@@ -408,7 +428,12 @@ export default function ProfileConsole({ sidebar, data }: ProfileConsoleProps) {
                       return (
                         <li
                           key={`${item.kind}-${item.id}`}
-                          className="fade-slide-up flex items-start justify-between gap-3 rounded-xl px-3 py-3.5 transition-colors hover:bg-gray-50"
+                          id={`submission-${item.kind}-${item.id}`}
+                          className={`fade-slide-up flex items-start justify-between gap-3 rounded-xl border px-3 py-4 transition-colors hover:bg-gray-50 ${
+                            requestedSubmission === `${item.kind}-${item.id}`
+                              ? 'border-[#e52129]/40 bg-red-50/40 ring-2 ring-[#e52129]/10'
+                              : 'border-transparent'
+                          }`}
                           style={{ animationDelay: `${Math.min(i, 6) * 40}ms` }}
                         >
                           <div className="min-w-0 flex-1">
@@ -419,14 +444,58 @@ export default function ProfileConsole({ sidebar, data }: ProfileConsoleProps) {
                               <MetaBadge tone={statusTone}>{statusLabel}</MetaBadge>
                             </div>
                             <p className="mt-1.5 truncate text-sm font-semibold text-gray-900">{item.title}</p>
+                            <dl className="mt-2 space-y-1.5 text-xs leading-5">
+                              {item.kind === 'TOOL' ? (
+                                <>
+                                  <div className="grid gap-0.5 sm:grid-cols-[5rem_1fr]">
+                                    <dt className="text-gray-400">{t('submissions.website')}</dt>
+                                    <dd className="min-w-0">
+                                      <a href={item.url} target="_blank" rel="noopener noreferrer" className="break-all text-blue-600 hover:underline">
+                                        {item.url}
+                                      </a>
+                                    </dd>
+                                  </div>
+                                  <div className="grid gap-0.5 sm:grid-cols-[5rem_1fr]">
+                                    <dt className="text-gray-400">{t('submissions.description')}</dt>
+                                    <dd className="whitespace-pre-wrap break-words text-gray-600">{item.description}</dd>
+                                  </div>
+                                </>
+                              ) : (
+                                <>
+                                  <div className="grid gap-0.5 sm:grid-cols-[5rem_1fr]">
+                                    <dt className="text-gray-400">{t('submissions.detail')}</dt>
+                                    <dd className="whitespace-pre-wrap break-words text-gray-600">{item.detail}</dd>
+                                  </div>
+                                  {item.referenceUrl && (
+                                    <div className="grid gap-0.5 sm:grid-cols-[5rem_1fr]">
+                                      <dt className="text-gray-400">{t('submissions.referenceUrl')}</dt>
+                                      <dd className="min-w-0">
+                                        <a href={item.referenceUrl} target="_blank" rel="noopener noreferrer" className="break-all text-blue-600 hover:underline">
+                                          {item.referenceUrl}
+                                        </a>
+                                      </dd>
+                                    </div>
+                                  )}
+                                </>
+                              )}
+                              {item.contact && (
+                                <div className="grid gap-0.5 sm:grid-cols-[5rem_1fr]">
+                                  <dt className="text-gray-400">{t('submissions.contact')}</dt>
+                                  <dd className="break-all text-gray-600">{item.contact}</dd>
+                                </div>
+                              )}
+                            </dl>
                             {item.reviewNote && (
                               <p className="mt-1 rounded-md bg-gray-50 px-2 py-1.5 text-xs leading-5 text-gray-600">
                                 {t('submissions.reviewNote')}：{item.reviewNote}
                               </p>
                             )}
-                            <time className="mt-0.5 block text-xs tabular-nums text-gray-400">
-                              {formatDate(item.createdAt, locale)}
-                            </time>
+                            <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs tabular-nums text-gray-400">
+                              <span>{t('submissions.submittedAt')}：{formatDate(item.createdAt, locale)}</span>
+                              {item.reviewedAt && (
+                                <span>{t('submissions.reviewedAt')}：{formatDate(item.reviewedAt, locale)}</span>
+                              )}
+                            </div>
                           </div>
                         </li>
                       );

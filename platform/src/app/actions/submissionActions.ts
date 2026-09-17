@@ -78,7 +78,7 @@ export async function updateSubmissionStatus(id: string, status: string, reviewN
           titleEn: approved ? 'Tool recommendation approved' : 'Tool recommendation reviewed',
           message: note || `你提交的「${submission.name}」${approved ? '已通过审核。' : '暂未通过审核。'}`,
           messageEn: note || `Your submission “${submission.name}” was ${approved ? 'approved.' : 'not approved.'}`,
-          href: '/profile',
+          href: `/profile?tab=submissions&submission=TOOL-${id}`,
         },
       });
     }
@@ -107,7 +107,7 @@ export async function updateDemandStatus(id: string, status: string, reviewNote?
           titleEn: approved ? 'Wish approved' : 'Wish reviewed',
           message: note || `你提交的「${demand.title}」${approved ? '已通过审核。' : '暂未通过审核。'}`,
           messageEn: note || `Your submission “${demand.title}” was ${approved ? 'approved.' : 'not approved.'}`,
-          href: '/profile',
+          href: `/profile?tab=submissions&submission=DEMAND-${id}`,
         },
       });
     }

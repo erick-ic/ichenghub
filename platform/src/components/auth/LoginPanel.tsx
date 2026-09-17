@@ -31,7 +31,15 @@ export default function LoginPanel({ locale, redirectTo, error, mounted }: Login
   ];
 
   const showError = Boolean(
-    error && ['OAuthSignin', 'OAuthCallback', 'AccessDenied', 'Configuration', 'Default'].includes(error)
+    error && [
+      'OAuthSignin',
+      'OAuthCallback',
+      'OAuthSignInError',
+      'OAuthCallbackError',
+      'AccessDenied',
+      'Configuration',
+      'Default',
+    ].includes(error)
   );
 
   return (
@@ -41,6 +49,7 @@ export default function LoginPanel({ locale, redirectTo, error, mounted }: Login
       privacy={t('privacy')}
       providers={providers}
       showError={showError}
+      errorTitle={t('error.title')}
       errorMessage={t('error.message')}
       errorCloseLabel={t('error.close')}
       mounted={mounted}

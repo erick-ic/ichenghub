@@ -1,12 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Plus, Minus, Pencil, Trash2, Clock, RotateCcw, Database, LayoutGrid } from 'lucide-react';
+import { Plus, Minus, Pencil, Trash2, Clock, RotateCcw, Database, LayoutGrid, ExternalLink } from 'lucide-react';
 import { useTranslations, useLocale } from 'next-intl';
 import { trackResourceAction } from '@/app/actions/statsActions';
 import PlatformConfigModal from './PlatformConfigModal';
 import ConfirmModal from './ConfirmModal';
 import ImportExportModal from './ImportExportModal';
+import { normalizePlatformUrl } from './platform-url';
 
 // ===== 类型定义 =====
 export interface Indicator {
@@ -23,6 +24,7 @@ export interface Platform {
   id: string;
   nameZh: string;
   nameEn: string;
+  url?: string;
   indicators: Indicator[];
 }
 
@@ -34,6 +36,7 @@ interface QuotaStore {
 // ===== 常量 =====
 const STORAGE_KEY = 'ichenghub_ai_quotas';
 const ANALYTICS_PATH = '/aiquota';
+const MIDJOURNEY_PLATFORM_URL = 'https://www.midjourney.com/';
 
 // 首次访问示例数据：Midjourney Standard 套餐（$30/月）的官方额度，
 // 三个指标分别展示正常/预警/耗尽三种进度状态
@@ -43,6 +46,7 @@ const samplePlatforms: Platform[] = [
     id: 'sample-midjourney',
     nameZh: 'Midjourney',
     nameEn: 'Midjourney',
+    url: MIDJOURNEY_PLATFORM_URL,
     indicators: [
       // Fast GPU Time：Standard 每月 15 小时
       { id: 's1', nameZh: '快速GPU时长', nameEn: 'Fast GPU Time', used: 3.2, limit: 15, unitZh: '小时', unitEn: 'hrs' },
@@ -123,6 +127,10 @@ export default function AiQuotaTracker() {
             ...p,
             nameZh: p.nameZh ?? oldP.name ?? '',
             nameEn: p.nameEn ?? oldP.name ?? '',
+            // 为旧版本已落盘的 Midjourney 示例卡片补齐默认官网链接。
+            url: normalizePlatformUrl(p.url) ?? (
+              p.id === 'sample-midjourney' ? MIDJOURNEY_PLATFORM_URL : undefined
+            ),
             indicators: p.indicators.map((ind) => {
               const oldInd = ind as unknown as { name?: string; unit?: string };
               return {
@@ -422,6 +430,21 @@ export default function AiQuotaTracker() {
                 )}
               </div>
               <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
+                {platform.url && (
+                  <a
+                    href={platform.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={t('aria.openPlatform', { name: pickName(platform.nameZh, platform.nameEn) })}
+                    title={t('aria.openPlatform', { name: pickName(platform.nameZh, platform.nameEn) })}
+                    onClick={() => {
+                      trackResourceAction(null, 'TOOL', 'AI_QUOTA_OPEN_PLATFORM', ANALYTICS_PATH).catch(() => {});
+                    }}
+                    className="w-9 h-9 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-[#e52129] hover:bg-red-50 transition-colors"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                  </a>
+                )}
                 <button
                   type="button"
                   aria-label={t('aria.edit')}

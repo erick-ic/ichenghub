@@ -13,7 +13,8 @@
         "github": "正在跳转…"
       },
       "error": {
-        "message": "登录未完成，请重试。",
+        "title": "GitHub 登录暂时未完成",
+        "message": "登录服务可能遇到网络波动，请稍后再次点击下方按钮重试。",
         "close": "关闭"
       }
     },
@@ -63,6 +64,13 @@
       "cta": "去提交 / 许愿",
       "typeTool": "工具提交",
       "typeDemand": "需求许愿",
+      "website": "官网地址",
+      "description": "推荐理由",
+      "detail": "需求详情",
+      "referenceUrl": "参考产品",
+      "contact": "联系方式",
+      "submittedAt": "提交时间",
+      "reviewedAt": "处理时间",
       "reviewNote": "处理说明",
       "status": {
         "PENDING": "审核中",
@@ -312,6 +320,9 @@
     "editModalTitle": "修改 AI 平台配置",
     "platformNameLabel": "平台名称",
     "platformNamePlaceholder": "例如：Midjourney",
+    "platformUrlLabel": "平台链接（选填）",
+    "platformUrlPlaceholder": "例如：midjourney.com",
+    "platformUrlHint": "保存后可从卡片快速打开平台",
     "indicatorLabel": "监控指标",
     "indicatorName": "指标名称",
     "dailyLimit": "每日上限",
@@ -340,12 +351,14 @@
       "edit": "编辑",
       "delete": "删除",
       "reset": "重置",
+      "openPlatform": "打开{name}",
       "decrease": "减少用量",
       "increase": "增加用量"
     },
     "errors": {
       "platformNameRequired": "请填写中英文平台名称",
-      "indicatorRequired": "请至少填写一个有效指标"
+      "indicatorRequired": "请至少填写一个有效指标",
+      "platformUrlInvalid": "请输入有效的 HTTP 或 HTTPS 链接"
     },
     "dataSync": "数据同步",
     "exportTab": "导出",

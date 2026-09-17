@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { ShieldCheck } from 'lucide-react';
 import OAuthProviderButton from './OAuthProviderButton';
 import LoginErrorAlert from './LoginErrorAlert';
@@ -17,6 +18,7 @@ interface LoginPanelProps {
     action: () => Promise<void>;
   }>;
   showError: boolean;
+  errorTitle: string;
   errorMessage: string;
   errorCloseLabel: string;
   mounted: boolean;
@@ -28,11 +30,14 @@ export default function LoginPanelClient({
   privacy,
   providers,
   showError,
+  errorTitle,
   errorMessage,
   errorCloseLabel,
   mounted,
 }: LoginPanelProps) {
   const EASE = 'var(--ease-out-expo)';
+  const [availabilityError, setAvailabilityError] = useState(false);
+  const shouldShowError = showError || availabilityError;
 
   return (
     <div
@@ -70,9 +75,13 @@ export default function LoginPanelClient({
         <p className="mt-1.5 text-[14px] text-[#71717a]">{subtitle}</p>
       </div>
 
-      {showError && (
+      {shouldShowError && (
         <div className="mt-4">
-          <LoginErrorAlert message={errorMessage} closeLabel={errorCloseLabel} />
+          <LoginErrorAlert
+            title={errorTitle}
+            message={errorMessage}
+            closeLabel={errorCloseLabel}
+          />
         </div>
       )}
 
@@ -94,6 +103,7 @@ export default function LoginPanelClient({
             redirectingLabel={provider.redirectingLabel}
             icon={provider.icon}
             variant={provider.variant}
+            onAvailabilityError={() => setAvailabilityError(true)}
           />
         ))}
       </div>

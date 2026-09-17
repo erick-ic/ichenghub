@@ -5,6 +5,7 @@ import { Download, Copy, Check, Upload, ClipboardPaste, X, FileJson } from 'luci
 import { useTranslations } from 'next-intl';
 import type { Platform } from './AiQuotaTracker';
 import { getBeijingDayKey } from '@/lib/time';
+import { normalizePlatformUrl } from './platform-url';
 
 interface ExportData {
   version: number;
@@ -116,6 +117,7 @@ export default function ImportExportModal({
           id: String(p.id),
           nameZh: String(p.nameZh ?? oldP.name ?? ''),
           nameEn: String(p.nameEn ?? oldP.name ?? ''),
+          url: normalizePlatformUrl(p.url),
           indicators: Array.isArray(p.indicators)
             ? p.indicators.map((ind) => {
                 const oldInd = ind as unknown as { name?: string; unit?: string };

@@ -28,6 +28,7 @@ export function SystemStatusCard({
   const [modalOpen, setModalOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [errors, setErrors] = useState<ErrorLog[]>([]);
+  const [errorCount, setErrorCount] = useState(rawErrorCount);
   const [loading, setLoading] = useState(false);
   const [expanded, setExpanded] = useState<Record<number, boolean>>({});
   const [copied, setCopied] = useState(false);
@@ -51,7 +52,8 @@ export function SystemStatusCard({
 
   const total = apiSuccess + apiFailed;
   const successRate = total === 0 ? 100 : Math.round((apiSuccess / total) * 10000) / 100;
-  const hasErrors = apiFailed > 0 || rawErrorCount > 0;
+  const hasErrorLogs = errorCount > 0;
+  const hasHistoricalFailures = apiFailed > 0;
 
   async function openModal() {
     setModalOpen(true);
@@ -62,8 +64,11 @@ export function SystemStatusCard({
     setLoading(true);
     try {
       const res = await fetch('/api/system/errors', { cache: 'no-store' });
+      if (!res.ok) throw new Error(`Failed to load error logs: ${res.status}`);
       const data = await res.json();
-      setErrors(Array.isArray(data.errors) ? data.errors : []);
+      const nextErrors = Array.isArray(data.errors) ? data.errors : [];
+      setErrors(nextErrors);
+      setErrorCount(nextErrors.length);
     } catch {
       setErrors([]);
     } finally {
@@ -75,8 +80,10 @@ export function SystemStatusCard({
     if (!confirm('确定要清空所有错误日志吗？')) return;
     setLoading(true);
     try {
-      await fetch('/api/system/errors', { method: 'DELETE' });
+      const res = await fetch('/api/system/errors', { method: 'DELETE' });
+      if (!res.ok) throw new Error(`Failed to clear error logs: ${res.status}`);
       setErrors([]);
+      setErrorCount(0);
     } finally {
       setLoading(false);
     }
@@ -167,8 +174,8 @@ export function SystemStatusCard({
           ) : errors.length === 0 ? (
             <div className="p-16 text-center text-zinc-400">
               <div className="text-5xl mb-4">✨</div>
-              <div className="font-medium text-zinc-600">一切正常，暂无错误日志</div>
-              <div className="text-sm mt-1">所有接口均返回 2xx，系统平稳运行</div>
+              <div className="font-medium text-zinc-600">最近暂无错误日志明细</div>
+              <div className="text-sm mt-1">状态卡仅统计当前 24 小时周期</div>
             </div>
           ) : (
             <div className="divide-y divide-zinc-100">
@@ -246,7 +253,7 @@ export function SystemStatusCard({
     <>
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <span className="text-sm">API 成功率</span>
+          <span className="text-sm">API 成功率 <span className="text-zinc-400">· 近 24 小时</span></span>
           <span
             className={`text-sm font-semibold px-2 py-0.5 rounded-full ${
               successRate >= 95
@@ -258,7 +265,7 @@ export function SystemStatusCard({
           </span>
         </div>
         <div className="flex items-center justify-between">
-          <span className="text-sm">核心请求失败</span>
+          <span className="text-sm">核心请求失败 <span className="text-zinc-400">· 近 24 小时</span></span>
           <span
             className={`text-sm font-semibold px-2 py-0.5 rounded-full ${
               apiFailed === 0
@@ -270,7 +277,7 @@ export function SystemStatusCard({
           </span>
         </div>
         <div className="flex items-center justify-between">
-          <span className="text-sm">AI 服务异常</span>
+          <span className="text-sm">AI 服务异常 <span className="text-zinc-400">· 近 24 小时</span></span>
           <span
             className={`text-sm font-semibold px-2 py-0.5 rounded-full ${
               aiErrors === 0
@@ -285,15 +292,23 @@ export function SystemStatusCard({
         <button
           onClick={openModal}
           className={`mt-3 w-full inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-            hasErrors
+            hasErrorLogs
               ? 'bg-red-50 text-red-600 hover:bg-red-100 border border-red-100'
+              : hasHistoricalFailures
+                ? 'bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-100'
               : 'bg-zinc-50 text-zinc-600 hover:bg-zinc-100 border border-zinc-100'
           }`}
         >
-          <AlertTriangle className={`w-4 h-4 ${hasErrors ? 'text-red-600' : ''}`} />
-          {hasErrors
-            ? `查看错误日志 · ${Math.max(apiFailed, rawErrorCount)} 条`
-            : '系统健康'}
+          <AlertTriangle
+            className={`w-4 h-4 ${
+              hasErrorLogs ? 'text-red-600' : hasHistoricalFailures ? 'text-amber-600' : ''
+            }`}
+          />
+          {hasErrorLogs
+            ? `查看最近错误日志 · ${errorCount} 条`
+            : hasHistoricalFailures
+              ? '查看最近错误日志 · 当前无明细'
+              : '查看最近错误日志'}
         </button>
       </div>
 

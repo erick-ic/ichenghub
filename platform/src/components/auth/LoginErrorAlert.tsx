@@ -4,12 +4,13 @@ import { useEffect, useState } from 'react';
 import { AlertCircle, X } from 'lucide-react';
 
 interface LoginErrorAlertProps {
+  title: string;
   message: string;
   closeLabel: string;
 }
 
 // 登录错误提示：位于登录方式标题与按钮之间，可关闭，不暴露内部错误码
-export default function LoginErrorAlert({ message, closeLabel }: LoginErrorAlertProps) {
+export default function LoginErrorAlert({ title, message, closeLabel }: LoginErrorAlertProps) {
   const [visible, setVisible] = useState(true);
 
   // 防止 SSR 阶段访问 document
@@ -25,7 +26,10 @@ export default function LoginErrorAlert({ message, closeLabel }: LoginErrorAlert
       className="mt-3 flex items-start gap-2.5 rounded-xl border border-[#e52129]/30 bg-[#e52129]/5 px-3.5 py-3 text-left fade-slide-up"
     >
       <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-[#e52129]" aria-hidden="true" />
-      <p className="flex-1 text-xs leading-relaxed text-[#b3191f]">{message}</p>
+      <div className="min-w-0 flex-1">
+        <p className="text-xs font-semibold leading-relaxed text-[#a8171d]">{title}</p>
+        <p className="mt-0.5 text-xs leading-relaxed text-[#b3191f]">{message}</p>
+      </div>
       <button
         type="button"
         onClick={() => setVisible(false)}
