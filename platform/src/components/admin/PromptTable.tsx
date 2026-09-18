@@ -170,7 +170,7 @@ export function PromptTable({ prompts }: PromptTableProps) {
               添加提示词
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
+          <DialogContent className="sm:max-w-[800px]">
             <DialogHeader>
               <DialogTitle>{editingPrompt ? '编辑提示词' : '添加提示词'}</DialogTitle>
             </DialogHeader>
@@ -252,7 +252,7 @@ export function PromptTable({ prompts }: PromptTableProps) {
       </div>
 
       <div className="rounded-md border bg-white overflow-x-auto">
-        <Table className="w-full">
+        <Table className="w-full min-w-[1100px] md:min-w-0">
           <TableHeader>
             <TableRow className="hover:bg-slate-50">
               <TableHead className="w-16 whitespace-nowrap">封面</TableHead>

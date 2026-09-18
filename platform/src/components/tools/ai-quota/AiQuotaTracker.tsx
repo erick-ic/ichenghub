@@ -8,6 +8,7 @@ import PlatformConfigModal from './PlatformConfigModal';
 import ConfirmModal from './ConfirmModal';
 import ImportExportModal from './ImportExportModal';
 import { normalizePlatformUrl } from './platform-url';
+import { normalizePlatformColor, PLATFORM_COLOR_STYLES, type PlatformColor } from './platform-colors';
 
 // ===== 类型定义 =====
 export interface Indicator {
@@ -25,6 +26,7 @@ export interface Platform {
   nameZh: string;
   nameEn: string;
   url?: string;
+  color?: PlatformColor;
   indicators: Indicator[];
 }
 
@@ -131,6 +133,7 @@ export default function AiQuotaTracker() {
             url: normalizePlatformUrl(p.url) ?? (
               p.id === 'sample-midjourney' ? MIDJOURNEY_PLATFORM_URL : undefined
             ),
+            color: normalizePlatformColor(p.color),
             indicators: p.indicators.map((ind) => {
               const oldInd = ind as unknown as { name?: string; unit?: string };
               return {
@@ -414,14 +417,18 @@ export default function AiQuotaTracker() {
         </div>
       ) : (
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
-        {platforms.map((platform) => (
+        {platforms.map((platform) => {
+          const colorStyle = PLATFORM_COLOR_STYLES[normalizePlatformColor(platform.color)];
+          return (
           <div
             key={platform.id}
-            className="bg-white rounded-2xl shadow-sm border border-zinc-100 p-4 sm:p-6 hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
+            className={`relative overflow-hidden bg-white rounded-2xl shadow-sm border p-4 sm:p-6 hover:-translate-y-1 transition-all duration-300 ${colorStyle.card}`}
           >
+            <div className={`absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r ${colorStyle.sheen}`} />
             {/* 卡片 Header */}
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-2 min-w-0">
+                <span className={`h-2.5 w-2.5 shrink-0 rounded-full shadow-[0_0_0_4px_rgba(255,255,255,0.9)] ${colorStyle.marker}`} />
                 <h2 className="text-base sm:text-lg font-bold text-gray-900 truncate">{pickName(platform.nameZh, platform.nameEn)}</h2>
                 {platform.id.startsWith('sample-') && (
                   <span className="shrink-0 text-[10px] text-zinc-500 bg-zinc-100 px-1.5 py-0.5 rounded font-medium">
@@ -551,7 +558,8 @@ export default function AiQuotaTracker() {
               })}
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
       )}
 

@@ -57,14 +57,14 @@ const BlogPostCard = memo(({ blog, index, isDragOver, onDragStart, onDragOver, o
       onDragEnd={onDragEnd}
     >
       <CardHeader>
-        <div className="flex justify-between items-start">
-          <div className="flex items-center gap-3">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-2 sm:gap-3">
             <GripVertical className="h-5 w-5 text-gray-400 cursor-grab" />
-            <div>
+            <div className="min-w-0">
               <Badge variant="outline" className="mr-2 font-mono">
                 #{blog.sortOrder > 0 ? blog.sortOrder : index + 1}
               </Badge>
-              <CardTitle className="text-xl inline">{blog.titleZh}</CardTitle>
+              <CardTitle className="inline break-words text-lg sm:text-xl">{blog.titleZh}</CardTitle>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -75,8 +75,8 @@ const BlogPostCard = memo(({ blog, index, isDragOver, onDragStart, onDragOver, o
         </div>
       </CardHeader>
       <CardContent>
-        <div className="flex justify-between items-center">
-          <div className="space-y-2">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0 space-y-2">
             <p className="text-sm text-gray-600 dark:text-gray-400">
               <span className="font-medium">分类：</span>
               {blog.categoryZh} / {blog.categoryEn}
@@ -89,7 +89,7 @@ const BlogPostCard = memo(({ blog, index, isDragOver, onDragStart, onDragOver, o
               创建时间：{new Date(blog.createdAt).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })}
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2 sm:shrink-0">
             <Button
               variant="outline"
               size="sm"
@@ -308,7 +308,7 @@ function BlogsPageContent() {
   return (
     <div className="space-y-6">
       {showToast && (
-        <div className="fixed top-20 right-8 px-4 py-2 rounded-lg shadow-lg z-[200] flex items-center gap-2 bg-green-100 text-green-700">
+        <div className="fixed left-4 right-4 top-16 z-[200] flex items-center gap-2 rounded-lg bg-green-100 px-4 py-2 text-green-700 shadow-lg sm:left-auto sm:right-8 sm:top-20">
           <Check className="h-4 w-4" />
           {toastMessage}
         </div>
@@ -390,7 +390,7 @@ function BlogsPageContent() {
           ))}
 
           {pagination.totalPages > 1 && (
-            <div className="flex items-center justify-between mt-6">
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-sm text-gray-500">
                 共 {pagination.total} 篇文章 · 第 {pagination.currentPage}/{pagination.totalPages} 页
               </p>
@@ -589,7 +589,7 @@ function BlogsPageContent() {
                     required
                   />
                   {previewZh && (
-                    <div className="min-h-[480px] max-h-[600px] overflow-y-auto px-6 py-4 bg-[#f5f5f7] dark:bg-gray-900/50">
+                    <div className="min-h-[320px] bg-[#f5f5f7] px-4 py-4 sm:min-h-[480px] sm:px-6 dark:bg-gray-900/50">
                       <CodeCopyHandler blogId="" locale="zh" />
                       <div className="prose prose-slate dark:prose-invert max-w-3xl prose-pre:bg-transparent prose-pre:p-0 prose-code:before:hidden prose-code:after:hidden">
                         {formData.contentZh ? (
@@ -643,7 +643,7 @@ function BlogsPageContent() {
                     required
                   />
                   {previewEn && (
-                    <div className="min-h-[480px] max-h-[600px] overflow-y-auto px-6 py-4 bg-[#f5f5f7] dark:bg-gray-900/50">
+                    <div className="min-h-[320px] bg-[#f5f5f7] px-4 py-4 sm:min-h-[480px] sm:px-6 dark:bg-gray-900/50">
                       <CodeCopyHandler blogId="" locale="en" />
                       <div className="prose prose-slate dark:prose-invert max-w-3xl prose-pre:bg-transparent prose-pre:p-0 prose-code:before:hidden prose-code:after:hidden">
                         {formData.contentEn ? (

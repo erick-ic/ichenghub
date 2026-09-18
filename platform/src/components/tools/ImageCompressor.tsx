@@ -6,6 +6,8 @@ import { useTranslations } from 'next-intl';
 import Image from 'next/image';
 import imageCompression from 'browser-image-compression';
 import { trackResourceAction } from '@/app/actions/statsActions';
+import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
+import { useEscapeKey } from '@/hooks/useEscapeKey';
 
 interface ImageInfo {
   file: File;
@@ -67,6 +69,8 @@ export default function ImageCompressor({ toolId = null }: ImageCompressorProps)
   const [error, setError] = useState<string | null>(null);
   const [quality, setQuality] = useState(80);
   const [previewMode, setPreviewMode] = useState<'original' | 'compressed' | null>(null);
+  useBodyScrollLock(previewMode !== null);
+  useEscapeKey(previewMode !== null, () => setPreviewMode(null));
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isProcessing = useRef(false);
   const abortControllerRef = useRef<AbortController | null>(null);

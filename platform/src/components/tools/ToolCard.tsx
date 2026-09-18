@@ -6,6 +6,8 @@ import { useRouter, usePathname } from '@/navigation';
 import { useTranslations, useLocale } from 'next-intl';
 import { ToolIcon } from '../ui/ToolIcon';
 import { trackResourceAction } from '@/app/actions/statsActions';
+import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
+import { useEscapeKey } from '@/hooks/useEscapeKey';
 
 interface ToolCardProps {
   tool: {
@@ -25,6 +27,8 @@ export default function ToolCard({ tool, isEnglish }: ToolCardProps) {
   const pathname = usePathname();
   const locale = useLocale();
   const [showModal, setShowModal] = useState(false);
+  useBodyScrollLock(showModal);
+  useEscapeKey(showModal, () => setShowModal(false));
   const t = useTranslations('HomePage');
 
   const title = isEnglish && tool.nameEn ? tool.nameEn : tool.name;

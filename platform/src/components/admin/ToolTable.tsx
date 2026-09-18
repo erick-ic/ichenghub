@@ -275,12 +275,12 @@ export function ToolTable({ tools }: ToolTableProps) {
 
       {/* 表格 */}
       <div className="rounded-md border bg-white overflow-x-auto">
-        <Table className="w-full">
+        <Table className="w-full min-w-[900px] md:min-w-0">
           <TableHeader>
             <TableRow className="hover:bg-slate-50">
               <TableHead className="w-16 whitespace-nowrap">Logo</TableHead>
-              <TableHead className="w-32 whitespace-nowrap">工具名称</TableHead>
-              <TableHead className="w-24 whitespace-nowrap">分类</TableHead>
+              <TableHead className="w-28 whitespace-nowrap">工具名称</TableHead>
+              <TableHead className="w-20 whitespace-nowrap">分类</TableHead>
               <TableHead className="w-[30%] whitespace-nowrap">描述</TableHead>
               <TableHead className="w-24 whitespace-nowrap">状态</TableHead>
               <TableHead className="w-40 whitespace-nowrap">创建时间</TableHead>
@@ -318,10 +318,12 @@ export function ToolTable({ tools }: ToolTableProps) {
                       />
                     </div>
                   </TableCell>
-                  <TableCell className="font-medium">
+                  <TableCell className="max-w-[120px] truncate whitespace-nowrap font-medium" title={tool.name}>
                     {tool.name}
                   </TableCell>
-                  <TableCell>{tool.category}</TableCell>
+                  <TableCell className="max-w-[100px] truncate whitespace-nowrap" title={tool.category}>
+                    {tool.category}
+                  </TableCell>
                   <TableCell className="w-[30%] max-w-xs truncate" title={tool.desc}>
                     {tool.desc}
                   </TableCell>

@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { AlertTriangle, Download, RefreshCw, ChevronDown, ChevronUp, Copy, Check, X, Trash2 } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import { copyToClipboard } from '@/lib/copyUtils';
+import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
+import { useEscapeKey } from '@/hooks/useEscapeKey';
 
 interface ErrorLog {
   ts: string;
@@ -32,23 +34,13 @@ export function SystemStatusCard({
   const [loading, setLoading] = useState(false);
   const [expanded, setExpanded] = useState<Record<number, boolean>>({});
   const [copied, setCopied] = useState(false);
+  useBodyScrollLock(modalOpen);
+  useEscapeKey(modalOpen, () => setModalOpen(false));
 
   useEffect(() => {
     setMounted(true);
     return () => setMounted(false);
   }, []);
-
-  useEffect(() => {
-    if (modalOpen) {
-      document.body.style.overflow = 'hidden';
-      const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setModalOpen(false);
-      window.addEventListener('keydown', onKey);
-      return () => {
-        document.body.style.overflow = '';
-        window.removeEventListener('keydown', onKey);
-      };
-    }
-  }, [modalOpen]);
 
   const total = apiSuccess + apiFailed;
   const successRate = total === 0 ? 100 : Math.round((apiSuccess / total) * 10000) / 100;

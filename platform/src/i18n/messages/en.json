@@ -323,6 +323,16 @@
     "platformUrlLabel": "Platform URL (optional)",
     "platformUrlPlaceholder": "e.g., midjourney.com",
     "platformUrlHint": "Save it to open the platform directly from its card",
+    "cardColorLabel": "Card Color",
+    "cardColorHint": "Use color to distinguish platform priority without changing quota alerts.",
+    "cardColors": {
+      "graphite": "Graphite",
+      "garnet": "Garnet",
+      "champagne": "Champagne",
+      "sapphire": "Sapphire",
+      "jade": "Jade",
+      "amethyst": "Amethyst"
+    },
     "indicatorLabel": "Monitoring Indicators",
     "indicatorName": "Indicator Name",
     "dailyLimit": "Daily Limit",

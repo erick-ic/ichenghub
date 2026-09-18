@@ -323,6 +323,16 @@
     "platformUrlLabel": "平台链接（选填）",
     "platformUrlPlaceholder": "例如：midjourney.com",
     "platformUrlHint": "保存后可从卡片快速打开平台",
+    "cardColorLabel": "卡片配色",
+    "cardColorHint": "选择色调来区分平台优先级，不影响额度告警状态。",
+    "cardColors": {
+      "graphite": "石墨",
+      "garnet": "曜红",
+      "champagne": "鎏金",
+      "sapphire": "深海",
+      "jade": "松石",
+      "amethyst": "暮紫"
+    },
     "indicatorLabel": "监控指标",
     "indicatorName": "指标名称",
     "dailyLimit": "每日上限",

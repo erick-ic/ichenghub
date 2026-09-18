@@ -205,6 +205,10 @@ export default async function AdminDashboard() {
     return num.toString()
   }
 
+  // 移动端每行两张；超长数值改为独占整行，md 以上不改变原有列布局。
+  const mobileCardSpan = (value: string | number) =>
+    String(value).length > 8 ? 'col-span-2 md:col-span-1' : ''
+
   // 格式化日期（UTC+8）
   const formatDate = (date: Date): string => {
     const d = new Date(date)
@@ -228,79 +232,79 @@ export default async function AdminDashboard() {
             <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: '#e52129' }}></span>
             内容数据
           </h3>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
-            <Card className="bg-white border border-slate-100 shadow-sm hover:-translate-y-0.5 hover:shadow-xl hover:border-[#e52129]/20 transition-all duration-300 ease-out">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-2 lg:grid-cols-6">
+            <Card className={`${mobileCardSpan(toolCount)} min-w-0 bg-white border border-slate-100 shadow-sm hover:-translate-y-0.5 hover:shadow-xl hover:border-[#e52129]/20 transition-all duration-300 ease-out`}>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 pb-2 sm:p-6 sm:pb-2">
                 <CardTitle className="text-sm font-medium">总工具数</CardTitle>
                 <Wrench className="h-4 w-4" style={{ color: '#e52129' }} />
               </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold">{toolCount}</div>
-                <p className={`text-[10px] mt-1 ${trendClass(toolTrend.tone)}`}>
+              <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
+                <div className="break-all text-2xl font-bold sm:text-3xl">{toolCount}</div>
+                <p className={`mt-1 break-words text-[10px] ${trendClass(toolTrend.tone)}`}>
                   {toolTrend.text}
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="bg-white border border-slate-100 shadow-sm hover:-translate-y-0.5 hover:shadow-xl hover:border-[#e52129]/20 transition-all duration-300 ease-out">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <Card className={`${mobileCardSpan(blogCount)} min-w-0 bg-white border border-slate-100 shadow-sm hover:-translate-y-0.5 hover:shadow-xl hover:border-[#e52129]/20 transition-all duration-300 ease-out`}>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 pb-2 sm:p-6 sm:pb-2">
                 <CardTitle className="text-sm font-medium">博客总数</CardTitle>
                 <FileText className="h-4 w-4" style={{ color: '#e52129' }} />
               </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold">{blogCount}</div>
+              <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
+                <div className="break-all text-2xl font-bold sm:text-3xl">{blogCount}</div>
                 <p className={`text-[10px] mt-1 ${trendClass(blogTrend.tone)}`}>
                   {blogTrend.text}
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="bg-white border border-slate-100 shadow-sm hover:-translate-y-0.5 hover:shadow-xl hover:border-[#e52129]/20 transition-all duration-300 ease-out">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <Card className={`${mobileCardSpan(linkCount)} min-w-0 bg-white border border-slate-100 shadow-sm hover:-translate-y-0.5 hover:shadow-xl hover:border-[#e52129]/20 transition-all duration-300 ease-out`}>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 pb-2 sm:p-6 sm:pb-2">
                 <CardTitle className="text-sm font-medium">导航总数</CardTitle>
                 <Link2 className="h-4 w-4" style={{ color: '#e52129' }} />
               </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold">{linkCount}</div>
+              <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
+                <div className="break-all text-2xl font-bold sm:text-3xl">{linkCount}</div>
                 <p className={`text-[10px] mt-1 ${trendClass(linkTrend.tone)}`}>
                   {linkTrend.text}
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="bg-white border border-slate-100 shadow-sm hover:-translate-y-0.5 hover:shadow-xl hover:border-[#e52129]/20 transition-all duration-300 ease-out">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <Card className={`${mobileCardSpan(promptCount)} min-w-0 bg-white border border-slate-100 shadow-sm hover:-translate-y-0.5 hover:shadow-xl hover:border-[#e52129]/20 transition-all duration-300 ease-out`}>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 pb-2 sm:p-6 sm:pb-2">
                 <CardTitle className="text-sm font-medium">提示词总数</CardTitle>
                 <Lightbulb className="h-4 w-4" style={{ color: '#e52129' }} />
               </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold">{promptCount}</div>
+              <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
+                <div className="break-all text-2xl font-bold sm:text-3xl">{promptCount}</div>
                 <p className={`text-[10px] mt-1 ${trendClass(promptTrend.tone)}`}>
                   {promptTrend.text}
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="bg-white border border-slate-100 shadow-sm hover:-translate-y-0.5 hover:shadow-xl hover:border-[#e52129]/20 transition-all duration-300 ease-out">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <Card className={`${mobileCardSpan(submissionCount)} min-w-0 bg-white border border-slate-100 shadow-sm hover:-translate-y-0.5 hover:shadow-xl hover:border-[#e52129]/20 transition-all duration-300 ease-out`}>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 pb-2 sm:p-6 sm:pb-2">
                 <CardTitle className="text-sm font-medium">推荐总数</CardTitle>
                 <Star className="h-4 w-4" style={{ color: '#e52129' }} />
               </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold">{submissionCount}</div>
+              <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
+                <div className="break-all text-2xl font-bold sm:text-3xl">{submissionCount}</div>
                 <p className={`text-[10px] mt-1 ${trendClass(submissionTrend.tone)}`}>
                   {submissionTrend.text}
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="bg-white border border-slate-100 shadow-sm hover:-translate-y-0.5 hover:shadow-xl hover:border-[#e52129]/20 transition-all duration-300 ease-out">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <Card className={`${mobileCardSpan(demandCount)} min-w-0 bg-white border border-slate-100 shadow-sm hover:-translate-y-0.5 hover:shadow-xl hover:border-[#e52129]/20 transition-all duration-300 ease-out`}>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 pb-2 sm:p-6 sm:pb-2">
                 <CardTitle className="text-sm font-medium">心愿总数</CardTitle>
                 <MessageSquare className="h-4 w-4" style={{ color: '#e52129' }} />
               </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold">{demandCount}</div>
+              <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
+                <div className="break-all text-2xl font-bold sm:text-3xl">{demandCount}</div>
                 <p className={`text-[10px] mt-1 ${trendClass(demandTrend.tone)}`}>
                   {demandTrend.text}
                 </p>
@@ -315,14 +319,14 @@ export default async function AdminDashboard() {
             <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: '#e52129' }}></span>
             互动数据
           </h3>
-          <div className="grid gap-4 md:grid-cols-3">
-            <Card className="bg-white border border-slate-100 shadow-sm hover:-translate-y-0.5 hover:shadow-xl hover:border-[#e52129]/20 transition-all duration-300 ease-out">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3">
+            <Card className={`${mobileCardSpan(formatNumber(views))} min-w-0 bg-white border border-slate-100 shadow-sm hover:-translate-y-0.5 hover:shadow-xl hover:border-[#e52129]/20 transition-all duration-300 ease-out`}>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 pb-2 sm:p-6 sm:pb-2">
                 <CardTitle className="text-sm font-medium">总浏览量</CardTitle>
                 <Eye className="h-4 w-4" style={{ color: '#e52129' }} />
               </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold">{formatNumber(views)}</div>
+              <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
+                <div className="break-all text-2xl font-bold sm:text-3xl">{formatNumber(views)}</div>
                 <p
                   className={`text-[10px] mt-1 ${trendClass(viewsTrend.tone)}`}
                   title="本月浏览量相比上月的变化（按行为日志统计）"
@@ -332,13 +336,13 @@ export default async function AdminDashboard() {
               </CardContent>
             </Card>
 
-            <Card className="bg-white border border-slate-100 shadow-sm hover:-translate-y-0.5 hover:shadow-xl hover:border-[#e52129]/20 transition-all duration-300 ease-out">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <Card className={`${mobileCardSpan(formatNumber(likes))} min-w-0 bg-white border border-slate-100 shadow-sm hover:-translate-y-0.5 hover:shadow-xl hover:border-[#e52129]/20 transition-all duration-300 ease-out`}>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 pb-2 sm:p-6 sm:pb-2">
                 <CardTitle className="text-sm font-medium">点赞数</CardTitle>
                 <Heart className="h-4 w-4" style={{ color: '#e52129' }} />
               </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold">{formatNumber(likes)}</div>
+              <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
+                <div className="break-all text-2xl font-bold sm:text-3xl">{formatNumber(likes)}</div>
                 <p
                   className={`text-[10px] mt-1 ${trendClass(likesTrend.tone)}`}
                   title="本月点赞量相比上月的变化（按行为日志统计）"
@@ -348,13 +352,13 @@ export default async function AdminDashboard() {
               </CardContent>
             </Card>
 
-            <Card className="bg-white border border-slate-100 shadow-sm hover:-translate-y-0.5 hover:shadow-xl hover:border-[#e52129]/20 transition-all duration-300 ease-out">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <Card className="col-span-2 min-w-0 bg-white border border-slate-100 shadow-sm hover:-translate-y-0.5 hover:shadow-xl hover:border-[#e52129]/20 transition-all duration-300 ease-out md:col-span-1">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 pb-2 sm:p-6 sm:pb-2">
                 <CardTitle className="text-sm font-medium">收藏数</CardTitle>
                 <Star className="h-4 w-4" style={{ color: '#e52129' }} />
               </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold">{formatNumber(favorites)}</div>
+              <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
+                <div className="break-all text-2xl font-bold sm:text-3xl">{formatNumber(favorites)}</div>
                 <p
                   className={`text-[10px] mt-1 ${trendClass(favoritesTrend.tone)}`}
                   title="本月收藏量相比上月的变化（按行为日志统计）"
@@ -385,7 +389,9 @@ export default async function AdminDashboard() {
               <CardDescription>最近 7 天新增的提示词</CardDescription>
             </CardHeader>
             <CardContent>
-              <Table>
+              {/* 桌面端保留完整数据表；移动端采用主次信息明确的列表卡，避免横向滚动。 */}
+              <div className="hidden md:block">
+                <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead className="whitespace-nowrap">提示词名称</TableHead>
@@ -420,7 +426,41 @@ export default async function AdminDashboard() {
                     ))
                   )}
                 </TableBody>
-              </Table>
+                </Table>
+              </div>
+
+              <div className="divide-y divide-slate-100 md:hidden">
+                {recentPrompts.length === 0 ? (
+                  <div className="py-10 text-center text-sm text-slate-500">暂无提示词数据</div>
+                ) : (
+                  recentPrompts.map((prompt) => (
+                    <article key={prompt.id} className="py-4 first:pt-0 last:pb-0">
+                      <div className="flex items-start justify-between gap-3">
+                        <h4 className="min-w-0 flex-1 break-words text-sm font-semibold leading-5 text-slate-900">
+                          {prompt.title}
+                        </h4>
+                        <Badge variant="secondary" className="max-w-[42%] shrink-0 truncate">
+                          {prompt.category}
+                        </Badge>
+                      </div>
+                      <dl className="mt-3 grid grid-cols-3 gap-2 rounded-lg bg-slate-50 px-3 py-2.5">
+                        <div>
+                          <dt className="text-[11px] text-slate-400">浏览量</dt>
+                          <dd className="mt-0.5 text-sm font-semibold tabular-nums text-slate-700">{prompt.views}</dd>
+                        </div>
+                        <div>
+                          <dt className="text-[11px] text-slate-400">点赞</dt>
+                          <dd className="mt-0.5 text-sm font-semibold tabular-nums text-slate-700">{prompt.likes}</dd>
+                        </div>
+                        <div className="text-right">
+                          <dt className="text-[11px] text-slate-400">添加日期</dt>
+                          <dd className="mt-0.5 whitespace-nowrap text-xs font-medium text-slate-600">{formatDate(prompt.createdAt)}</dd>
+                        </div>
+                      </dl>
+                    </article>
+                  ))
+                )}
+              </div>
             </CardContent>
           </Card>
         </div>

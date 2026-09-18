@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import { X } from 'lucide-react';
+import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
+import { useEscapeKey } from '@/hooks/useEscapeKey';
 
 interface ColorExtractedImageProps {
   src: string;
@@ -13,6 +15,8 @@ interface ColorExtractedImageProps {
 
 export default function ColorExtractedImage({ src, alt, className = '', unoptimized = false }: ColorExtractedImageProps) {
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  useBodyScrollLock(isPreviewOpen);
+  useEscapeKey(isPreviewOpen, () => setIsPreviewOpen(false));
 
   return (
     <>

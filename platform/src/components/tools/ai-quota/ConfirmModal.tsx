@@ -2,6 +2,8 @@
 
 import { AlertTriangle, RotateCcw } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
+import { useEscapeKey } from '@/hooks/useEscapeKey';
 
 interface ConfirmModalProps {
   isOpen: boolean;
@@ -19,6 +21,8 @@ export default function ConfirmModal({
   onConfirm,
 }: ConfirmModalProps) {
   const t = useTranslations('AiQuota');
+  useBodyScrollLock(isOpen);
+  useEscapeKey(isOpen, onCancel);
   if (!isOpen) return null;
 
   const isDelete = variant === 'delete';

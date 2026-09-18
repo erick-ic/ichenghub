@@ -6,6 +6,9 @@ import { useTranslations } from 'next-intl';
 import type { Platform } from './AiQuotaTracker';
 import { getBeijingDayKey } from '@/lib/time';
 import { normalizePlatformUrl } from './platform-url';
+import { normalizePlatformColor } from './platform-colors';
+import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
+import { useEscapeKey } from '@/hooks/useEscapeKey';
 
 interface ExportData {
   version: number;
@@ -27,6 +30,8 @@ export default function ImportExportModal({
   onClose,
   onImport,
 }: ImportExportModalProps) {
+  useBodyScrollLock(true);
+  useEscapeKey(true, onClose);
   const t = useTranslations('AiQuota');
   const [tab, setTab] = useState<'export' | 'import'>('export');
   const [copied, setCopied] = useState(false);
@@ -118,6 +123,7 @@ export default function ImportExportModal({
           nameZh: String(p.nameZh ?? oldP.name ?? ''),
           nameEn: String(p.nameEn ?? oldP.name ?? ''),
           url: normalizePlatformUrl(p.url),
+          color: normalizePlatformColor(p.color),
           indicators: Array.isArray(p.indicators)
             ? p.indicators.map((ind) => {
                 const oldInd = ind as unknown as { name?: string; unit?: string };

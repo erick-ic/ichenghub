@@ -4,6 +4,8 @@ import { useState, useTransition, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { LogOut } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
+import { useEscapeKey } from '@/hooks/useEscapeKey';
 
 interface LogoutButtonProps {
   action: () => Promise<void>;
@@ -18,6 +20,8 @@ export default function LogoutButton({ action }: LogoutButtonProps) {
   const [isPending, startTransition] = useTransition();
   // SSR 时 document 不存在，必须等客户端挂载后才能 createPortal
   const [mounted, setMounted] = useState(false);
+  useBodyScrollLock(showConfirm);
+  useEscapeKey(showConfirm && !isPending, () => setShowConfirm(false));
   useEffect(() => setMounted(true), []);
 
   const handleConfirm = () => {

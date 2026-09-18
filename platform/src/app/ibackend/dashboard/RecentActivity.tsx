@@ -1,6 +1,7 @@
 'use client'
 
 import { Eye, MousePointerClick, Copy, Globe, QrCode, Download, Type, Link as LinkIcon, AlertCircle, FileImage, Heart, Star } from 'lucide-react'
+import { getAnalyticsActionLabel } from '@/lib/analytics-labels'
 
 interface ActivityItem {
   id: string
@@ -49,66 +50,6 @@ function getActionIcon(actionType: string) {
   }
 }
 
-function getActionLabel(actionType: string, resourceType: string) {
-  if (resourceType === 'TOOL') {
-    switch (actionType) {
-      case 'CLICK':
-        return '点击工具'
-      case 'VIEW':
-        return '浏览工具'
-      case 'QR_MODE_TEXT':
-        return '切换文本模式'
-      case 'QR_MODE_URL':
-        return '切换链接模式'
-      case 'QR_GENERATE_SUCCESS':
-        return '生成二维码'
-      case 'QR_GENERATE_FAILURE':
-        return '生成失败'
-      case 'QR_DOWNLOAD_SVG':
-        return '下载 SVG'
-      case 'QR_DOWNLOAD_PNG':
-        return '下载 PNG'
-      case 'IMAGE_COMPRESS_SUCCESS':
-        return '压缩图片'
-      case 'AI_QUOTA_ADD_PLATFORM':
-        return '新增平台'
-      case 'AI_QUOTA_EDIT_PLATFORM':
-        return '编辑平台'
-      case 'AI_QUOTA_DELETE_PLATFORM':
-        return '删除平台'
-      case 'AI_QUOTA_RESET_PLATFORM':
-        return '重置平台额度'
-      case 'AI_QUOTA_RESET_ALL':
-        return '一键重置全部额度'
-      case 'AI_QUOTA_IMPORT':
-        return '导入数据'
-      default:
-        return actionType
-    }
-  }
-  if (resourceType === 'PROMPT') {
-    switch (actionType) {
-      case 'COPY':
-        return '复制提示词'
-      case 'VIEW':
-        return '浏览提示词'
-      case 'LIKE':
-        return '点赞提示词'
-      case 'FAVORITE':
-        return '收藏提示词'
-      default:
-        return actionType
-    }
-  }
-  if (resourceType === 'BLOG') {
-    return actionType === 'COPY' ? '复制代码' : actionType === 'VIEW' ? '访问博客' : actionType
-  }
-  if (resourceType === 'PAGE') {
-    return actionType === 'VIEW' ? '访问页面' : actionType
-  }
-  return actionType
-}
-
 export function RecentActivity({ activities }: RecentActivityProps) {
   if (activities.length === 0) {
     return (
@@ -129,18 +70,18 @@ export function RecentActivity({ activities }: RecentActivityProps) {
           <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center flex-shrink-0">
             {getActionIcon(activity.actionType)}
           </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-medium text-slate-600">{activity.ipMasked}</span>
-              <span className="text-[10px] text-slate-400">{activity.timeAgo}</span>
+          <div className="min-w-0 flex-1 overflow-hidden">
+            <div className="flex min-w-0 items-center gap-2">
+              <span className="min-w-0 truncate text-xs font-medium text-slate-600">{activity.ipMasked}</span>
+              <span className="shrink-0 text-[10px] text-slate-400">{activity.timeAgo}</span>
             </div>
             <div className="flex items-center gap-2 mt-0.5">
-              <span className="text-xs text-slate-500">{getActionLabel(activity.actionType, activity.resourceType)}</span>
-              <span className="text-xs text-slate-300">→</span>
-              <span className="text-xs font-medium text-slate-800 truncate">{activity.resourceName}</span>
+              <span className="shrink-0 text-xs text-slate-500">{getAnalyticsActionLabel(activity.actionType, activity.resourceType)}</span>
+              <span className="shrink-0 text-xs text-slate-300">→</span>
+              <span className="min-w-0 truncate text-xs font-medium text-slate-800">{activity.resourceName}</span>
             </div>
           </div>
-          <span className="text-[10px] text-slate-400 flex-shrink-0 px-2 py-1 bg-slate-100 rounded">
+          <span className="hidden max-w-[28%] flex-shrink-0 truncate rounded bg-slate-100 px-2 py-1 text-[10px] text-slate-400 sm:block">
             {activity.path || '/'}
           </span>
         </div>

@@ -1,10 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, Plus, Minus } from 'lucide-react';
+import { Check, X, Plus, Minus } from 'lucide-react';
 import { useTranslations, useLocale } from 'next-intl';
 import type { Platform, Indicator } from './AiQuotaTracker';
 import { normalizePlatformUrl } from './platform-url';
+import { DEFAULT_PLATFORM_COLOR, normalizePlatformColor, PLATFORM_COLORS, PLATFORM_COLOR_STYLES, type PlatformColor } from './platform-colors';
+import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
+import { useEscapeKey } from '@/hooks/useEscapeKey';
 
 // ===== 表单态指标 =====
 interface IndicatorForm {
@@ -57,10 +60,13 @@ export default function PlatformConfigModal({
   const locale = useLocale();
   const isEn = locale === 'en';
   const isEdit = !!initialData;
+  useBodyScrollLock(isOpen);
+  useEscapeKey(isOpen, onClose);
 
   const [platformNameZh, setPlatformNameZh] = useState('');
   const [platformNameEn, setPlatformNameEn] = useState('');
   const [platformUrl, setPlatformUrl] = useState('');
+  const [platformColor, setPlatformColor] = useState<PlatformColor>(DEFAULT_PLATFORM_COLOR);
   const [indicators, setIndicators] = useState<IndicatorForm[]>([
     createEmptyIndicator(),
   ]);
@@ -79,11 +85,13 @@ export default function PlatformConfigModal({
       setPlatformNameZh(initialData.nameZh);
       setPlatformNameEn(initialData.nameEn);
       setPlatformUrl(initialData.url ?? '');
+      setPlatformColor(normalizePlatformColor(initialData.color));
       setIndicators(toFormIndicators(initialData.indicators));
     } else {
       setPlatformNameZh('');
       setPlatformNameEn('');
       setPlatformUrl('');
+      setPlatformColor(DEFAULT_PLATFORM_COLOR);
       setIndicators([createEmptyIndicator()]);
     }
     setNameError(false);
@@ -149,6 +157,7 @@ export default function PlatformConfigModal({
       nameZh: isEn ? platformNameZh : trimmedName,
       nameEn: isEn ? trimmedName : platformNameEn,
       url: normalizedUrl,
+      color: platformColor,
       indicators: validIndicators.map((ind) => ({
         id: ind.id,
         nameZh: ind.nameZh.trim(),
@@ -230,6 +239,37 @@ export default function PlatformConfigModal({
             {urlError ? t('errors.platformUrlInvalid') : t('platformUrlHint')}
           </p>
         </div>
+
+        {/* ===== 卡片配色 ===== */}
+        <fieldset className="mb-5">
+          <legend className="block text-sm text-gray-600 mb-1.5">{t('cardColorLabel')}</legend>
+          <p className="text-xs text-gray-400 mb-3">{t('cardColorHint')}</p>
+          <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-label={t('cardColorLabel')}>
+            {PLATFORM_COLORS.map((color) => {
+              const selected = platformColor === color;
+              const style = PLATFORM_COLOR_STYLES[color];
+              return (
+                <button
+                  key={color}
+                  type="button"
+                  role="radio"
+                  aria-checked={selected}
+                  onClick={() => setPlatformColor(color)}
+                  className={`flex items-center gap-2 rounded-xl border p-2 text-left transition-all ${
+                    selected
+                      ? 'border-zinc-800 bg-zinc-50 ring-1 ring-zinc-800 shadow-sm'
+                      : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br ${style.swatch} shadow-inner`}>
+                    {selected && <Check className="h-3.5 w-3.5 text-white drop-shadow" strokeWidth={3} />}
+                  </span>
+                  <span className="truncate text-xs font-medium text-gray-700">{t(`cardColors.${color}`)}</span>
+                </button>
+              );
+            })}
+          </div>
+        </fieldset>
 
         {/* ===== 监控指标列表 ===== */}
         <div className="mb-5">

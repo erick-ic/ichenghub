@@ -215,7 +215,7 @@ export default function AdminSubmissionsPage() {
     <div className="space-y-6">
       {/* 操作状态提示 */}
       {operationStatus && (
-        <div className={`fixed top-20 right-8 px-4 py-2 rounded-lg shadow-lg z-50 flex items-center gap-2 ${
+        <div className={`fixed left-4 right-4 top-16 z-50 flex items-center gap-2 rounded-lg px-4 py-2 shadow-lg sm:left-auto sm:right-8 sm:top-20 ${
           operationStatus.success ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
         }`}>
           {operationStatus.success ? <Check className="h-4 w-4" /> : <X className="h-4 w-4" />}
@@ -288,7 +288,7 @@ export default function AdminSubmissionsPage() {
       </div>
 
       {/* 数据统计 */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 hover:-translate-y-0.5 hover:shadow-xl hover:border-[#e52129]/20 transition-all duration-300 ease-out">
           <div className="text-2xl font-bold text-gray-900">{filteredData.length}</div>
           <div className="text-sm text-gray-500">总记录数</div>
@@ -315,8 +315,8 @@ export default function AdminSubmissionsPage() {
 
       {/* 数据表格 */}
       <div className="bg-white rounded-xl shadow-sm border border-slate-100 hover:-translate-y-0.5 hover:shadow-xl hover:border-[#e52129]/20 transition-all duration-300 ease-out overflow-hidden">
-        <div className="overflow-hidden">
-          <table className="w-full table-fixed">
+        <div>
+          <table className="admin-card-table admin-submissions-table w-full table-fixed md:min-w-[900px]">
             <colgroup>
               <col className="w-[18%]" />
               <col className="w-[23%]" />
@@ -472,7 +472,7 @@ export default function AdminSubmissionsPage() {
       {/* 提交详情 */}
       <Dialog open={!!selectedItem} onOpenChange={(open) => !open && setSelectedItem(null)}>
         <DialogContent
-          className="sm:max-w-2xl max-h-[85vh] overflow-hidden [&>div:first-child]:max-h-[calc(85vh-3rem)]"
+          className="sm:max-w-2xl"
           onOpenAutoFocus={(event) => event.preventDefault()}
         >
           {selectedItem && (

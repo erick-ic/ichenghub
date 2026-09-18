@@ -7,6 +7,8 @@ import rehypeRaw from 'rehype-raw';
 import rehypePrism from 'rehype-prism-plus';
 import { Copy } from 'lucide-react';
 import type { HeadingItem } from '@/lib/headingUtils';
+import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
+import { useEscapeKey } from '@/hooks/useEscapeKey';
 
 function generateSlug(text: string): string {
   return text
@@ -165,6 +167,8 @@ function TableCell({ children, isHeader }: { children: React.ReactNode; isHeader
 }
 
 function ImageLightbox({ src, alt, onClose }: { src?: string; alt?: string; onClose: () => void }) {
+  useBodyScrollLock(true);
+  useEscapeKey(true, onClose);
   const handleBackdropClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
       onClose();
@@ -176,18 +180,6 @@ function ImageLightbox({ src, alt, onClose }: { src?: string; alt?: string; onCl
       onClose();
     }
   };
-
-  React.useEffect(() => {
-    document.body.style.overflow = 'hidden';
-    const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
-    document.addEventListener('keydown', handleEsc);
-    return () => {
-      document.body.style.overflow = '';
-      document.removeEventListener('keydown', handleEsc);
-    };
-  }, [onClose]);
 
   return (
     <div

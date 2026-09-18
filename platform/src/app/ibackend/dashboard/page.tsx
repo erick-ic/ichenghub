@@ -370,13 +370,14 @@ async function getAnalyticsData(): Promise<AnalyticsData> {
 }
 
 function StatCard({ title, value, icon, color, hint, trend }: { title: string; value: number; icon: React.ReactNode; color: string; hint?: string; trend?: string }) {
+  const isWideOnMobile = value.toLocaleString().length > 8
   return (
-    <Card className="group relative overflow-hidden bg-white border border-slate-100 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:-translate-y-0.5 hover:shadow-xl hover:border-[#e52129]/20 transition-all duration-300 ease-out">
-      <CardContent className="p-5">
+    <Card className={`${isWideOnMobile ? 'col-span-2 md:col-span-1' : ''} group relative min-w-0 overflow-hidden bg-white border border-slate-100 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:-translate-y-0.5 hover:shadow-xl hover:border-[#e52129]/20 transition-all duration-300 ease-out`}>
+      <CardContent className="p-4 sm:p-5">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <p className="text-xs font-medium text-slate-500 mb-2 tracking-wide uppercase" title={hint}>{title}</p>
-            <p className="text-[28px] font-bold leading-none tracking-tight tabular-nums" style={{ color }}>{value.toLocaleString()}</p>
+            <p className="break-all text-2xl font-bold leading-none tracking-tight tabular-nums sm:text-[28px]" style={{ color }}>{value.toLocaleString()}</p>
             {trend && (
               <p className="mt-2 text-xs text-slate-400 flex items-center gap-1">
                 <span className="inline-block w-1 h-1 rounded-full" style={{ backgroundColor: color + '60' }} />
@@ -407,7 +408,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-3">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">数据看板</h1>
           <p className="text-slate-500 mt-1">分析用户行为和内容互动数据</p>
@@ -566,7 +567,7 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card className="bg-white border border-slate-100 shadow-sm hover:-translate-y-0.5 hover:shadow-xl hover:border-[#e52129]/20 transition-all duration-300 ease-out">
+        <Card className="ranked-list-card min-w-0 overflow-hidden bg-white border border-slate-100 shadow-sm hover:-translate-y-0.5 hover:shadow-xl hover:border-[#e52129]/20 transition-all duration-300 ease-out">
           <CardHeader className="pb-2">
             <CardTitle className="text-lg flex items-center gap-2">
               <Lightbulb className="w-5 h-5" style={{ color: '#e52129' }} />
@@ -581,14 +582,14 @@ export default async function DashboardPage() {
               <div className="space-y-3">
                 {data.topPrompts.map((prompt, index) => {
                   return (
-                    <div key={prompt.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors">
-                      <div className="flex items-center gap-3 flex-[0.9] min-w-0">
+                    <div key={prompt.id} className="ranked-list-row grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-2 overflow-hidden rounded-xl bg-slate-50 p-3 transition-colors hover:bg-slate-100">
+                      <div className="flex w-full min-w-0 items-center gap-3 overflow-hidden">
                         <span className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0" style={{ backgroundColor: index === 0 ? '#e52129' : '#f97316' }}>
                           {index + 1}
                         </span>
                         <span className="text-sm font-medium text-slate-700 truncate block min-w-0" title={prompt.title}>{prompt.title}</span>
                       </div>
-                      <Badge variant="secondary" className="bg-red-50 text-red-600 hover:bg-red-50 flex-shrink-0">
+                      <Badge variant="secondary" className="ranked-list-badge min-w-0 max-w-[8rem] truncate bg-red-50 text-red-600 hover:bg-red-50">
                         {prompt.copies} 次
                       </Badge>
                     </div>
@@ -601,7 +602,7 @@ export default async function DashboardPage() {
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <Card className="bg-white border border-slate-100 shadow-sm hover:-translate-y-0.5 hover:shadow-xl hover:border-[#e52129]/20 transition-all duration-300 ease-out">
+        <Card className="ranked-list-card min-w-0 overflow-hidden bg-white border border-slate-100 shadow-sm hover:-translate-y-0.5 hover:shadow-xl hover:border-[#e52129]/20 transition-all duration-300 ease-out">
           <CardHeader className="pb-2">
             <CardTitle className="text-lg flex items-center gap-2">
               <Wrench className="w-5 h-5" style={{ color: '#e52129' }} />
@@ -616,14 +617,14 @@ export default async function DashboardPage() {
               <div className="space-y-3">
                 {data.topTools.map((tool, index) => {
                   return (
-                    <div key={tool.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors">
-                      <div className="flex items-center gap-3 flex-[0.9] min-w-0">
+                    <div key={tool.id} className="ranked-list-row grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-2 overflow-hidden rounded-xl bg-slate-50 p-3 transition-colors hover:bg-slate-100">
+                      <div className="flex w-full min-w-0 items-center gap-3 overflow-hidden">
                         <span className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0" style={{ backgroundColor: index === 0 ? '#e52129' : '#f97316' }}>
                           {index + 1}
                         </span>
                         <span className="text-sm font-medium text-slate-700 truncate block min-w-0" title={tool.name}>{tool.name}</span>
                       </div>
-                      <Badge variant="secondary" className="bg-red-50 text-red-600 hover:bg-red-50 flex-shrink-0">
+                      <Badge variant="secondary" className="ranked-list-badge min-w-0 max-w-[8rem] truncate bg-red-50 text-red-600 hover:bg-red-50">
                         {tool.clicks + tool.views} 次
                       </Badge>
                     </div>
@@ -634,7 +635,7 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card className="bg-white border border-slate-100 shadow-sm hover:-translate-y-0.5 hover:shadow-xl hover:border-[#e52129]/20 transition-all duration-300 ease-out">
+        <Card className="ranked-list-card min-w-0 overflow-hidden bg-white border border-slate-100 shadow-sm hover:-translate-y-0.5 hover:shadow-xl hover:border-[#e52129]/20 transition-all duration-300 ease-out">
           <CardHeader className="pb-2">
             <CardTitle className="text-lg flex items-center gap-2">
               <FileText className="w-5 h-5" style={{ color: '#e52129' }} />
@@ -649,14 +650,14 @@ export default async function DashboardPage() {
               <div className="space-y-3">
                 {data.topBlogs.map((blog, index) => {
                   return (
-                    <div key={blog.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors">
-                      <div className="flex items-center gap-3 flex-[0.9] min-w-0">
+                    <div key={blog.id} className="ranked-list-row grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-2 overflow-hidden rounded-xl bg-slate-50 p-3 transition-colors hover:bg-slate-100">
+                      <div className="flex w-full min-w-0 items-center gap-3 overflow-hidden">
                         <span className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0" style={{ backgroundColor: index === 0 ? '#e52129' : '#f97316' }}>
                           {index + 1}
                         </span>
                         <span className="text-sm font-medium text-slate-700 truncate block min-w-0" title={blog.title}>{blog.title}</span>
                       </div>
-                      <Badge variant="secondary" className="bg-red-50 text-red-600 hover:bg-red-50 flex-shrink-0">
+                      <Badge variant="secondary" className="ranked-list-badge min-w-0 max-w-[9rem] truncate bg-red-50 text-red-600 hover:bg-red-50">
                         浏览 {blog.views} · 复制 {blog.copies}
                       </Badge>
                     </div>
@@ -669,7 +670,7 @@ export default async function DashboardPage() {
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <Card className="bg-white border border-slate-100 shadow-sm hover:-translate-y-0.5 hover:shadow-xl hover:border-[#e52129]/20 transition-all duration-300 ease-out">
+        <Card className="ranked-list-card min-w-0 overflow-hidden bg-white border border-slate-100 shadow-sm hover:-translate-y-0.5 hover:shadow-xl hover:border-[#e52129]/20 transition-all duration-300 ease-out">
           <CardHeader className="pb-2">
             <CardTitle className="text-lg flex items-center gap-2">
               <Link2 className="w-5 h-5" style={{ color: '#e52129' }} />
@@ -683,14 +684,14 @@ export default async function DashboardPage() {
             ) : (
               <div className="space-y-3">
                 {data.topLinks.map((link, index) => (
-                  <div key={link.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors">
-                    <div className="flex items-center gap-3 flex-[0.9] min-w-0">
+                  <div key={link.id} className="ranked-list-row grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-2 overflow-hidden rounded-xl bg-slate-50 p-3 transition-colors hover:bg-slate-100">
+                    <div className="flex w-full min-w-0 items-center gap-3 overflow-hidden">
                         <span className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0" style={{ backgroundColor: index === 0 ? '#e52129' : '#f97316' }}>
                           {index + 1}
                         </span>
                         <span className="text-sm font-medium text-slate-700 truncate block min-w-0" title={link.name}>{link.name}</span>
                       </div>
-                    <Badge variant="secondary" className="bg-red-50 text-red-600 hover:bg-red-50 flex-shrink-0">
+                    <Badge variant="secondary" className="ranked-list-badge min-w-0 max-w-[8rem] truncate bg-red-50 text-red-600 hover:bg-red-50">
                       {link.clicks} 次
                     </Badge>
                   </div>

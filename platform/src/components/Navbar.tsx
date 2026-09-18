@@ -170,10 +170,7 @@ const Navbar: React.FC<NavbarProps> = ({ locale, isLoggedIn, userImage }) => {
 
             {/* 移动端个人主页入口 */}
             {isLoggedIn && (
-              <div className="flex items-center justify-between px-3 py-2 text-sm font-medium text-muted-foreground">
-                <span>{locale === 'en' ? 'Notifications' : '消息通知'}</span>
-                <NotificationBell locale={locale} />
-              </div>
+              <NotificationBell locale={locale} showLabel onNavigate={() => setMobileMenuOpen(false)} />
             )}
 
             <Link
