@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { createPortal } from 'react-dom';
-import { Github, Link2, ShieldCheck, Unlink, X } from 'lucide-react';
+import { createPortal, useFormStatus } from 'react-dom';
+import { Github, Link2, Loader2, ShieldCheck, Unlink, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 import { useEscapeKey } from '@/hooks/useEscapeKey';
@@ -15,6 +15,26 @@ interface Props {
 }
 
 const supportedProviders = ['github', 'gitee'] as const;
+
+function LinkAccountButton({ label }: { label: string }) {
+  const { pending } = useFormStatus();
+
+  return (
+    <button
+      type="submit"
+      disabled={pending}
+      aria-busy={pending}
+      aria-label={label}
+      className="relative inline-flex h-8 shrink-0 items-center justify-center rounded-lg bg-gray-900 px-2.5 text-xs font-medium text-white transition-colors hover:bg-black disabled:cursor-not-allowed disabled:opacity-60"
+    >
+      <span className={`inline-flex items-center gap-1 ${pending ? 'invisible' : ''}`}>
+        <Link2 className="h-3.5 w-3.5" aria-hidden="true" />
+        {label}
+      </span>
+      {pending && <Loader2 className="absolute h-3.5 w-3.5 animate-spin" aria-hidden="true" />}
+    </button>
+  );
+}
 
 export default function AccountConnections({ locale, providers, status }: Props) {
   const t = useTranslations('Profile.accounts');
@@ -85,13 +105,7 @@ export default function AccountConnections({ locale, providers, status }: Props)
                 </button>
               ) : (
                 <form action={linkOAuthAccount.bind(null, provider, locale)}>
-                  <button
-                    type="submit"
-                    className="inline-flex h-8 shrink-0 items-center gap-1 rounded-lg bg-gray-900 px-2.5 text-xs font-medium text-white transition-colors hover:bg-black"
-                  >
-                    <Link2 className="h-3.5 w-3.5" aria-hidden="true" />
-                    {t('link')}
-                  </button>
+                  <LinkAccountButton label={t('link')} />
                 </form>
               )}
             </div>
