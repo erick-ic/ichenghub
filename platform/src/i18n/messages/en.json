@@ -7,15 +7,21 @@
       "subtitle": "Continue to your personal space",
       "privacy": "We only access the basic account information required to sign you in.",
       "providers": {
-        "github": "Continue with GitHub"
+        "github": "Continue with GitHub",
+        "gitee": "Continue with Gitee"
       },
       "redirecting": {
-        "github": "Redirecting…"
+        "github": "Redirecting…",
+        "gitee": "Redirecting…"
       },
       "error": {
-        "title": "GitHub sign-in wasn't completed",
+        "title": "Sign-in wasn't completed",
         "message": "The sign-in service may be experiencing a temporary network issue. Please try the button below again shortly.",
         "close": "Dismiss"
+      },
+      "accountNotLinked": {
+        "title": "This email uses another sign-in method",
+        "message": "Sign in with the original method first, then link the new provider from your profile."
       }
     },
     "signOut": "Sign out",
@@ -24,6 +30,31 @@
     "confirmSignOut": "Sign out",
     "cancel": "Cancel",
     "joinedAt": "Joined",
+    "accounts": {
+      "title": "Sign-in methods",
+      "description": "Link multiple providers and use any of them to access the same account.",
+      "providers": {
+        "github": "GitHub",
+        "gitee": "Gitee"
+      },
+      "connected": "Linked",
+      "notConnected": "Not linked",
+      "link": "Link",
+      "unlink": "Unlink",
+      "unlinkHint": "Any provider can be unlinked, but at least one sign-in method must remain.",
+      "confirmTitle": "Unlink this provider?",
+      "confirmDescription": "After unlinking {provider}, you can no longer use it to access this account. Your existing data will remain.",
+      "confirmUnlink": "Unlink",
+      "cancel": "Cancel",
+      "status": {
+        "linked": "The new sign-in method has been linked.",
+        "unlinked": "The sign-in method has been unlinked. Your account data is unchanged.",
+        "already-linked": "This sign-in method is already linked to your account.",
+        "not-linked": "This provider account belongs to another user and cannot be linked here.",
+        "last-account": "You cannot unlink your only sign-in method. Link another provider first.",
+        "unsupported": "This sign-in method is not supported."
+      }
+    },
     "tabs": {
       "overview": "Overview",
       "favorites": "Favorites",

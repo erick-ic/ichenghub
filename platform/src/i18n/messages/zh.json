@@ -7,15 +7,21 @@
       "subtitle": "继续进入你的个人空间",
       "privacy": "我们仅获取完成登录所需的基础账户信息。",
       "providers": {
-        "github": "使用 GitHub 登录"
+        "github": "使用 GitHub 登录",
+        "gitee": "使用 Gitee 登录"
       },
       "redirecting": {
-        "github": "正在跳转…"
+        "github": "正在跳转…",
+        "gitee": "正在跳转…"
       },
       "error": {
-        "title": "GitHub 登录暂时未完成",
+        "title": "登录暂时未完成",
         "message": "登录服务可能遇到网络波动，请稍后再次点击下方按钮重试。",
         "close": "关闭"
+      },
+      "accountNotLinked": {
+        "title": "该邮箱已关联其他登录方式",
+        "message": "请先使用原登录方式进入账号，然后在个人主页中绑定新的登录方式。"
       }
     },
     "signOut": "退出登录",
@@ -24,6 +30,31 @@
     "confirmSignOut": "确认退出",
     "cancel": "取消",
     "joinedAt": "加入时间",
+    "accounts": {
+      "title": "登录方式",
+      "description": "绑定多个平台后，可使用其中任意一种方式进入同一个账号。",
+      "providers": {
+        "github": "GitHub",
+        "gitee": "Gitee"
+      },
+      "connected": "已绑定",
+      "notConnected": "未绑定",
+      "link": "绑定",
+      "unlink": "解绑",
+      "unlinkHint": "所有平台均可解绑，但账号必须至少保留一种登录方式。",
+      "confirmTitle": "确认解绑？",
+      "confirmDescription": "解绑 {provider} 后，将无法再通过该平台进入当前账号。已有数据不会被删除。",
+      "confirmUnlink": "确认解绑",
+      "cancel": "取消",
+      "status": {
+        "linked": "新的登录方式已成功绑定。",
+        "unlinked": "登录方式已解绑，账号数据不受影响。",
+        "already-linked": "该登录方式已经绑定到当前账号。",
+        "not-linked": "该平台账号已属于其他站内用户，无法绑定到当前账号。",
+        "last-account": "无法解绑唯一的登录方式，请先绑定另一个平台。",
+        "unsupported": "暂不支持该登录方式。"
+      }
+    },
     "tabs": {
       "overview": "个人概览",
       "favorites": "我的收藏",

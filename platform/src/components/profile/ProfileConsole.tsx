@@ -183,7 +183,7 @@ export default function ProfileConsole({ sidebar, data }: ProfileConsoleProps) {
     <div className="mx-auto w-full max-w-7xl px-4 py-8">
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
         {/* 左侧：用户卡片 */}
-        <aside className="self-start lg:sticky lg:top-20 lg:col-span-3">
+        <aside className="self-start lg:col-span-3">
           {sidebar}
         </aside>
 

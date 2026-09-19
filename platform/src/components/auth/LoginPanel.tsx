@@ -26,10 +26,21 @@ export default function LoginPanel({ locale, redirectTo, error, mounted }: Login
       redirectingLabel: t('redirecting.github'),
       icon: <Github className="h-5 w-5" aria-hidden="true" />,
       variant: 'primary' as const,
+      availabilityCheckUrl: '/api/auth/github-health',
       action: signInAction.bind(null, 'github', redirectTo) as () => Promise<void>,
+    },
+    {
+      id: 'gitee',
+      label: t('providers.gitee'),
+      redirectingLabel: t('redirecting.gitee'),
+      icon: <span className="text-base font-black leading-none text-[#c71d23]" aria-hidden="true">G</span>,
+      variant: 'secondary' as const,
+      availabilityCheckUrl: '/api/auth/gitee-health',
+      action: signInAction.bind(null, 'gitee', redirectTo) as () => Promise<void>,
     },
   ];
 
+  const accountNotLinked = error === 'OAuthAccountNotLinked';
   const showError = Boolean(
     error && [
       'OAuthSignin',
@@ -39,6 +50,7 @@ export default function LoginPanel({ locale, redirectTo, error, mounted }: Login
       'AccessDenied',
       'Configuration',
       'Default',
+      'OAuthAccountNotLinked',
     ].includes(error)
   );
 
@@ -49,8 +61,8 @@ export default function LoginPanel({ locale, redirectTo, error, mounted }: Login
       privacy={t('privacy')}
       providers={providers}
       showError={showError}
-      errorTitle={t('error.title')}
-      errorMessage={t('error.message')}
+      errorTitle={accountNotLinked ? t('accountNotLinked.title') : t('error.title')}
+      errorMessage={accountNotLinked ? t('accountNotLinked.message') : t('error.message')}
       errorCloseLabel={t('error.close')}
       mounted={mounted}
     />

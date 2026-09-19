@@ -15,6 +15,7 @@ interface OAuthProviderButtonProps {
   buttonClassName?: string;
   // 外部 OAuth 服务不可达时留在当前页面，并交由父组件展示统一提示。
   onAvailabilityError?: () => void;
+  availabilityCheckUrl?: string;
 }
 
 // 单个 OAuth Provider 提交按钮。
@@ -36,6 +37,7 @@ export default function OAuthProviderButton({
   variant = 'primary',
   buttonClassName = '',
   onAvailabilityError,
+  availabilityCheckUrl,
 }: OAuthProviderButtonProps) {
   const [pending, setPending] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -63,12 +65,13 @@ export default function OAuthProviderButton({
     timerRef.current = setTimeout(() => setPending(false), 15000);
 
     try {
-      const response = await fetch('/api/auth/github-health', {
-        method: 'GET',
-        cache: 'no-store',
-      });
-
-      if (!response.ok) throw new Error('GitHub OAuth is unavailable');
+      if (availabilityCheckUrl) {
+        const response = await fetch(availabilityCheckUrl, {
+          method: 'GET',
+          cache: 'no-store',
+        });
+        if (!response.ok) throw new Error('OAuth provider is unavailable');
+      }
 
       // 由 React 正常处理第二次 submit 事件，保留 Server Action 的内部提交协议。
       preflightPassedRef.current = true;

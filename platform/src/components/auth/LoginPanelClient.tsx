@@ -16,6 +16,7 @@ interface LoginPanelProps {
     icon: React.ReactNode;
     variant: 'primary' | 'secondary';
     action: () => Promise<void>;
+    availabilityCheckUrl?: string;
   }>;
   showError: boolean;
   errorTitle: string;
@@ -103,6 +104,7 @@ export default function LoginPanelClient({
             redirectingLabel={provider.redirectingLabel}
             icon={provider.icon}
             variant={provider.variant}
+            availabilityCheckUrl={provider.availabilityCheckUrl}
             onAvailabilityError={() => setAvailabilityError(true)}
           />
         ))}

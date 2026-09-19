@@ -9,7 +9,7 @@ import prisma from '@/lib/prisma';
 
 type Props = {
   params: Promise<{ locale: string }>;
-  searchParams?: { callbackUrl?: string; error?: string };
+  searchParams?: { callbackUrl?: string; error?: string; account?: string };
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -64,12 +64,12 @@ export default async function ProfilePage({ params, searchParams }: Props) {
   // 已登录：三栏式个人控制台。身份只来自服务端 session，禁止外部传入 userId
   if (user?.id) {
     // session 不含 createdAt，补查用户加入时间；查询失败不阻塞页面
-    let dbUser: { createdAt: Date | null } = { createdAt: null };
+    let dbUser: { createdAt: Date | null; accounts: Array<{ provider: string }> } = { createdAt: null, accounts: [] };
     try {
       dbUser = await prisma.user.findUnique({
         where: { id: user.id },
-        select: { createdAt: true },
-      }) ?? { createdAt: null };
+        select: { createdAt: true, accounts: { select: { provider: true } } },
+      }) ?? { createdAt: null, accounts: [] };
     } catch (error) {
       console.error('[profile] failed to load user createdAt:', error);
     }
@@ -80,7 +80,13 @@ export default async function ProfilePage({ params, searchParams }: Props) {
     return (
       <div className="min-h-[60vh] bg-[#f5f5f7]">
         <ProfileConsole
-          sidebar={<ProfileSidebar user={{ ...user, createdAt: dbUser.createdAt }} />}
+          sidebar={(
+            <ProfileSidebar
+              user={{ ...user, createdAt: dbUser.createdAt }}
+              providers={dbUser.accounts.map((account) => account.provider)}
+              accountStatus={searchParams?.error === 'OAuthAccountNotLinked' ? 'not-linked' : searchParams?.account}
+            />
+          )}
           data={profileData}
         />
       </div>

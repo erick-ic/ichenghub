@@ -3,6 +3,7 @@ import { getTranslations, getLocale } from 'next-intl/server';
 import { signOut } from '../../../auth';
 import UserAvatar from './UserAvatar';
 import LogoutButton from './LogoutButton';
+import AccountConnections from './AccountConnections';
 
 export interface ProfileUser {
   id?: string | null;
@@ -14,6 +15,8 @@ export interface ProfileUser {
 
 interface ProfileSidebarProps {
   user: ProfileUser;
+  providers: string[];
+  accountStatus?: string;
 }
 
 function formatJoinedAt(value: Date | string | null | undefined, locale: string): string | null {
@@ -28,7 +31,7 @@ function formatJoinedAt(value: Date | string | null | undefined, locale: string)
 }
 
 // 三栏控制台 · 左侧用户卡片（服务端组件，内含 signOut server action）
-export default async function ProfileSidebar({ user }: ProfileSidebarProps) {
+export default async function ProfileSidebar({ user, providers, accountStatus }: ProfileSidebarProps) {
   const [t, locale] = await Promise.all([
     getTranslations('Profile'),
     getLocale(),
@@ -64,6 +67,7 @@ export default async function ProfileSidebar({ user }: ProfileSidebarProps) {
           }}
         />
       </div>
+      <AccountConnections locale={locale} providers={providers} status={accountStatus} />
     </div>
   );
 }
