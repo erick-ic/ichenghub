@@ -30,7 +30,7 @@ export default function AccountConnections({ locale, providers, status }: Props)
   const visibleStatus = status && statusKeys.has(status) ? status : null;
 
   return (
-    <div className="mt-4 rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+    <div className="mt-4 rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
       <div className="flex items-start gap-3">
         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gray-100 text-gray-700">
           <ShieldCheck className="h-4 w-4" aria-hidden="true" />
