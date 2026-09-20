@@ -7,6 +7,7 @@ import type { Platform } from './AiQuotaTracker';
 import { getBeijingDayKey } from '@/lib/time';
 import { normalizePlatformUrl } from './platform-url';
 import { normalizePlatformColor } from './platform-colors';
+import { normalizeExpiryIndicators } from './expiry-indicators';
 import { normalizeCheckIns } from './check-ins';
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 import { useEscapeKey } from '@/hooks/useEscapeKey';
@@ -43,7 +44,7 @@ export default function ImportExportModal({
 
   // ===== 导出：构建 JSON 字符串 =====
   const exportData: ExportData = {
-    version: 3,
+    version: 4,
     exportedAt: new Date().toISOString(),
     platforms,
     lastResetDate,
@@ -132,6 +133,7 @@ export default function ImportExportModal({
             resetDaily: p.balance.resetDaily === true,
           } : undefined,
           checkIns: normalizeCheckIns(p.checkIns, p.checkIn),
+          expiryIndicators: normalizeExpiryIndicators(p.expiryIndicators),
           indicators: Array.isArray(p.indicators)
             ? p.indicators.map((ind) => {
                 const oldInd = ind as unknown as { name?: string; unit?: string };
@@ -173,14 +175,14 @@ export default function ImportExportModal({
 
   const parsedPreview = importText.trim() ? parseImportData(importText) : null;
   const platformCount = parsedPreview?.platforms.length ?? 0;
-  const indicatorCount = parsedPreview?.platforms.reduce((s, p) => s + p.indicators.length, 0) ?? 0;
+  const indicatorCount = parsedPreview?.platforms.reduce((s, p) => s + p.indicators.length + (p.expiryIndicators?.length ?? 0), 0) ?? 0;
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 bg-black/40 backdrop-blur-sm">
       <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-xl w-full sm:max-w-2xl max-h-[92vh] sm:max-h-[85vh] flex flex-col overflow-hidden">
         {/* 头部 */}
         <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-gray-100">
-          <h3 className="text-lg font-bold text-gray-900">{t('dataSync')}</h3>
+          <h3 className="text-lg font-bold text-gray-900">{t('backupRestore')}</h3>
           <button
             type="button"
             onClick={onClose}

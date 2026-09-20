@@ -16,6 +16,8 @@ export function normalizeCheckIns(value: unknown, legacyValue?: unknown): CheckI
       id,
       nameZh: typeof item.nameZh === 'string' ? item.nameZh : '',
       nameEn: typeof item.nameEn === 'string' ? item.nameEn : '',
+      validityMinutes: Number.isFinite(item.validityMinutes) && Number(item.validityMinutes) >= 1 && Number.isFinite(new Date(Date.now() + Number(item.validityMinutes) * 60000).getTime()) ? Math.floor(Number(item.validityMinutes)) : undefined,
+      expiryRecordId: typeof item.expiryRecordId === 'string' ? item.expiryRecordId : undefined,
       reward: Math.max(0, Number(item.reward) || 0),
       completedDate: typeof item.completedDate === 'string' ? item.completedDate : undefined,
       creditedAmount: Math.max(0, Number(item.creditedAmount) || 0),

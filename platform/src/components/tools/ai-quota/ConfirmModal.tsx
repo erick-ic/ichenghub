@@ -10,6 +10,7 @@ interface ConfirmModalProps {
   platformName: string;
   variant: 'delete' | 'reset' | 'resetAll';
   resetEffects?: string;
+  resetProtection?: string;
   onCancel: () => void;
   onConfirm: () => void;
 }
@@ -19,6 +20,7 @@ export default function ConfirmModal({
   platformName,
   variant,
   resetEffects,
+  resetProtection,
   onCancel,
   onConfirm,
 }: ConfirmModalProps) {
@@ -29,13 +31,18 @@ export default function ConfirmModal({
 
   const isDelete = variant === 'delete';
   const isResetAll = variant === 'resetAll';
+  const nothingToReset = !isDelete && resetEffects === t('resetNoEffects');
   const title = isDelete
     ? t('deleteConfirmTitle')
+    : nothingToReset
+    ? t('resetNoEffectsTitle')
     : isResetAll
     ? t('resetAllConfirmTitle')
     : t('resetConfirmTitle');
   const desc = isDelete
     ? t('deleteConfirmDesc', { name: platformName })
+    : nothingToReset
+    ? t('resetNoEffectsDesc')
     : isResetAll
     ? t('resetAllConfirmDesc', { effects: resetEffects ?? t('resetNoEffects') })
     : t('resetConfirmDesc', { name: platformName, effects: resetEffects ?? t('resetNoEffects') });
@@ -69,7 +76,8 @@ export default function ConfirmModal({
         <h3 className="text-lg font-bold text-gray-900 text-center mb-2">{title}</h3>
 
         {/* 描述 */}
-        <p className="text-sm text-gray-500 text-center mb-6">{desc}</p>
+        <p className={`text-sm text-gray-500 text-center ${resetProtection ? 'mb-3' : 'mb-6'}`}>{desc}</p>
+        {resetProtection && <p className="mb-6 rounded-lg bg-emerald-50 p-2.5 text-center text-xs leading-relaxed text-emerald-800">{resetProtection}</p>}
 
         {/* 操作按钮 */}
         <div className="flex gap-3">
@@ -78,9 +86,9 @@ export default function ConfirmModal({
             onClick={onCancel}
             className="flex-1 py-3 sm:py-2.5 rounded-lg border border-gray-200 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
           >
-            {t('cancel')}
+            {nothingToReset ? t('closeDialog') : t('cancel')}
           </button>
-          <button
+          {!nothingToReset && <button
             type="button"
             onClick={onConfirm}
             className={`flex-1 py-3 sm:py-2.5 rounded-lg text-white text-sm font-medium transition-colors ${
@@ -90,7 +98,7 @@ export default function ConfirmModal({
             }`}
           >
             {confirmText}
-          </button>
+          </button>}
         </div>
       </div>
     </div>

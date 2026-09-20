@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Plus, Minus, Pencil, Trash2, Clock, RotateCcw, Database, LayoutGrid, ExternalLink, Circle, CheckCircle2, Pin, PinOff } from 'lucide-react';
+import { Plus, Minus, Pencil, Trash2, RotateCcw, Search, ChevronDown, LayoutGrid, ExternalLink, Pin, PinOff, Hourglass } from 'lucide-react';
 import { useTranslations, useLocale } from 'next-intl';
 import { trackResourceAction } from '@/app/actions/statsActions';
 import PlatformConfigModal from './PlatformConfigModal';
@@ -10,7 +10,12 @@ import ImportExportModal from './ImportExportModal';
 import { normalizePlatformUrl } from './platform-url';
 import { normalizePlatformColor, PLATFORM_COLOR_STYLES, type PlatformColor } from './platform-colors';
 import { normalizeCheckIns } from './check-ins';
-import { resetForNewDay, toggleCheckIn } from './quota-state';
+import { resetForNewDay, syncCheckInExpiryRecords, toggleCheckIn } from './quota-state';
+import ExpiryIndicatorCard from './ExpiryIndicatorCard';
+import { normalizeExpiryIndicators, type ExpiryIndicator } from './expiry-indicators';
+import DailyCheckInDialog from './DailyCheckInDialog';
+import QuotaMoreActions from './QuotaMoreActions';
+import { hasDailyQuota, hasPendingCheckIns } from './daily-overview';
 
 // ===== 类型定义 =====
 export interface Indicator {
@@ -35,6 +40,8 @@ export interface CheckIn {
   nameZh?: string;
   nameEn?: string;
   reward: number;
+  validityMinutes?: number;
+  expiryRecordId?: string;
   completedDate?: string;
   creditedAmount?: number;
 }
@@ -47,6 +54,7 @@ export interface Platform {
   url?: string;
   color?: PlatformColor;
   indicators: Indicator[];
+  expiryIndicators?: ExpiryIndicator[];
   balance?: CreditBalance;
   checkIns?: CheckIn[];
   checkIn?: Omit<CheckIn, 'id'> & { enabled: boolean };
@@ -110,6 +118,8 @@ export default function AiQuotaTracker() {
   const [isImportExportOpen, setIsImportExportOpen] = useState(false);
   // 进度条挂载动画：挂载后从 0 填充到目标值
   const [animated, setAnimated] = useState(false);
+  const [platformFilter, setPlatformFilter] = useState<'all' | 'pending' | 'available'>('all');
+  const [search, setSearch] = useState('');
   const t = useTranslations('AiQuota');
   const locale = useLocale();
 
@@ -123,6 +133,14 @@ export default function AiQuotaTracker() {
   const pickUnit = (zh?: string, en?: string) => {
     if (locale === 'en') return en || zh;
     return zh || en;
+  };
+
+  const formatValidity = (minutes: number) => {
+    const hours = Math.floor(minutes / 60);
+    const rest = minutes % 60;
+    return locale === 'en'
+      ? [hours && `${hours}h`, rest && `${rest}m`].filter(Boolean).join(' ')
+      : [hours && `${hours} 小时`, rest && `${rest} 分钟`].filter(Boolean).join(' ');
   };
 
   const getResetEffects = (items: Platform[]) => {
@@ -169,6 +187,7 @@ export default function AiQuotaTracker() {
             balance: p.balance,
             checkIn: undefined,
             checkIns: normalizeCheckIns(p.checkIns, p.checkIn),
+            expiryIndicators: normalizeExpiryIndicators(p.expiryIndicators),
             indicators: p.indicators.map((ind) => {
               const oldInd = ind as unknown as { name?: string; unit?: string };
               return {
@@ -191,8 +210,12 @@ export default function AiQuotaTracker() {
           setLastResetDate(today);
           persist(resetPlatforms, today);
         } else {
-          setPlatforms(storedPlatforms);
+          const reconciledPlatforms = storedPlatforms.map((platform) => syncCheckInExpiryRecords(platform, today));
+          setPlatforms(reconciledPlatforms);
           setLastResetDate(storedResetDate);
+          if (reconciledPlatforms.some((platform, index) => platform !== storedPlatforms[index])) {
+            persist(reconciledPlatforms, storedResetDate);
+          }
         }
       } else {
         // 首次访问：加载示例数据，帮助用户理解工具用法
@@ -264,14 +287,15 @@ export default function AiQuotaTracker() {
 
   // ===== 保存平台：新增追加 / 编辑替换，统一持久化 =====
   const handleSavePlatform = (platform: Platform) => {
+    const ready = syncCheckInExpiryRecords(platform, getTodayStr());
     const actionType = editingPlatform ? 'AI_QUOTA_EDIT_PLATFORM' : 'AI_QUOTA_ADD_PLATFORM';
     // 本地 localStorage 平台 id 不是 ToolCard.id，资源 ID 留空；工具级归属由页面 VIEW 埋点承载
     trackResourceAction(null, 'TOOL', actionType, ANALYTICS_PATH).catch(() => {});
     setPlatforms((prev) => {
-      const exists = prev.some((p) => p.id === platform.id);
+      const exists = prev.some((p) => p.id === ready.id);
       const next = exists
-        ? prev.map((p) => (p.id === platform.id ? platform : p))
-        : [...prev, platform];
+        ? prev.map((p) => (p.id === ready.id ? ready : p))
+        : [...prev, ready];
       persist(next, lastResetDate);
       return next;
     });
@@ -306,15 +330,18 @@ export default function AiQuotaTracker() {
     setIsResetOpen(true);
   };
 
-  // ===== 确认重置：与目标平台跨天重置使用同一规则 =====
+  // ===== 手动重置与跨日使用相同规则，保留独立的有效期批次 =====
   const handleConfirmReset = () => {
     const id = resettingPlatformId;
+    const today = getTodayStr();
+    const crossedDay = lastResetDate !== today;
     trackResourceAction(null, 'TOOL', 'AI_QUOTA_RESET_PLATFORM', ANALYTICS_PATH).catch(() => {});
     setPlatforms((prev) => {
-      const next = prev.map((p) => p.id === id ? resetForNewDay(p) : p);
-      persist(next, lastResetDate);
+      const next = prev.map((p) => p.id === id || crossedDay ? resetForNewDay(p) : p);
+      persist(next, today);
       return next;
     });
+    if (crossedDay) setLastResetDate(today);
     setIsResetOpen(false);
     setResettingPlatformId('');
     setResettingPlatformName('');
@@ -325,14 +352,17 @@ export default function AiQuotaTracker() {
     setIsResetAllOpen(true);
   };
 
-  // ===== 确认全局重置：所有平台按跨天规则重置 =====
+  // ===== 全局手动重置：与跨日使用相同规则 =====
   const handleConfirmResetAll = () => {
+    const today = getTodayStr();
+    const crossedDay = lastResetDate !== today;
     trackResourceAction(null, 'TOOL', 'AI_QUOTA_RESET_ALL', ANALYTICS_PATH).catch(() => {});
     setPlatforms((prev) => {
       const next = prev.map(resetForNewDay);
-      persist(next, lastResetDate);
+      persist(next, today);
       return next;
     });
+    if (crossedDay) setLastResetDate(today);
     setIsResetAllOpen(false);
   };
 
@@ -363,7 +393,9 @@ export default function AiQuotaTracker() {
         } else {
           const indMap = new Map(existing.indicators.map((i) => [i.id, i]));
           imp.indicators.forEach((ind) => indMap.set(ind.id, ind));
-          map.set(imp.id, { ...existing, ...imp, indicators: Array.from(indMap.values()) });
+          const expiryMap = new Map(existing.expiryIndicators?.map((item) => [item.id, item]));
+          imp.expiryIndicators?.forEach((item) => expiryMap.set(item.id, item));
+          map.set(imp.id, { ...existing, ...imp, indicators: Array.from(indMap.values()), expiryIndicators: Array.from(expiryMap.values()) });
         }
       });
       const next = Array.from(map.values());
@@ -391,6 +423,16 @@ export default function AiQuotaTracker() {
     setEditingPlatform(null);
     setIsModalOpen(true);
   };
+
+  const today = getTodayStr();
+  const orderedPlatforms = [...platforms].sort((a, b) => Number(!!b.pinned) - Number(!!a.pinned));
+  const query = search.trim().toLocaleLowerCase();
+  const visiblePlatforms = orderedPlatforms.filter((platform) => {
+    const matchesName = !query || [platform.nameZh, platform.nameEn].some((name) => name.toLocaleLowerCase().includes(query));
+    return matchesName && (platformFilter === 'all'
+      || (platformFilter === 'pending' && hasPendingCheckIns(platform, today))
+      || (platformFilter === 'available' && hasDailyQuota(platform)));
+  });
 
   // ===== 挂载前骨架：避免 Hydration 不匹配 =====
   if (!mounted) {
@@ -422,41 +464,47 @@ export default function AiQuotaTracker() {
         <p className="text-base md:text-lg text-zinc-500 max-w-2xl mx-auto mt-3">
           {t('description')}
         </p>
+        <p className="mt-2 text-xs text-zinc-400">{t('subtitle')}</p>
       </header>
 
-      {/* ===== 次级提示 + 操作按钮（移动端纵向堆叠，桌面端两端对齐） ===== */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6 sm:mb-8">
-        <p className="text-xs text-gray-400 flex items-center gap-1">
-          <Clock className="w-3 h-3 shrink-0" />
-          {t('subtitle')}
-        </p>
-        <div className="grid grid-cols-3 gap-2 sm:flex sm:items-center sm:gap-3">
-          <button
-            type="button"
-            onClick={() => setIsImportExportOpen(true)}
-            className="inline-flex items-center justify-center gap-1.5 px-2 sm:px-4 py-2 rounded-lg border border-zinc-200 bg-white text-xs sm:text-sm font-medium text-gray-700 hover:border-zinc-300 hover:text-zinc-900 transition-colors"
-          >
-            <Database className="w-4 h-4 shrink-0" />
-            <span className="truncate">{t('dataSync')}</span>
+      {/* 搜索与筛选靠左，常用操作靠右，低频操作收进更多菜单。 */}
+      <div className="mb-6 flex flex-wrap items-center gap-2 lg:flex-nowrap">
+        {platforms.length > 0 && <>
+          <div className="relative w-full lg:w-64 lg:shrink-0">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" aria-hidden="true" />
+            <input type="search" value={search} onChange={(e) => setSearch(e.target.value)}
+              aria-label={t('searchPlatforms')} placeholder={t('searchPlatforms')}
+              className="h-10 w-full rounded-lg border border-zinc-200 bg-white pl-9 pr-3 text-base outline-none focus:border-zinc-400 focus:ring-2 focus:ring-zinc-200 sm:text-sm" />
+          </div>
+        </>}
+        <div className="flex w-full min-w-0 items-center gap-2 lg:contents">
+        {platforms.length > 0 && <>
+          <div className="relative mr-auto min-w-0 flex-1 lg:flex-none">
+            <select value={platformFilter}
+              onChange={(e) => setPlatformFilter(e.target.value as 'all' | 'pending' | 'available')}
+              aria-label={t('filterPlatforms')}
+              aria-describedby={platformFilter === 'available' ? 'daily-quota-hint' : undefined}
+              className="h-10 w-full appearance-none truncate rounded-lg border border-zinc-200 bg-white pl-3 pr-7 text-sm text-zinc-600 outline-none hover:border-zinc-300 focus:ring-2 focus:ring-zinc-300 lg:w-auto lg:border-transparent lg:bg-transparent lg:pl-2 lg:hover:bg-zinc-200/50">
+              <option value="all">{t('filterAll')}</option>
+              <option value="pending">{t('filterPending')}</option>
+              <option value="available">{t('filterAvailable')}</option>
+            </select>
+            <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" aria-hidden="true" />
+          </div>
+        </>}
+        <div className="ml-auto flex shrink-0 items-center justify-end gap-2">
+          {platforms.length > 0 && <DailyCheckInDialog platforms={orderedPlatforms} today={today} onCheckIn={handleCheckIn} />}
+          <button type="button" onClick={handleOpenAdd} aria-label={t('addPlatform')}
+            className="inline-flex h-10 w-10 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg bg-zinc-900 text-sm font-medium text-white transition-colors hover:bg-zinc-700 sm:w-auto sm:px-3">
+            <Plus className="h-4 w-4 shrink-0" />
+            <span className="hidden sm:inline">{t('addPlatform')}</span>
           </button>
-          <button
-            type="button"
-            onClick={handleResetAll}
-            className="inline-flex items-center justify-center gap-1.5 px-2 sm:px-4 py-2 rounded-lg border border-zinc-200 bg-white text-xs sm:text-sm font-medium text-gray-700 hover:border-[#e52129] hover:text-[#e52129] hover:bg-red-50 transition-colors"
-          >
-            <RotateCcw className="w-4 h-4 shrink-0" />
-            <span className="truncate">{t('resetAll')}</span>
-          </button>
-          <button
-            type="button"
-            onClick={handleOpenAdd}
-            className="inline-flex items-center justify-center gap-1.5 px-2 sm:px-4 py-2 rounded-lg border border-zinc-200 bg-white text-xs sm:text-sm font-medium text-gray-700 hover:border-zinc-300 hover:text-[#e52129] transition-colors"
-          >
-            <Plus className="w-4 h-4 shrink-0" />
-            <span className="truncate">{t('addPlatform')}</span>
-          </button>
+          <QuotaMoreActions onBackup={() => setIsImportExportOpen(true)} onReset={handleResetAll} canReset={platforms.length > 0} />
+        </div>
         </div>
       </div>
+      {platforms.length > 0 && platformFilter === 'available' &&
+        <p id="daily-quota-hint" className="-mt-3 mb-4 text-xs text-zinc-500">{t('dailyQuotaHint')}</p>}
 
       {/* ===== 平台卡片网格 / 空状态 ===== */}
       {platforms.length === 0 ? (
@@ -475,18 +523,24 @@ export default function AiQuotaTracker() {
             {t('addPlatform')}
           </button>
         </div>
+      ) : visiblePlatforms.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-zinc-300 bg-white p-8 text-center">
+          <p className="text-sm text-zinc-500">{t('noMatchingPlatforms')}</p>
+          <button type="button" onClick={() => { setSearch(''); setPlatformFilter('all'); }}
+            className="mt-3 text-sm font-medium text-zinc-900 underline">{t('clearFilters')}</button>
+        </div>
       ) : (
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
-        {[...platforms].sort((a, b) => Number(!!b.pinned) - Number(!!a.pinned)).map((platform) => {
+      <div className="grid grid-cols-1 items-start gap-4 sm:gap-6 md:grid-cols-2 xl:grid-cols-3">
+        {visiblePlatforms.map((platform) => {
           const colorStyle = PLATFORM_COLOR_STYLES[normalizePlatformColor(platform.color)];
           return (
           <div
             key={platform.id}
-            className={`relative overflow-hidden bg-white rounded-2xl shadow-sm border p-4 sm:p-6 hover:-translate-y-1 transition-all duration-300 ${colorStyle.card}`}
+            className={`relative flex max-h-[36rem] flex-col overflow-hidden bg-white rounded-2xl shadow-sm border p-4 sm:p-6 hover:-translate-y-1 transition-all duration-300 ${colorStyle.card}`}
           >
             <div className={`absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r ${colorStyle.sheen}`} />
             {/* 卡片 Header */}
-            <div className="flex items-center justify-between gap-2">
+            <div className="flex shrink-0 items-center justify-between gap-2">
               <div className="flex items-center gap-2 min-w-0">
                 <span className={`h-2.5 w-2.5 shrink-0 rounded-full shadow-[0_0_0_4px_rgba(255,255,255,0.9)] ${colorStyle.marker}`} />
                 <h2 className="text-base sm:text-lg font-bold text-gray-900 truncate">{pickName(platform.nameZh, platform.nameEn)}</h2>
@@ -552,51 +606,29 @@ export default function AiQuotaTracker() {
             </div>
 
             {/* 指标列表 */}
-            <div className="flex flex-col gap-4 sm:gap-5 mt-5 sm:mt-6">
+            <div tabIndex={0} aria-label={pickName(platform.nameZh, platform.nameEn)}
+              className="mt-5 flex min-h-0 flex-col gap-4 overflow-y-auto overscroll-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-600 sm:mt-6 sm:gap-5">
               {platform.balance && (
-                <div className="rounded-xl bg-zinc-50 p-3">
+                <div className="flex items-center justify-between gap-2 rounded-xl bg-zinc-50 p-3">
                   <div>
                     <div className="text-xs text-zinc-500">{t('balance')}</div>
                     <div className="font-mono text-lg font-semibold text-zinc-900">{platform.balance.current}</div>
                   </div>
+                  {!!platform.checkIns?.length &&
+                    <DailyCheckInDialog mode="platform" compact platforms={[platform]} today={today} onCheckIn={handleCheckIn} />}
                 </div>
               )}
-              {platform.checkIns?.map((checkIn) => (
-                <div className={`flex flex-wrap items-center justify-between gap-3 rounded-xl border p-3 sm:p-4 ${
-                  checkIn.completedDate === getTodayStr()
-                    ? 'border-emerald-200 bg-emerald-50'
-                    : 'border-amber-200 bg-amber-50'
-                }`} key={checkIn.id}>
-                  <div className="flex min-w-0 items-center gap-3">
-                    <button type="button" onClick={() => handleCheckIn(platform.id, checkIn.id)}
-                      aria-label={checkIn.completedDate === getTodayStr() ? t('undoCheckIn') : t('completeCheckIn')}
-                      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 ${
-                        checkIn.completedDate === getTodayStr()
-                          ? 'text-emerald-700 hover:bg-emerald-100 focus-visible:outline-emerald-600'
-                          : 'text-amber-700 hover:bg-amber-100 focus-visible:outline-amber-600'
-                      }`}>
-                      {checkIn.completedDate === getTodayStr()
-                        ? <CheckCircle2 className="h-6 w-6" aria-hidden="true" />
-                        : <Circle className="h-6 w-6" aria-hidden="true" />}
-                    </button>
-                    <div>
-                      <div className={`text-sm font-semibold ${checkIn.completedDate === getTodayStr() ? 'text-emerald-800' : 'text-amber-900'}`}>
-                        {checkIn.completedDate === getTodayStr() ? t('checkedInToday') : t('notCheckedInToday')}
-                      </div>
-                      <div className="text-xs text-zinc-600">
-                        {pickName(checkIn.nameZh ?? '', checkIn.nameEn ?? '') || t('dailyCheckIn')}
-                        {checkIn.reward > 0 && <span className="ml-1">· +{checkIn.reward} {t('creditUnit')}</span>}
-                      </div>
-                    </div>
+              {!platform.balance && !!platform.checkIns?.length &&
+                <DailyCheckInDialog mode="platform" platforms={[platform]} today={today} onCheckIn={handleCheckIn} />}
+              {platform.expiryIndicators?.map((item) => <ExpiryIndicatorCard key={item.id} item={item} />)}
+              {platform.checkIns?.filter((item) => item.validityMinutes && !item.expiryRecordId).map((item) => (
+                <div key={`pending-expiry-${item.id}`} className="rounded-xl border border-dashed border-zinc-300 bg-zinc-50 p-3 text-sm text-zinc-500">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="flex min-w-0 items-center gap-1.5 font-medium"><Hourglass className="h-4 w-4 shrink-0" />{pickName(item.nameZh ?? '', item.nameEn ?? '') || t('dailyCheckIn')}</span>
+                    <span>{item.reward} {t('creditUnit')}</span>
                   </div>
-                  <button type="button" onClick={() => handleCheckIn(platform.id, checkIn.id)}
-                    className={`rounded-lg px-3 py-2 text-xs font-medium transition-colors ${
-                      checkIn.completedDate === getTodayStr()
-                        ? 'border border-emerald-300 bg-white text-emerald-800 hover:bg-emerald-100'
-                        : 'bg-amber-800 text-white hover:bg-amber-900'
-                    }`}>
-                    {checkIn.completedDate === getTodayStr() ? t('undoCheckIn') : t('completeCheckIn')}
-                  </button>
+                  <p className="my-2 text-xs">{t('expiryStartsOnCheckIn', { duration: formatValidity(item.validityMinutes ?? 0) })}</p>
+                  <div className="h-2 rounded-full bg-zinc-200" aria-hidden="true" />
                 </div>
               ))}
               {platform.indicators.map((ind) => {
@@ -704,6 +736,7 @@ export default function AiQuotaTracker() {
         platformName={resettingPlatformName}
         variant="reset"
         resetEffects={getResetEffects(platforms.filter((p) => p.id === resettingPlatformId))}
+        resetProtection={platforms.some((p) => p.id === resettingPlatformId && p.checkIns?.some((item) => item.validityMinutes)) ? t('resetExpiryProtected') : undefined}
         onCancel={() => {
           setIsResetOpen(false);
           setResettingPlatformId('');
@@ -718,6 +751,7 @@ export default function AiQuotaTracker() {
         platformName=""
         variant="resetAll"
         resetEffects={getResetEffects(platforms)}
+        resetProtection={platforms.some((p) => p.checkIns?.some((item) => item.validityMinutes)) ? t('resetExpiryProtected') : undefined}
         onCancel={() => setIsResetAllOpen(false)}
         onConfirm={handleConfirmResetAll}
       />

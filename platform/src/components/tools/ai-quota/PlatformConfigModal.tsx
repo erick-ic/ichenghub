@@ -1,9 +1,11 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Check, X, Plus, Minus } from 'lucide-react';
+import { Check, X, Plus, Minus, Settings2, SlidersHorizontal, Coins, CalendarCheck } from 'lucide-react';
 import { useTranslations, useLocale } from 'next-intl';
 import type { Platform, Indicator, CheckIn } from './AiQuotaTracker';
+import ExpiryIndicatorFields from './ExpiryIndicatorFields';
+import { normalizeExpiryIndicators, type ExpiryIndicator } from './expiry-indicators';
 import { normalizeCheckIns } from './check-ins';
 import { normalizePlatformUrl } from './platform-url';
 import { DEFAULT_PLATFORM_COLOR, normalizePlatformColor, PLATFORM_COLORS, PLATFORM_COLOR_STYLES, type PlatformColor } from './platform-colors';
@@ -81,6 +83,10 @@ export default function PlatformConfigModal({
   const [indicators, setIndicators] = useState<IndicatorForm[]>([
     createEmptyIndicator(),
   ]);
+  const [expiryIndicators, setExpiryIndicators] = useState<ExpiryIndicator[]>([]);
+  const [indicatorType, setIndicatorType] = useState('usage');
+  const [expiryError, setExpiryError] = useState(false);
+  const [validityError, setValidityError] = useState(false);
   const [hasBalance, setHasBalance] = useState(false);
   const [balanceCurrent, setBalanceCurrent] = useState(0);
   const [balanceInitial, setBalanceInitial] = useState(0);
@@ -99,6 +105,10 @@ export default function PlatformConfigModal({
   // 每次打开弹窗时：编辑态回填 initialData，新增态置空
   useEffect(() => {
     if (!isOpen) return;
+    setExpiryIndicators(normalizeExpiryIndicators(initialData?.expiryIndicators));
+    setIndicatorType('usage');
+    setExpiryError(false);
+    setValidityError(false);
     if (initialData) {
       setPlatformNameZh(initialData.nameZh);
       setPlatformNameEn(initialData.nameEn);
@@ -150,7 +160,10 @@ export default function PlatformConfigModal({
   };
 
   const addIndicator = () => {
-    setIndicators((prev) => [...prev, createEmptyIndicator()]);
+    if (indicatorType === 'expiry') {
+      const startsAt = Math.floor(Date.now() / 60_000) * 60_000;
+      setExpiryIndicators((prev) => [...prev, { id: crypto.randomUUID(), nameZh: '', nameEn: '', amount: 0, startsAt, expiresAt: startsAt + 86400000 }]);
+    } else setIndicators((prev) => [...prev, createEmptyIndicator()]);
   };
 
   const updateCheckIn = (id: string, field: 'nameZh' | 'nameEn' | 'reward', value: string) => {
@@ -178,7 +191,7 @@ export default function PlatformConfigModal({
     const validIndicators = indicators.filter(
       (ind) => ind.nameZh.trim() || ind.nameEn.trim()
     );
-    if (validIndicators.length === 0 && !hasBalance && checkIns.length === 0) {
+    if (validIndicators.length === 0 && expiryIndicators.length === 0 && !hasBalance && checkIns.length === 0) {
       setIndicatorError(true);
       (document.querySelector<HTMLInputElement>('[data-indicator-name]') ?? addIndicatorRef.current)?.focus();
       return;
@@ -192,6 +205,19 @@ export default function PlatformConfigModal({
       return;
     }
     setCheckInError(false);
+
+    const invalidExpiry = expiryIndicators.find((item) => !Number.isFinite(new Date(item.startsAt).getTime()) || !Number.isFinite(new Date(item.expiresAt).getTime()) || item.expiresAt <= item.startsAt || !Number.isFinite(item.amount) || item.amount < 0);
+    setExpiryError(!!invalidExpiry);
+    if (invalidExpiry) {
+      document.getElementById(`expiry-${invalidExpiry.id}`)?.scrollIntoView({ block: 'center' });
+      return;
+    }
+    const invalidValidity = checkIns.find((item) => item.validityMinutes !== undefined && (!Number.isFinite(item.validityMinutes) || item.validityMinutes < 1 || !Number.isFinite(new Date(Date.now() + item.validityMinutes * 60000).getTime())));
+    setValidityError(!!invalidValidity);
+    if (invalidValidity) {
+      document.getElementById(`validity-${invalidValidity.id}`)?.focus();
+      return;
+    }
 
     // 组装完整 Platform：编辑态保留原有 id 与各指标 used 值
     const savedPlatform: Platform = {
@@ -212,6 +238,7 @@ export default function PlatformConfigModal({
         nameEn: item.nameEn?.trim() ?? '',
         reward: Math.max(0, Number(item.reward) || 0),
       })),
+      expiryIndicators,
       indicators: validIndicators.map((ind) => ({
         id: ind.id,
         nameZh: ind.nameZh.trim(),
@@ -234,14 +261,16 @@ export default function PlatformConfigModal({
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-t-2xl sm:rounded-2xl shadow-xl w-full sm:max-w-md max-h-[92vh] overflow-y-auto p-5 sm:p-6 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:pb-6 relative"
+        className="bg-zinc-50 rounded-t-2xl sm:rounded-2xl shadow-xl w-full sm:max-w-lg max-h-[92vh] overflow-y-auto p-5 sm:p-6 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:pb-6 relative"
         onClick={(e) => e.stopPropagation()}
       >
         {/* ===== 头部 ===== */}
-        <div className="flex items-center justify-between mb-5">
-          <h2 className="text-lg font-bold text-gray-900">
+        <div className="flex items-start justify-between gap-3 mb-6 border-b border-zinc-200 pb-5">
+          <div className="min-w-0">
+          <h2 className="text-xl font-bold tracking-tight text-zinc-900">
             {isEdit ? t('editModalTitle') : t('modalTitle')}
           </h2>
+          </div>
           <button
             type="button"
             onClick={onClose}
@@ -252,6 +281,8 @@ export default function PlatformConfigModal({
           </button>
         </div>
 
+        <section className="mb-6 rounded-xl border border-zinc-200 bg-white p-4 shadow-sm">
+        <h3 className="flex items-center gap-2 border-b border-zinc-200 pb-3 text-base font-semibold text-zinc-900 mb-4"><Settings2 className="h-4 w-4 text-zinc-500" aria-hidden="true" />{t('platformInfoSection')}</h3>
         {/* ===== 平台名称：原始语言和可选翻译都可编辑 ===== */}
         <div className="mb-5">
           <div className="text-sm text-gray-600 mb-1.5">{t('platformNameLabel')}</div>
@@ -305,7 +336,7 @@ export default function PlatformConfigModal({
         </div>
 
         {/* ===== 卡片配色 ===== */}
-        <fieldset className="mb-5">
+        <fieldset>
           <legend className="block text-sm text-gray-600 mb-1.5">{t('cardColorLabel')}</legend>
           <p className="text-xs text-gray-400 mb-3">{t('cardColorHint')}</p>
           <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-label={t('cardColorLabel')}>
@@ -335,9 +366,11 @@ export default function PlatformConfigModal({
           </div>
         </fieldset>
 
+        </section>
+
         {/* ===== 监控指标列表 ===== */}
-        <div className="mb-5">
-          <label className="block text-sm text-gray-600 mb-1.5">{t('indicatorLabel')}</label>
+        <section className="mb-6 rounded-xl border border-zinc-200 bg-white p-4 shadow-sm">
+          <h3 className="flex items-center gap-2 border-b border-zinc-200 pb-3 text-base font-semibold text-zinc-900 mb-4"><SlidersHorizontal className="h-4 w-4 text-zinc-500" aria-hidden="true" />{t('indicatorLabel')}</h3>
           <div className="flex flex-col gap-2.5">
             {indicators.map((ind) => (
               <div key={ind.id} className="flex flex-wrap items-center gap-2">
@@ -387,10 +420,17 @@ export default function PlatformConfigModal({
             ))}
           </div>
 
+          <ExpiryIndicatorFields items={expiryIndicators} onChange={setExpiryIndicators} />
+          {expiryError && <p role="alert" className="mt-2 text-xs text-red-600">{t('expiryInvalid')}</p>}
           {indicatorError && (
             <p className="text-xs text-[#e52129] mt-1.5">{t('errors.indicatorRequired')}</p>
           )}
 
+          <label className="mt-4 flex items-center gap-2 text-xs text-zinc-600">{t('indicatorType')}
+            <select value={indicatorType} onChange={(e) => setIndicatorType(e.target.value)} className="rounded-lg border border-zinc-200 bg-white p-2 text-sm">
+              <option value="usage">{t('usageType')}</option><option value="expiry">{t('manualExpiryType')}</option>
+            </select>
+          </label>
           <button
             ref={addIndicatorRef}
             type="button"
@@ -400,9 +440,10 @@ export default function PlatformConfigModal({
             <Plus className="w-4 h-4" />
             {t('addIndicator')}
           </button>
-        </div>
+        </section>
 
-        <div className="mb-5 space-y-3 border-t border-zinc-100 pt-4">
+        <section className="mb-6 rounded-xl border border-zinc-200 bg-white p-4 shadow-sm space-y-4">
+          <h3 className="flex items-center gap-2 border-b border-zinc-200 pb-3 text-base font-semibold text-zinc-900"><Coins className="h-4 w-4 text-zinc-500" aria-hidden="true" />{t('balanceSection')}</h3>
           <label className="flex items-center gap-2 text-sm text-zinc-700">
             <input type="checkbox" checked={hasBalance} onChange={(e) => setHasBalance(e.target.checked)} />
             {t('enableBalance')}
@@ -423,7 +464,9 @@ export default function PlatformConfigModal({
               {t('resetBalanceDaily')}
             </label>
           </div>}
-          <div className="text-sm font-medium text-zinc-700">{t('checkInCategories')}</div>
+        </section>
+        <section className="mb-6 rounded-xl border border-zinc-200 bg-white p-4 shadow-sm space-y-4">
+          <h3 className="flex items-center gap-2 border-b border-zinc-200 pb-3 text-base font-semibold text-zinc-900"><CalendarCheck className="h-4 w-4 text-zinc-500" aria-hidden="true" />{t('checkInCategories')}</h3>
           {checkIns.map((item) => <div key={item.id} className="rounded-xl border border-zinc-200 p-3 space-y-3">
             <div className="grid grid-cols-2 items-end gap-2">
               {nameLanguages.map((language, index) => <label key={language} className="block min-w-0 text-xs text-zinc-600">
@@ -448,13 +491,27 @@ export default function PlatformConfigModal({
                 <Minus className="h-4 w-4" />
               </button>
             </div>
+            <label className="flex items-center gap-2 text-xs text-zinc-600">
+              <input type="checkbox" checked={item.validityMinutes !== undefined}
+                onChange={(e) => setCheckIns((prev) => prev.map((entry) => entry.id === item.id ? { ...entry, validityMinutes: e.target.checked ? 1440 : undefined } : entry))} />
+              {t('trackExpiry')}
+            </label>
+            {item.validityMinutes !== undefined && <div className="space-y-2">
+              <label className="block text-xs text-zinc-600">{t('validityHours')}
+                <input id={`validity-${item.id}`} type="number" min="0.0167" step="any" value={Number.isFinite(item.validityMinutes) ? item.validityMinutes / 60 : ''}
+                  onChange={(e) => setCheckIns((prev) => prev.map((entry) => entry.id === item.id ? { ...entry, validityMinutes: e.target.value ? Math.round(Number(e.target.value) * 60) : NaN } : entry))}
+                  className="mt-1 w-full rounded-lg border border-zinc-200 p-2 text-base sm:text-sm" />
+              </label>
+              <p className="text-xs leading-relaxed text-zinc-500">{t('expiryRuleHint')}</p>
+            </div>}
           </div>)}
+          {validityError && <p role="alert" className="text-xs text-red-600">{t('validityInvalid')}</p>}
           {checkInError && <p className="text-xs text-[#e52129]">{t('checkInNameRequired')}</p>}
           <button type="button" onClick={() => setCheckIns((prev) => [...prev, createEmptyCheckIn()])}
             className="inline-flex items-center gap-1 text-sm text-zinc-600 hover:text-[#e52129]">
             <Plus className="h-4 w-4" />{t('addCheckIn')}
           </button>
-        </div>
+        </section>
 
         {/* ===== 保存按钮 ===== */}
         <button
