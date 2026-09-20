@@ -7,6 +7,7 @@ import type { Platform } from './AiQuotaTracker';
 import { getBeijingDayKey } from '@/lib/time';
 import { normalizePlatformUrl } from './platform-url';
 import { normalizePlatformColor } from './platform-colors';
+import { normalizeCheckIns } from './check-ins';
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 import { useEscapeKey } from '@/hooks/useEscapeKey';
 
@@ -42,7 +43,7 @@ export default function ImportExportModal({
 
   // ===== 导出：构建 JSON 字符串 =====
   const exportData: ExportData = {
-    version: 1,
+    version: 3,
     exportedAt: new Date().toISOString(),
     platforms,
     lastResetDate,
@@ -124,6 +125,12 @@ export default function ImportExportModal({
           nameEn: String(p.nameEn ?? oldP.name ?? ''),
           url: normalizePlatformUrl(p.url),
           color: normalizePlatformColor(p.color),
+          balance: p.balance && typeof p.balance === 'object' ? {
+            current: Math.max(0, Number(p.balance.current) || 0),
+            initial: Math.max(0, Number(p.balance.initial) || 0),
+            resetDaily: p.balance.resetDaily === true,
+          } : undefined,
+          checkIns: normalizeCheckIns(p.checkIns, p.checkIn),
           indicators: Array.isArray(p.indicators)
             ? p.indicators.map((ind) => {
                 const oldInd = ind as unknown as { name?: string; unit?: string };
@@ -133,6 +140,7 @@ export default function ImportExportModal({
                   nameEn: String(ind.nameEn ?? oldInd.name ?? ''),
                   used: Number(ind.used) || 0,
                   limit: Number(ind.limit) || 0,
+                  resetDaily: ind.resetDaily !== false,
                   unitZh: ind.unitZh ? String(ind.unitZh) : oldInd.unit ? String(oldInd.unit) : undefined,
                   unitEn: ind.unitEn ? String(ind.unitEn) : oldInd.unit ? String(oldInd.unit) : undefined,
                 };

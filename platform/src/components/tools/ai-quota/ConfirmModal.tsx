@@ -9,6 +9,7 @@ interface ConfirmModalProps {
   isOpen: boolean;
   platformName: string;
   variant: 'delete' | 'reset' | 'resetAll';
+  resetEffects?: string;
   onCancel: () => void;
   onConfirm: () => void;
 }
@@ -17,6 +18,7 @@ export default function ConfirmModal({
   isOpen,
   platformName,
   variant,
+  resetEffects,
   onCancel,
   onConfirm,
 }: ConfirmModalProps) {
@@ -35,8 +37,8 @@ export default function ConfirmModal({
   const desc = isDelete
     ? t('deleteConfirmDesc', { name: platformName })
     : isResetAll
-    ? t('resetAllConfirmDesc')
-    : t('resetConfirmDesc', { name: platformName });
+    ? t('resetAllConfirmDesc', { effects: resetEffects ?? t('resetNoEffects') })
+    : t('resetConfirmDesc', { name: platformName, effects: resetEffects ?? t('resetNoEffects') });
   const confirmText = isDelete ? t('confirmDelete') : t('confirmReset');
 
   return (

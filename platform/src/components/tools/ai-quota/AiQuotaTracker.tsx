@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Plus, Minus, Pencil, Trash2, Clock, RotateCcw, Database, LayoutGrid, ExternalLink } from 'lucide-react';
+import { Plus, Minus, Pencil, Trash2, Clock, RotateCcw, Database, LayoutGrid, ExternalLink, Circle, CheckCircle2 } from 'lucide-react';
 import { useTranslations, useLocale } from 'next-intl';
 import { trackResourceAction } from '@/app/actions/statsActions';
 import PlatformConfigModal from './PlatformConfigModal';
@@ -9,6 +9,8 @@ import ConfirmModal from './ConfirmModal';
 import ImportExportModal from './ImportExportModal';
 import { normalizePlatformUrl } from './platform-url';
 import { normalizePlatformColor, PLATFORM_COLOR_STYLES, type PlatformColor } from './platform-colors';
+import { normalizeCheckIns } from './check-ins';
+import { resetForNewDay, toggleCheckIn } from './quota-state';
 
 // ===== 类型定义 =====
 export interface Indicator {
@@ -19,6 +21,22 @@ export interface Indicator {
   limit: number;
   unitZh?: string;
   unitEn?: string;
+  resetDaily?: boolean;
+}
+
+export interface CreditBalance {
+  current: number;
+  initial: number;
+  resetDaily: boolean;
+}
+
+export interface CheckIn {
+  id: string;
+  nameZh?: string;
+  nameEn?: string;
+  reward: number;
+  completedDate?: string;
+  creditedAmount?: number;
 }
 
 export interface Platform {
@@ -28,6 +46,9 @@ export interface Platform {
   url?: string;
   color?: PlatformColor;
   indicators: Indicator[];
+  balance?: CreditBalance;
+  checkIns?: CheckIn[];
+  checkIn?: Omit<CheckIn, 'id'> & { enabled: boolean };
 }
 
 interface QuotaStore {
@@ -103,6 +124,15 @@ export default function AiQuotaTracker() {
     return zh || en;
   };
 
+  const getResetEffects = (items: Platform[]) => {
+    const effects = [
+      items.some((p) => p.indicators.some((ind) => ind.resetDaily !== false)) && t('resetEffectUsage'),
+      items.some((p) => p.balance?.resetDaily) && t('resetEffectBalance'),
+      items.some((p) => p.checkIns?.length) && t('resetEffectCheckIn'),
+    ].filter(Boolean);
+    return effects.length ? effects.join(t('resetEffectSeparator')) : t('resetNoEffects');
+  };
+
   // ===== 持久化写入 =====
   const persist = (nextPlatforms: Platform[], nextResetDate: string) => {
     try {
@@ -134,6 +164,9 @@ export default function AiQuotaTracker() {
               p.id === 'sample-midjourney' ? MIDJOURNEY_PLATFORM_URL : undefined
             ),
             color: normalizePlatformColor(p.color),
+            balance: p.balance,
+            checkIn: undefined,
+            checkIns: normalizeCheckIns(p.checkIns, p.checkIn),
             indicators: p.indicators.map((ind) => {
               const oldInd = ind as unknown as { name?: string; unit?: string };
               return {
@@ -142,6 +175,7 @@ export default function AiQuotaTracker() {
                 nameEn: ind.nameEn ?? oldInd.name ?? '',
                 unitZh: ind.unitZh ?? oldInd.unit,
                 unitEn: ind.unitEn ?? oldInd.unit,
+                resetDaily: ind.resetDaily !== false,
               };
             }),
           };
@@ -150,10 +184,7 @@ export default function AiQuotaTracker() {
 
         if (storedResetDate !== today) {
           // 跨天：所有指标 used 归零，刷新 lastResetDate
-          const resetPlatforms = storedPlatforms.map((p) => ({
-            ...p,
-            indicators: p.indicators.map((ind) => ({ ...ind, used: 0 })),
-          }));
+          const resetPlatforms = storedPlatforms.map(resetForNewDay);
           setPlatforms(resetPlatforms);
           setLastResetDate(today);
           persist(resetPlatforms, today);
@@ -178,30 +209,55 @@ export default function AiQuotaTracker() {
     }
   }, []);
 
-  // ===== 快捷加减：边界防御 + 同步持久化 =====
-  const handleUpdateQuota = (
-    platformId: string,
-    indicatorId: string,
-    delta: number
-  ) => {
+  // 页面保持打开时也在本地日期变更后重置。
+  useEffect(() => {
+    if (!mounted) return;
+    const timer = window.setInterval(() => {
+      const today = getTodayStr();
+      if (today === lastResetDate) return;
+      setPlatforms((prev) => {
+        const next = prev.map(resetForNewDay);
+        persist(next, today);
+        return next;
+      });
+      setLastResetDate(today);
+    }, 30_000);
+    return () => window.clearInterval(timer);
+  }, [mounted, lastResetDate]);
+
+  const handleCheckIn = (platformId: string, checkInId: string) => {
+    const today = getTodayStr();
+    const crossedDay = lastResetDate !== today;
     setPlatforms((prev) => {
-      const next = prev.map((p) =>
-        p.id !== platformId
-          ? p
-          : {
-              ...p,
-              indicators: p.indicators.map((ind) => {
-                if (ind.id !== indicatorId) return ind;
-                // 边界：used ∈ [0, limit]
-                const nextUsed = Math.max(0, Math.min(ind.limit, ind.used + delta));
-                return { ...ind, used: nextUsed };
-              }),
-            }
-      );
-      // 状态更新后同步持久化（lastResetDate 仅在跨天时变更，此处沿用当前值）
-      persist(next, lastResetDate);
+      const next = prev.map((p) => {
+        const ready = crossedDay ? resetForNewDay(p) : p;
+        return ready.id === platformId ? toggleCheckIn(ready, checkInId, today) : ready;
+      });
+      persist(next, today);
       return next;
     });
+    if (crossedDay) setLastResetDate(today);
+  };
+
+  // 每日消费沿用卡片上的快捷加减操作。
+  const handleUpdateQuota = (platformId: string, indicatorId: string, delta: number) => {
+    const today = getTodayStr();
+    const crossedDay = lastResetDate !== today;
+    setPlatforms((prev) => {
+      const next = prev.map((p) => {
+        const ready = crossedDay ? resetForNewDay(p) : p;
+        return ready.id !== platformId ? ready : {
+          ...ready,
+          indicators: ready.indicators.map((ind) => ind.id !== indicatorId ? ind : {
+            ...ind,
+            used: Math.max(0, Math.min(ind.limit, ind.used + delta)),
+          }),
+        };
+      });
+      persist(next, today);
+      return next;
+    });
+    if (crossedDay) setLastResetDate(today);
   };
 
   // ===== 保存平台：新增追加 / 编辑替换，统一持久化 =====
@@ -248,19 +304,12 @@ export default function AiQuotaTracker() {
     setIsResetOpen(true);
   };
 
-  // ===== 确认重置：将目标平台所有指标 used 归零 =====
+  // ===== 确认重置：与目标平台跨天重置使用同一规则 =====
   const handleConfirmReset = () => {
     const id = resettingPlatformId;
     trackResourceAction(null, 'TOOL', 'AI_QUOTA_RESET_PLATFORM', ANALYTICS_PATH).catch(() => {});
     setPlatforms((prev) => {
-      const next = prev.map((p) =>
-        p.id !== id
-          ? p
-          : {
-              ...p,
-              indicators: p.indicators.map((ind) => ({ ...ind, used: 0 })),
-            }
-      );
+      const next = prev.map((p) => p.id === id ? resetForNewDay(p) : p);
       persist(next, lastResetDate);
       return next;
     });
@@ -274,14 +323,11 @@ export default function AiQuotaTracker() {
     setIsResetAllOpen(true);
   };
 
-  // ===== 确认全局重置：所有平台所有指标 used 归零 =====
+  // ===== 确认全局重置：所有平台按跨天规则重置 =====
   const handleConfirmResetAll = () => {
     trackResourceAction(null, 'TOOL', 'AI_QUOTA_RESET_ALL', ANALYTICS_PATH).catch(() => {});
     setPlatforms((prev) => {
-      const next = prev.map((p) => ({
-        ...p,
-        indicators: p.indicators.map((ind) => ({ ...ind, used: 0 })),
-      }));
+      const next = prev.map(resetForNewDay);
       persist(next, lastResetDate);
       return next;
     });
@@ -295,16 +341,20 @@ export default function AiQuotaTracker() {
     mode: 'replace' | 'merge'
   ) => {
     trackResourceAction(null, 'TOOL', 'AI_QUOTA_IMPORT', ANALYTICS_PATH).catch(() => {});
+    const today = getTodayStr();
+    const readyPlatforms = importedResetDate === today
+      ? importedPlatforms : importedPlatforms.map(resetForNewDay);
     if (mode === 'replace') {
-      setPlatforms(importedPlatforms);
-      persist(importedPlatforms, importedResetDate);
+      setPlatforms(readyPlatforms);
+      setLastResetDate(today);
+      persist(readyPlatforms, today);
       return;
     }
     // 合并模式：按平台 id 合并，同 id 平台内按指标 id 合并
     setPlatforms((prev) => {
       const map = new Map<string, Platform>();
       prev.forEach((p) => map.set(p.id, p));
-      importedPlatforms.forEach((imp) => {
+      readyPlatforms.forEach((imp) => {
         const existing = map.get(imp.id);
         if (!existing) {
           map.set(imp.id, imp);
@@ -481,6 +531,52 @@ export default function AiQuotaTracker() {
 
             {/* 指标列表 */}
             <div className="flex flex-col gap-4 sm:gap-5 mt-5 sm:mt-6">
+              {platform.balance && (
+                <div className="rounded-xl bg-zinc-50 p-3">
+                  <div>
+                    <div className="text-xs text-zinc-500">{t('balance')}</div>
+                    <div className="font-mono text-lg font-semibold text-zinc-900">{platform.balance.current}</div>
+                  </div>
+                </div>
+              )}
+              {platform.checkIns?.map((checkIn) => (
+                <div className={`flex flex-wrap items-center justify-between gap-3 rounded-xl border p-3 sm:p-4 ${
+                  checkIn.completedDate === getTodayStr()
+                    ? 'border-emerald-200 bg-emerald-50'
+                    : 'border-amber-200 bg-amber-50'
+                }`} key={checkIn.id}>
+                  <div className="flex min-w-0 items-center gap-3">
+                    <button type="button" onClick={() => handleCheckIn(platform.id, checkIn.id)}
+                      aria-label={checkIn.completedDate === getTodayStr() ? t('undoCheckIn') : t('completeCheckIn')}
+                      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 ${
+                        checkIn.completedDate === getTodayStr()
+                          ? 'text-emerald-700 hover:bg-emerald-100 focus-visible:outline-emerald-600'
+                          : 'text-amber-700 hover:bg-amber-100 focus-visible:outline-amber-600'
+                      }`}>
+                      {checkIn.completedDate === getTodayStr()
+                        ? <CheckCircle2 className="h-6 w-6" aria-hidden="true" />
+                        : <Circle className="h-6 w-6" aria-hidden="true" />}
+                    </button>
+                    <div>
+                      <div className={`text-sm font-semibold ${checkIn.completedDate === getTodayStr() ? 'text-emerald-800' : 'text-amber-900'}`}>
+                        {checkIn.completedDate === getTodayStr() ? t('checkedInToday') : t('notCheckedInToday')}
+                      </div>
+                      <div className="text-xs text-zinc-600">
+                        {pickName(checkIn.nameZh ?? '', checkIn.nameEn ?? '') || t('dailyCheckIn')}
+                        {checkIn.reward > 0 && <span className="ml-1">· +{checkIn.reward} {t('creditUnit')}</span>}
+                      </div>
+                    </div>
+                  </div>
+                  <button type="button" onClick={() => handleCheckIn(platform.id, checkIn.id)}
+                    className={`rounded-lg px-3 py-2 text-xs font-medium transition-colors ${
+                      checkIn.completedDate === getTodayStr()
+                        ? 'border border-emerald-300 bg-white text-emerald-800 hover:bg-emerald-100'
+                        : 'bg-amber-800 text-white hover:bg-amber-900'
+                    }`}>
+                    {checkIn.completedDate === getTodayStr() ? t('undoCheckIn') : t('completeCheckIn')}
+                  </button>
+                </div>
+              ))}
               {platform.indicators.map((ind) => {
                 const percent = Math.min(100, (ind.used / ind.limit) * 100);
                 const isExceeded = ind.used >= ind.limit;
@@ -509,7 +605,7 @@ export default function AiQuotaTracker() {
                         <span className={`font-mono text-sm font-medium ${valueColor}`}>
                           {ind.used}
                         </span>
-                        <span className="text-[10px] text-gray-400 px-1 bg-gray-100 rounded">{t('today')}</span>
+                        <span className="text-[10px] text-gray-400 px-1 bg-gray-100 rounded">{ind.resetDaily === false ? t('used') : t('today')}</span>
                         <span className="text-sm text-gray-400">/</span>
                         <span className="font-mono text-sm text-gray-500">{ind.limit}</span>
                         {(() => { const u = pickUnit(ind.unitZh, ind.unitEn); return u ? <span className="text-xs text-gray-400 ml-0.5">{u}</span> : null; })()}
@@ -527,7 +623,7 @@ export default function AiQuotaTracker() {
                       </div>
                     </div>
 
-                    {/* 进度条 + 操作按钮（移动端加大触控热区） */}
+                    {/* 每日消费进度条与快捷加减 */}
                     <div className="flex items-center gap-2 sm:gap-3">
                       <div className={`flex-1 rounded-full h-2 overflow-hidden ${trackColor}`}>
                         <div
@@ -535,21 +631,14 @@ export default function AiQuotaTracker() {
                           style={{ width: animated ? `${percent}%` : '0%' }}
                         />
                       </div>
-
-                      <button
-                        type="button"
-                        aria-label={t('aria.decrease')}
+                      <button type="button" aria-label={t('aria.decrease')}
                         onClick={() => handleUpdateQuota(platform.id, ind.id, -1)}
-                        className="w-8 h-8 sm:w-6 sm:h-6 flex items-center justify-center rounded-md border border-gray-200 text-gray-500 hover:text-[#e52129] hover:bg-red-50 transition-colors"
-                      >
+                        className="w-8 h-8 sm:w-6 sm:h-6 flex items-center justify-center rounded-md border border-gray-200 text-gray-500 hover:text-[#e52129] hover:bg-red-50 transition-colors">
                         <Minus className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
                       </button>
-                      <button
-                        type="button"
-                        aria-label={t('aria.increase')}
+                      <button type="button" aria-label={t('aria.increase')}
                         onClick={() => handleUpdateQuota(platform.id, ind.id, 1)}
-                        className="w-8 h-8 sm:w-6 sm:h-6 flex items-center justify-center rounded-md border border-gray-200 text-gray-500 hover:text-[#e52129] hover:bg-red-50 transition-colors"
-                      >
+                        className="w-8 h-8 sm:w-6 sm:h-6 flex items-center justify-center rounded-md border border-gray-200 text-gray-500 hover:text-[#e52129] hover:bg-red-50 transition-colors">
                         <Plus className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
                       </button>
                     </div>
@@ -592,6 +681,7 @@ export default function AiQuotaTracker() {
         isOpen={isResetOpen}
         platformName={resettingPlatformName}
         variant="reset"
+        resetEffects={getResetEffects(platforms.filter((p) => p.id === resettingPlatformId))}
         onCancel={() => {
           setIsResetOpen(false);
           setResettingPlatformId('');
@@ -605,6 +695,7 @@ export default function AiQuotaTracker() {
         isOpen={isResetAllOpen}
         platformName=""
         variant="resetAll"
+        resetEffects={getResetEffects(platforms)}
         onCancel={() => setIsResetAllOpen(false)}
         onConfirm={handleConfirmResetAll}
       />

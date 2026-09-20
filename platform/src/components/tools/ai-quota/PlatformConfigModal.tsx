@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { Check, X, Plus, Minus } from 'lucide-react';
 import { useTranslations, useLocale } from 'next-intl';
-import type { Platform, Indicator } from './AiQuotaTracker';
+import type { Platform, Indicator, CheckIn } from './AiQuotaTracker';
+import { normalizeCheckIns } from './check-ins';
 import { normalizePlatformUrl } from './platform-url';
 import { DEFAULT_PLATFORM_COLOR, normalizePlatformColor, PLATFORM_COLORS, PLATFORM_COLOR_STYLES, type PlatformColor } from './platform-colors';
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
@@ -18,6 +19,7 @@ interface IndicatorForm {
   used: number;
   unitZh: string;
   unitEn: string;
+  resetDaily: boolean;
 }
 
 interface PlatformConfigModalProps {
@@ -36,6 +38,14 @@ const createEmptyIndicator = (): IndicatorForm => ({
   used: 0,
   unitZh: '',
   unitEn: '',
+  resetDaily: true,
+});
+
+const createEmptyCheckIn = (): CheckIn => ({
+  id: crypto.randomUUID(),
+  nameZh: '',
+  nameEn: '',
+  reward: 0,
 });
 
 // 将存储态指标转为表单态
@@ -48,6 +58,7 @@ const toFormIndicators = (list: Indicator[]): IndicatorForm[] =>
     used: ind.used,
     unitZh: ind.unitZh ?? '',
     unitEn: ind.unitEn ?? '',
+    resetDaily: ind.resetDaily !== false,
   }));
 
 export default function PlatformConfigModal({
@@ -70,9 +81,15 @@ export default function PlatformConfigModal({
   const [indicators, setIndicators] = useState<IndicatorForm[]>([
     createEmptyIndicator(),
   ]);
+  const [hasBalance, setHasBalance] = useState(false);
+  const [balanceCurrent, setBalanceCurrent] = useState(0);
+  const [balanceInitial, setBalanceInitial] = useState(0);
+  const [balanceResetDaily, setBalanceResetDaily] = useState(false);
+  const [checkIns, setCheckIns] = useState<CheckIn[]>([]);
   const [nameError, setNameError] = useState(false);
   const [urlError, setUrlError] = useState(false);
   const [indicatorError, setIndicatorError] = useState(false);
+  const [checkInError, setCheckInError] = useState(false);
 
   // 当前语言对应的平台名称值与 setter
   const platformName = isEn ? platformNameEn : platformNameZh;
@@ -87,16 +104,27 @@ export default function PlatformConfigModal({
       setPlatformUrl(initialData.url ?? '');
       setPlatformColor(normalizePlatformColor(initialData.color));
       setIndicators(toFormIndicators(initialData.indicators));
+      setHasBalance(!!initialData.balance);
+      setBalanceCurrent(initialData.balance?.current ?? 0);
+      setBalanceInitial(initialData.balance?.initial ?? 0);
+      setBalanceResetDaily(initialData.balance?.resetDaily ?? false);
+      setCheckIns(normalizeCheckIns(initialData.checkIns, initialData.checkIn));
     } else {
       setPlatformNameZh('');
       setPlatformNameEn('');
       setPlatformUrl('');
       setPlatformColor(DEFAULT_PLATFORM_COLOR);
       setIndicators([createEmptyIndicator()]);
+      setHasBalance(false);
+      setBalanceCurrent(0);
+      setBalanceInitial(0);
+      setBalanceResetDaily(false);
+      setCheckIns([]);
     }
     setNameError(false);
     setUrlError(false);
     setIndicatorError(false);
+    setCheckInError(false);
   }, [isOpen, initialData]);
 
   if (!isOpen) return null;
@@ -104,8 +132,8 @@ export default function PlatformConfigModal({
   // ===== 指标行操作 =====
   const updateIndicator = (
     id: string,
-    field: 'nameZh' | 'nameEn' | 'limit' | 'unitZh' | 'unitEn',
-    value: string
+    field: 'nameZh' | 'nameEn' | 'limit' | 'unitZh' | 'unitEn' | 'resetDaily',
+    value: string | boolean
   ) => {
     setIndicators((prev) =>
       prev.map((ind) =>
@@ -122,6 +150,11 @@ export default function PlatformConfigModal({
 
   const addIndicator = () => {
     setIndicators((prev) => [...prev, createEmptyIndicator()]);
+  };
+
+  const updateCheckIn = (id: string, field: 'nameZh' | 'nameEn' | 'reward', value: string) => {
+    setCheckIns((prev) => prev.map((item) => item.id === id
+      ? { ...item, [field]: field === 'reward' ? Number(value) : value } : item));
   };
 
   // ===== 保存：校验 + 组装 + 回调 =====
@@ -145,11 +178,16 @@ export default function PlatformConfigModal({
     const validIndicators = indicators.filter(
       (ind) => (ind[nameField] as string).trim() !== ''
     );
-    if (validIndicators.length === 0) {
+    if (validIndicators.length === 0 && !hasBalance && checkIns.length === 0) {
       setIndicatorError(true);
       return;
     }
     setIndicatorError(false);
+    if (checkIns.length > 1 && checkIns.some((item) => !(item[nameField] ?? '').trim())) {
+      setCheckInError(true);
+      return;
+    }
+    setCheckInError(false);
 
     // 组装完整 Platform：编辑态保留原有 id 与各指标 used 值
     const savedPlatform: Platform = {
@@ -158,6 +196,17 @@ export default function PlatformConfigModal({
       nameEn: isEn ? trimmedName : platformNameEn,
       url: normalizedUrl,
       color: platformColor,
+      balance: hasBalance ? {
+        current: Math.max(0, Number(balanceCurrent) || 0),
+        initial: Math.max(0, Number(balanceInitial) || 0),
+        resetDaily: balanceResetDaily,
+      } : undefined,
+      checkIns: checkIns.map((item) => ({
+        ...item,
+        nameZh: item.nameZh?.trim() ?? '',
+        nameEn: item.nameEn?.trim() ?? '',
+        reward: Math.max(0, Number(item.reward) || 0),
+      })),
       indicators: validIndicators.map((ind) => ({
         id: ind.id,
         nameZh: ind.nameZh.trim(),
@@ -166,6 +215,7 @@ export default function PlatformConfigModal({
         used: ind.used,
         unitZh: ind.unitZh.trim() || undefined,
         unitEn: ind.unitEn.trim() || undefined,
+        resetDaily: ind.resetDaily,
       })),
     };
 
@@ -276,7 +326,7 @@ export default function PlatformConfigModal({
           <label className="block text-sm text-gray-600 mb-1.5">{t('indicatorLabel')}</label>
           <div className="flex flex-col gap-2.5">
             {indicators.map((ind) => (
-              <div key={ind.id} className="flex items-center gap-2">
+              <div key={ind.id} className="flex flex-wrap items-center gap-2">
                 <input
                   type="text"
                   value={isEn ? ind.nameEn : ind.nameZh}
@@ -310,6 +360,11 @@ export default function PlatformConfigModal({
                 >
                   <Minus className="w-4 h-4" />
                 </button>
+                <label className="w-full text-xs text-zinc-600 flex items-center gap-2 pl-1">
+                  <input type="checkbox" checked={ind.resetDaily}
+                    onChange={(e) => updateIndicator(ind.id, 'resetDaily', e.target.checked)} />
+                  {t('resetDaily')}
+                </label>
               </div>
             ))}
           </div>
@@ -325,6 +380,55 @@ export default function PlatformConfigModal({
           >
             <Plus className="w-4 h-4" />
             {t('addIndicator')}
+          </button>
+        </div>
+
+        <div className="mb-5 space-y-3 border-t border-zinc-100 pt-4">
+          <label className="flex items-center gap-2 text-sm text-zinc-700">
+            <input type="checkbox" checked={hasBalance} onChange={(e) => setHasBalance(e.target.checked)} />
+            {t('enableBalance')}
+          </label>
+          {hasBalance && <div className="grid grid-cols-2 gap-3">
+            <label className="text-xs text-zinc-600">{t('balance')}
+              <input type="number" min="0" step="any" value={balanceCurrent}
+                onChange={(e) => setBalanceCurrent(Number(e.target.value))}
+                className="mt-1 w-full rounded-lg border border-zinc-200 p-2 text-sm" />
+            </label>
+            <label className="text-xs text-zinc-600">{t('initialBalance')}
+              <input type="number" min="0" step="any" value={balanceInitial}
+                onChange={(e) => setBalanceInitial(Number(e.target.value))}
+                className="mt-1 w-full rounded-lg border border-zinc-200 p-2 text-sm" />
+            </label>
+            <label className="col-span-2 flex items-center gap-2 text-xs text-zinc-600">
+              <input type="checkbox" checked={balanceResetDaily} onChange={(e) => setBalanceResetDaily(e.target.checked)} />
+              {t('resetBalanceDaily')}
+            </label>
+          </div>}
+          <div className="text-sm font-medium text-zinc-700">{t('checkInCategories')}</div>
+          {checkIns.map((item) => <div key={item.id} className="rounded-xl border border-zinc-200 p-3 space-y-3">
+            <div className="flex items-start gap-2">
+              <label className="block min-w-0 flex-1 text-xs text-zinc-600">{t('checkInName')}
+                <input type="text" value={isEn ? item.nameEn ?? '' : item.nameZh ?? ''}
+                  onChange={(e) => updateCheckIn(item.id, isEn ? 'nameEn' : 'nameZh', e.target.value)}
+                  placeholder={t('dailyCheckIn')}
+                  className="mt-1 w-full rounded-lg border border-zinc-200 p-2 text-sm" />
+              </label>
+              <button type="button" onClick={() => setCheckIns((prev) => prev.filter((entry) => entry.id !== item.id))}
+                aria-label={t('removeCheckIn')}
+                className="mt-5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-zinc-200 text-zinc-500 hover:text-red-600">
+                <Minus className="h-4 w-4" />
+              </button>
+            </div>
+            <label className="block text-xs text-zinc-600">{t('checkInReward')}
+              <input type="number" min="0" step="any" value={item.reward}
+                onChange={(e) => updateCheckIn(item.id, 'reward', e.target.value)}
+                className="mt-1 w-full rounded-lg border border-zinc-200 p-2 text-sm" />
+            </label>
+          </div>)}
+          {checkInError && <p className="text-xs text-[#e52129]">{t('checkInNameRequired')}</p>}
+          <button type="button" onClick={() => setCheckIns((prev) => [...prev, createEmptyCheckIn()])}
+            className="inline-flex items-center gap-1 text-sm text-zinc-600 hover:text-[#e52129]">
+            <Plus className="h-4 w-4" />{t('addCheckIn')}
           </button>
         </div>
 
