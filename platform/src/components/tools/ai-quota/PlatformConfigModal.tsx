@@ -196,6 +196,7 @@ export default function PlatformConfigModal({
     // 组装完整 Platform：编辑态保留原有 id 与各指标 used 值
     const savedPlatform: Platform = {
       id: initialData?.id ?? crypto.randomUUID(),
+      pinned: initialData?.pinned ?? false,
       nameZh: platformNameZh.trim(),
       nameEn: platformNameEn.trim(),
       url: normalizedUrl,

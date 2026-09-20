@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Plus, Minus, Pencil, Trash2, Clock, RotateCcw, Database, LayoutGrid, ExternalLink, Circle, CheckCircle2 } from 'lucide-react';
+import { Plus, Minus, Pencil, Trash2, Clock, RotateCcw, Database, LayoutGrid, ExternalLink, Circle, CheckCircle2, Pin, PinOff } from 'lucide-react';
 import { useTranslations, useLocale } from 'next-intl';
 import { trackResourceAction } from '@/app/actions/statsActions';
 import PlatformConfigModal from './PlatformConfigModal';
@@ -41,6 +41,7 @@ export interface CheckIn {
 
 export interface Platform {
   id: string;
+  pinned?: boolean;
   nameZh: string;
   nameEn: string;
   url?: string;
@@ -164,6 +165,7 @@ export default function AiQuotaTracker() {
               p.id === 'sample-midjourney' ? MIDJOURNEY_PLATFORM_URL : undefined
             ),
             color: normalizePlatformColor(p.color),
+            pinned: p.pinned === true,
             balance: p.balance,
             checkIn: undefined,
             checkIns: normalizeCheckIns(p.checkIns, p.checkIn),
@@ -371,6 +373,14 @@ export default function AiQuotaTracker() {
   };
 
   // ===== 打开编辑弹窗 =====
+  const handleTogglePin = (platformId: string) => {
+    setPlatforms((prev) => {
+      const next = prev.map((p) => p.id === platformId ? { ...p, pinned: !p.pinned } : p);
+      persist(next, lastResetDate);
+      return next;
+    });
+  };
+
   const handleEditPlatform = (platform: Platform) => {
     setEditingPlatform(platform);
     setIsModalOpen(true);
@@ -467,7 +477,7 @@ export default function AiQuotaTracker() {
         </div>
       ) : (
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
-        {platforms.map((platform) => {
+        {[...platforms].sort((a, b) => Number(!!b.pinned) - Number(!!a.pinned)).map((platform) => {
           const colorStyle = PLATFORM_COLOR_STYLES[normalizePlatformColor(platform.color)];
           return (
           <div
@@ -487,6 +497,18 @@ export default function AiQuotaTracker() {
                 )}
               </div>
               <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
+                <button
+                  type="button"
+                  aria-label={platform.pinned ? t('unpinPlatform') : t('pinPlatform')}
+                  title={platform.pinned ? t('unpinPlatform') : t('pinPlatform')}
+                  aria-pressed={!!platform.pinned}
+                  onClick={() => handleTogglePin(platform.id)}
+                  className={`w-9 h-9 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg transition-colors ${
+                    platform.pinned ? 'bg-amber-50 text-amber-700 hover:bg-amber-100' : 'text-gray-400 hover:text-amber-700 hover:bg-amber-50'
+                  }`}
+                >
+                  {platform.pinned ? <PinOff className="w-4 h-4" /> : <Pin className="w-4 h-4" />}
+                </button>
                 {platform.url && (
                   <a
                     href={platform.url}

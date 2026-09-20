@@ -121,6 +121,7 @@ export default function ImportExportModal({
         const oldP = p as unknown as { name?: string };
         return {
           id: String(p.id),
+          pinned: p.pinned === true,
           nameZh: String(p.nameZh ?? oldP.name ?? ''),
           nameEn: String(p.nameEn ?? oldP.name ?? ''),
           url: normalizePlatformUrl(p.url),

@@ -347,6 +347,8 @@
     "metaTitle": "AI 额度追踪器 - 本地存储每日自动重置",
     "metaDescription": "管理 Midjourney、ChatGPT Plus 等 AI 平台的每日额度消耗，纯本地存储零泄露，每日自动重置，支持多平台多指标监控与导入导出跨设备同步。",
     "addPlatform": "添加平台",
+    "pinPlatform": "置顶卡片",
+    "unpinPlatform": "取消置顶",
     "modalTitle": "新增 AI 平台配置",
     "editModalTitle": "修改 AI 平台配置",
     "platformNameLabel": "平台名称",

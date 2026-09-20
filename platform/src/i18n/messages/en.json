@@ -347,6 +347,8 @@
     "metaTitle": "AI Quota Tracker - Local Storage, Daily Auto-Reset",
     "metaDescription": "Track daily quotas for Midjourney, ChatGPT Plus and other AI platforms. Pure local storage with zero leaks, daily auto-reset, multi-platform multi-metric monitoring, import/export for cross-device sync.",
     "addPlatform": "Add Platform",
+    "pinPlatform": "Pin card to top",
+    "unpinPlatform": "Unpin card",
     "modalTitle": "New AI Platform Config",
     "editModalTitle": "Edit AI Platform Config",
     "platformNameLabel": "Platform Name",
