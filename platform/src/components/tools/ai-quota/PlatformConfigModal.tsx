@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Check, X, Plus, Minus } from 'lucide-react';
 import { useTranslations, useLocale } from 'next-intl';
 import type { Platform, Indicator, CheckIn } from './AiQuotaTracker';
@@ -90,10 +90,11 @@ export default function PlatformConfigModal({
   const [urlError, setUrlError] = useState(false);
   const [indicatorError, setIndicatorError] = useState(false);
   const [checkInError, setCheckInError] = useState(false);
+  const platformNameRef = useRef<HTMLInputElement>(null);
+  const platformUrlRef = useRef<HTMLInputElement>(null);
+  const addIndicatorRef = useRef<HTMLButtonElement>(null);
 
-  // 当前语言对应的平台名称值与 setter
-  const platformName = isEn ? platformNameEn : platformNameZh;
-  const setPlatformName = isEn ? setPlatformNameEn : setPlatformNameZh;
+  const nameLanguages: Array<'zh' | 'en'> = isEn ? ['en', 'zh'] : ['zh', 'en'];
 
   // 每次打开弹窗时：编辑态回填 initialData，新增态置空
   useEffect(() => {
@@ -159,10 +160,9 @@ export default function PlatformConfigModal({
 
   // ===== 保存：校验 + 组装 + 回调 =====
   const handleSave = () => {
-    const trimmedName = platformName.trim();
-
-    if (!trimmedName) {
+    if (!platformNameZh.trim() && !platformNameEn.trim()) {
       setNameError(true);
+      platformNameRef.current?.focus();
       return;
     }
     setNameError(false);
@@ -170,21 +170,25 @@ export default function PlatformConfigModal({
     const normalizedUrl = platformUrl.trim() ? normalizePlatformUrl(platformUrl) : undefined;
     if (platformUrl.trim() && !normalizedUrl) {
       setUrlError(true);
+      platformUrlRef.current?.focus();
       return;
     }
     setUrlError(false);
 
-    const nameField = isEn ? 'nameEn' : 'nameZh';
     const validIndicators = indicators.filter(
-      (ind) => (ind[nameField] as string).trim() !== ''
+      (ind) => ind.nameZh.trim() || ind.nameEn.trim()
     );
     if (validIndicators.length === 0 && !hasBalance && checkIns.length === 0) {
       setIndicatorError(true);
+      (document.querySelector<HTMLInputElement>('[data-indicator-name]') ?? addIndicatorRef.current)?.focus();
       return;
     }
     setIndicatorError(false);
-    if (checkIns.length > 1 && checkIns.some((item) => !(item[nameField] ?? '').trim())) {
+    const invalidCheckInIndex = checkIns.length > 1
+      ? checkIns.findIndex((item) => !item.nameZh?.trim() && !item.nameEn?.trim()) : -1;
+    if (invalidCheckInIndex !== -1) {
       setCheckInError(true);
+      document.querySelectorAll<HTMLInputElement>('[data-checkin-name]')[invalidCheckInIndex]?.focus();
       return;
     }
     setCheckInError(false);
@@ -192,8 +196,8 @@ export default function PlatformConfigModal({
     // 组装完整 Platform：编辑态保留原有 id 与各指标 used 值
     const savedPlatform: Platform = {
       id: initialData?.id ?? crypto.randomUUID(),
-      nameZh: isEn ? platformNameZh : trimmedName,
-      nameEn: isEn ? trimmedName : platformNameEn,
+      nameZh: platformNameZh.trim(),
+      nameEn: platformNameEn.trim(),
       url: normalizedUrl,
       color: platformColor,
       balance: hasBalance ? {
@@ -247,29 +251,38 @@ export default function PlatformConfigModal({
           </button>
         </div>
 
-        {/* ===== 平台名称（仅当前语言） ===== */}
+        {/* ===== 平台名称：原始语言和可选翻译都可编辑 ===== */}
         <div className="mb-5">
-          <label className="block text-sm text-gray-600 mb-1.5">{t('platformNameLabel')}</label>
-          <input
-            type="text"
-            value={platformName}
-            onChange={(e) => {
-              setPlatformName(e.target.value);
-              if (nameError) setNameError(false);
-            }}
-            placeholder={t('platformNamePlaceholder')}
-            className={`w-full px-3 py-2 rounded-lg border bg-white text-base sm:text-sm text-gray-900 outline-none transition-colors ${
-              nameError
-                ? 'border-[#e52129] focus:border-[#e52129]'
-                : 'border-gray-200 focus:border-[#e52129]'
-            }`}
-          />
+          <div className="text-sm text-gray-600 mb-1.5">{t('platformNameLabel')}</div>
+          <p className="text-xs text-gray-400 mb-2">{t('nameTranslationHint')}</p>
+          <div className="grid grid-cols-2 items-end gap-2">
+            {nameLanguages.map((language, index) => <label key={language} className="block min-w-0 text-xs text-gray-600">
+              {t(language === 'zh' ? 'nameChinese' : 'nameEnglish')}
+              <input
+                ref={index === 0 ? platformNameRef : undefined}
+                type="text"
+                value={language === 'zh' ? platformNameZh : platformNameEn}
+                onChange={(e) => {
+                  if (language === 'zh') setPlatformNameZh(e.target.value);
+                  else setPlatformNameEn(e.target.value);
+                  if (nameError) setNameError(false);
+                }}
+                placeholder={t('platformNamePlaceholder')}
+                aria-invalid={nameError || undefined}
+                className={`mt-1 w-full px-3 py-2 rounded-lg border bg-white text-base sm:text-sm text-gray-900 outline-none transition-colors ${
+                  nameError ? 'border-[#e52129] focus:border-[#e52129]' : 'border-gray-200 focus:border-[#e52129]'
+                }`}
+              />
+            </label>)}
+          </div>
+          {nameError && <p className="mt-1.5 text-xs text-[#e52129]">{t('errors.platformNameRequired')}</p>}
         </div>
 
         {/* ===== 平台链接（可选） ===== */}
         <div className="mb-5">
           <label className="block text-sm text-gray-600 mb-1.5">{t('platformUrlLabel')}</label>
           <input
+            ref={platformUrlRef}
             type="url"
             inputMode="url"
             value={platformUrl}
@@ -327,16 +340,20 @@ export default function PlatformConfigModal({
           <div className="flex flex-col gap-2.5">
             {indicators.map((ind) => (
               <div key={ind.id} className="flex flex-wrap items-center gap-2">
-                <input
-                  type="text"
-                  value={isEn ? ind.nameEn : ind.nameZh}
-                  onChange={(e) => {
-                    updateIndicator(ind.id, isEn ? 'nameEn' : 'nameZh', e.target.value);
-                    if (indicatorError) setIndicatorError(false);
-                  }}
-                  placeholder={t('indicatorName')}
-                  className="flex-1 min-w-0 px-3 py-2 rounded-lg border border-gray-200 bg-white text-base sm:text-sm text-gray-900 outline-none focus:border-[#e52129] transition-colors"
-                />
+                <div className="grid w-full grid-cols-2 items-end gap-2">
+                  {nameLanguages.map((language, index) => <label key={language} className="min-w-0 text-xs text-zinc-600">
+                    {t(language === 'zh' ? 'nameChinese' : 'nameEnglish')}
+                    <input type="text" data-indicator-name={index === 0 ? '' : undefined}
+                      aria-label={`${t('indicatorName')} (${t(language === 'zh' ? 'nameChinese' : 'nameEnglish')})`}
+                      value={language === 'zh' ? ind.nameZh : ind.nameEn}
+                      onChange={(e) => {
+                        updateIndicator(ind.id, language === 'zh' ? 'nameZh' : 'nameEn', e.target.value);
+                        if (indicatorError) setIndicatorError(false);
+                      }}
+                      placeholder={t('indicatorName')}
+                      className="mt-1 w-full min-w-0 rounded-lg border border-zinc-200 px-3 py-2 text-base sm:text-sm text-zinc-900 outline-none focus:border-[#e52129]" />
+                  </label>)}
+                </div>
                 <input
                   type="number"
                   min={1}
@@ -374,6 +391,7 @@ export default function PlatformConfigModal({
           )}
 
           <button
+            ref={addIndicatorRef}
             type="button"
             onClick={addIndicator}
             className="mt-2.5 inline-flex items-center gap-1 text-sm text-gray-500 hover:text-[#e52129] transition-colors"
@@ -406,24 +424,29 @@ export default function PlatformConfigModal({
           </div>}
           <div className="text-sm font-medium text-zinc-700">{t('checkInCategories')}</div>
           {checkIns.map((item) => <div key={item.id} className="rounded-xl border border-zinc-200 p-3 space-y-3">
-            <div className="flex items-start gap-2">
-              <label className="block min-w-0 flex-1 text-xs text-zinc-600">{t('checkInName')}
-                <input type="text" value={isEn ? item.nameEn ?? '' : item.nameZh ?? ''}
-                  onChange={(e) => updateCheckIn(item.id, isEn ? 'nameEn' : 'nameZh', e.target.value)}
+            <div className="grid grid-cols-2 items-end gap-2">
+              {nameLanguages.map((language, index) => <label key={language} className="block min-w-0 text-xs text-zinc-600">
+                {t(language === 'zh' ? 'nameChinese' : 'nameEnglish')}
+                <input type="text" data-checkin-name={index === 0 ? '' : undefined}
+                  aria-label={`${t('checkInName')} (${t(language === 'zh' ? 'nameChinese' : 'nameEnglish')})`}
+                  value={language === 'zh' ? item.nameZh ?? '' : item.nameEn ?? ''}
+                  onChange={(e) => updateCheckIn(item.id, language === 'zh' ? 'nameZh' : 'nameEn', e.target.value)}
                   placeholder={t('dailyCheckIn')}
-                  className="mt-1 w-full rounded-lg border border-zinc-200 p-2 text-sm" />
+                  className="mt-1 w-full min-w-0 rounded-lg border border-zinc-200 p-2 text-base sm:text-sm" />
+              </label>)}
+            </div>
+            <div className="flex items-end gap-2">
+              <label className="block min-w-0 flex-1 text-xs text-zinc-600">{t('checkInReward')}
+                <input type="number" min="0" step="any" value={item.reward}
+                  onChange={(e) => updateCheckIn(item.id, 'reward', e.target.value)}
+                  className="mt-1 w-full rounded-lg border border-zinc-200 p-2 text-base sm:text-sm" />
               </label>
               <button type="button" onClick={() => setCheckIns((prev) => prev.filter((entry) => entry.id !== item.id))}
                 aria-label={t('removeCheckIn')}
-                className="mt-5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-zinc-200 text-zinc-500 hover:text-red-600">
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-zinc-200 text-zinc-500 hover:text-red-600">
                 <Minus className="h-4 w-4" />
               </button>
             </div>
-            <label className="block text-xs text-zinc-600">{t('checkInReward')}
-              <input type="number" min="0" step="any" value={item.reward}
-                onChange={(e) => updateCheckIn(item.id, 'reward', e.target.value)}
-                className="mt-1 w-full rounded-lg border border-zinc-200 p-2 text-sm" />
-            </label>
           </div>)}
           {checkInError && <p className="text-xs text-[#e52129]">{t('checkInNameRequired')}</p>}
           <button type="button" onClick={() => setCheckIns((prev) => [...prev, createEmptyCheckIn()])}

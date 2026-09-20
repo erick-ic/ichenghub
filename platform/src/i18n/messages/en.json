@@ -350,6 +350,9 @@
     "modalTitle": "New AI Platform Config",
     "editModalTitle": "Edit AI Platform Config",
     "platformNameLabel": "Platform Name",
+    "nameChinese": "Chinese name (optional)",
+    "nameEnglish": "English name (optional)",
+    "nameTranslationHint": "Enter either language. The existing name appears when a translation is blank.",
     "platformNamePlaceholder": "e.g., Midjourney",
     "platformUrlLabel": "Platform URL (optional)",
     "platformUrlPlaceholder": "e.g., midjourney.com",
@@ -381,7 +384,7 @@
     "checkInCategories": "Check-in categories",
     "addCheckIn": "Add check-in category",
     "removeCheckIn": "Remove check-in category",
-    "checkInNameRequired": "Name each check-in category when adding more than one",
+    "checkInNameRequired": "When adding multiple check-ins, name each in at least one language",
     "notCheckedInToday": "Not checked in today",
     "checkedInToday": "Checked in today",
     "creditUnit": "credits",
@@ -422,7 +425,7 @@
       "increase": "Increase usage"
     },
     "errors": {
-      "platformNameRequired": "Please enter both Chinese and English platform names",
+      "platformNameRequired": "Enter a platform name in at least one language",
       "indicatorRequired": "Please add at least one valid indicator",
       "platformUrlInvalid": "Enter a valid HTTP or HTTPS URL"
     },

@@ -350,6 +350,9 @@
     "modalTitle": "新增 AI 平台配置",
     "editModalTitle": "修改 AI 平台配置",
     "platformNameLabel": "平台名称",
+    "nameChinese": "中文名称（选填）",
+    "nameEnglish": "英文名称（选填）",
+    "nameTranslationHint": "中英文填写一种即可；未填写翻译时，卡片显示已有名称。",
     "platformNamePlaceholder": "例如：Midjourney",
     "platformUrlLabel": "平台链接（选填）",
     "platformUrlPlaceholder": "例如：midjourney.com",
@@ -381,7 +384,7 @@
     "checkInCategories": "签到类目",
     "addCheckIn": "新增签到类目",
     "removeCheckIn": "删除签到类目",
-    "checkInNameRequired": "添加多个签到类目时，请为每个类目填写名称",
+    "checkInNameRequired": "添加多个签到类目时，每个类目至少填写一种语言的名称",
     "notCheckedInToday": "今日未签到",
     "checkedInToday": "今日已签到",
     "creditUnit": "积分",
@@ -422,7 +425,7 @@
       "increase": "增加用量"
     },
     "errors": {
-      "platformNameRequired": "请填写中英文平台名称",
+      "platformNameRequired": "平台名称至少填写一种语言",
       "indicatorRequired": "请至少填写一个有效指标",
       "platformUrlInvalid": "请输入有效的 HTTP 或 HTTPS 链接"
     },
