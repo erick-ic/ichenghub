@@ -68,8 +68,8 @@ export function toggleCheckIn(platform: Platform, checkInId: string, today: stri
   return {
     ...platform,
     expiryIndicators,
-    balance: platform.balance ? { ...platform.balance, current: completed
-      ? Math.max(0, platform.balance.current - amount) : platform.balance.current + amount } : undefined,
+    balance: platform.balance ? { ...platform.balance, current: Number((completed
+      ? Math.max(0, platform.balance.current - amount) : platform.balance.current + amount).toFixed(2)) } : undefined,
     checkIns: platform.checkIns?.map((entry) => entry.id === checkInId ? {
       ...entry,
       expiryRecordId,

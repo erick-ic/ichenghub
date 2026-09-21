@@ -612,7 +612,7 @@ export default function AiQuotaTracker() {
                 <div className="flex items-center justify-between gap-2 rounded-xl bg-zinc-50 p-3">
                   <div>
                     <div className="text-xs text-zinc-500">{t('balance')}</div>
-                    <div className="font-mono text-lg font-semibold text-zinc-900">{platform.balance.current}</div>
+                    <div className="font-mono text-lg font-semibold text-zinc-900">{platform.balance.current.toFixed(2)}</div>
                   </div>
                   {!!platform.checkIns?.length &&
                     <DailyCheckInDialog mode="platform" compact platforms={[platform]} today={today} onCheckIn={handleCheckIn} />}
