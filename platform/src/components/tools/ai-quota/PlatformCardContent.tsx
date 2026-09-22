@@ -75,29 +75,26 @@ export default function PlatformCardContent(props: Props) {
   ) : null;
 
   return <>
-    {!detailed && !hasIndicators && !regularCheckIns.length && <div className="mt-3 space-y-3">
-      {balancePanel ?? <div className="flex h-[4.25rem] min-w-0 shrink-0 items-center justify-between gap-2 rounded-xl bg-zinc-50 px-3">
+    {!detailed && !hasIndicators && !platform.balance && <div className="mt-3 space-y-3">
+      <div className="flex h-[4.25rem] min-w-0 shrink-0 items-center justify-between gap-2 rounded-xl bg-zinc-50 px-3">
         <div className="min-w-0 flex-1">
-          <p className="truncate text-xs text-zinc-500" title={platform.balance ? t('balance') : primaryQuota ? pickName(primaryQuota.nameZh, primaryQuota.nameEn) : t('activeCreditTotal')}>
-            {platform.balance ? t('balance') : primaryQuota ? pickName(primaryQuota.nameZh, primaryQuota.nameEn) : t('activeCreditTotal')}
+          <p className="truncate text-xs text-zinc-500" title={primaryQuota ? pickName(primaryQuota.nameZh, primaryQuota.nameEn) : t('activeCreditTotal')}>
+            {primaryQuota ? pickName(primaryQuota.nameZh, primaryQuota.nameEn) : t('activeCreditTotal')}
           </p>
           <p className="truncate font-mono text-lg font-semibold leading-7 tabular-nums text-zinc-900">
-            {platform.balance ? platform.balance.current.toFixed(2) : primaryQuota ? <>{primaryQuota.used}<span className="text-sm font-normal text-zinc-500"> / {primaryQuota.limit} {pickUnit(primaryQuota.unitZh, primaryQuota.unitEn)}</span></> : active.reduce((sum, item) => sum + item.amount, 0).toFixed(2)}
+            {primaryQuota ? <>{primaryQuota.used}<span className="text-sm font-normal text-zinc-500"> / {primaryQuota.limit} {pickUnit(primaryQuota.unitZh, primaryQuota.unitEn)}</span></> : active.reduce((sum, item) => sum + item.amount, 0).toFixed(2)}
           </p>
         </div>
-        {!!platform.checkIns?.length && <DailyCheckInDialog mode="platform" compact platforms={[platform]} today={today} onCheckIn={handleCheckIn} />}
-      </div>}
+      </div>
       <p title={status} className={`truncate text-xs leading-5 ${urgentQuota ? 'text-amber-700' : 'text-zinc-500'}`}>{status}</p>
     </div>}
-    {(detailed || hasIndicators || !!regularCheckIns.length) && <div
+    {(detailed || hasIndicators || !!platform.balance) && <div
       tabIndex={!detailed ? 0 : undefined}
       aria-label={!detailed ? t('scrollQuotaIndicators') : undefined}
       className={detailed ? 'mt-5 flex flex-col gap-4 sm:mt-6 sm:gap-5'
         : 'mt-3 flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto overscroll-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [&>*]:shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-300'}>
       {balancePanel}
-      {!platform.balance && !!platform.checkIns?.length &&
-        <DailyCheckInDialog mode="platform" platforms={[platform]} today={today} onCheckIn={handleCheckIn} />}
-      {!!regularCheckIns.length && <CheckInHistory items={regularCheckIns} today={today} detailed={detailed} color={platform.color} />}
+      {!!platform.balance && <CheckInHistory items={regularCheckIns} today={today} detailed={detailed} color={platform.color} />}
       {active.map((item) => <ExpiryIndicatorCard key={item.id} item={item} />)}
       {platform.indicators.map((ind) => {
         const percent = Math.min(100, (ind.used / ind.limit) * 100);

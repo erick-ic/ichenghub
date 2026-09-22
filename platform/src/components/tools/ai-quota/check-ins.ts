@@ -22,11 +22,14 @@ export function normalizeCheckIns(value: unknown, legacyValue?: unknown): CheckI
         at: Number.isFinite(record.at) && Number.isFinite(new Date(record.at).getTime()) ? record.at : undefined }];
     }) : [];
     let completedRecordId = typeof item.completedRecordId === 'string' ? item.completedRecordId : undefined;
-    // 旧签到只有日期：保留已知信息，不推测具体时间。
-    if (!item.validityMinutes && typeof item.completedDate === 'string' && !completedRecordId) {
-      const previous = history.find((record) => record.date === item.completedDate);
-      completedRecordId = previous?.id ?? `legacy-${id}-${item.completedDate}`;
-      if (!previous) history.push({ id: completedRecordId, date: item.completedDate, creditedAmount: Math.max(0, Number(item.creditedAmount) || 0) });
+    // 已签到但缺少当日 history（含带有效期追踪的旧数据）：按已知信息补一条，不推测具体时间。
+    const previous = typeof item.completedDate === 'string'
+      ? history.find((record) => record.date === item.completedDate) : undefined;
+    if (typeof item.completedDate === 'string' && !previous) {
+      completedRecordId = `legacy-${id}-${item.completedDate}`;
+      history.push({ id: completedRecordId, date: item.completedDate, creditedAmount: Math.max(0, Number(item.creditedAmount) || 0) });
+    } else if (!completedRecordId) {
+      completedRecordId = previous?.id;
     }
     return [{
       history,

@@ -237,12 +237,12 @@ export default function PlatformConfigModal({
         initial: Math.max(0, Number(balanceInitial) || 0),
         resetDaily: balanceResetDaily,
       } : undefined,
-      checkIns: checkIns.map((item) => ({
+      checkIns: hasBalance ? checkIns.map((item) => ({
         ...item,
         nameZh: item.nameZh?.trim() ?? '',
         nameEn: item.nameEn?.trim() ?? '',
         reward: Math.max(0, Number(item.reward) || 0),
-      })),
+      })) : [],
       expiryIndicators,
       indicators: validIndicators.map((ind) => ({
         id: ind.id,
@@ -481,7 +481,7 @@ export default function PlatformConfigModal({
             </label>
           </div>}
         </section>
-        <section className="mb-6 rounded-xl border border-zinc-200 bg-white p-4 shadow-sm space-y-4">
+        {hasBalance && <section className="mb-6 rounded-xl border border-zinc-200 bg-white p-4 shadow-sm space-y-4">
           <h3 className="flex items-center gap-2 border-b border-zinc-200 pb-3 text-base font-semibold text-zinc-900"><CalendarCheck className="h-4 w-4 text-zinc-500" aria-hidden="true" />{t('checkInCategories')}</h3>
           {checkIns.map((item) => <div key={item.id} className="rounded-xl border border-zinc-200 p-3 space-y-3">
             <div className="grid grid-cols-2 items-end gap-2">
@@ -540,7 +540,7 @@ export default function PlatformConfigModal({
             className="inline-flex items-center gap-1 text-sm text-zinc-600 hover:text-[#e52129]">
             <Plus className="h-4 w-4" />{t('addCheckIn')}
           </button>
-        </section>
+        </section>}
 
         {/* ===== 保存按钮 ===== */}
         <button

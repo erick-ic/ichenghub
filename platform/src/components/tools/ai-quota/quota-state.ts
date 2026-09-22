@@ -102,10 +102,15 @@ export function toggleCheckIn(platform: Platform, checkInId: string, today: stri
   const amount = completed ? (alreadyDeducted ? 0 : item.creditedAmount ?? 0) : platform.balance ? item.reward : 0;
   const created = !completed && item.validityMinutes ? makeExpiryRecord(platform, item, today, now) : undefined;
   const expiryRecordId = created?.id;
-  const recordId = !completed && !item.validityMinutes ? crypto.randomUUID() : undefined;
+  const recordId = !completed ? crypto.randomUUID() : undefined;
+  // 所有签到（含有效期追踪）都写入 history，用于今日入账与近 7 天统计；已存在当日记录时不重复添加
+  const existingToday = item.history?.find((record) => record.date === today);
+  const historyRecordId = completed ? undefined : existingToday?.id ?? recordId;
   const history = completed
     ? item.history?.filter((record) => record.id !== item.completedRecordId)
-    : recordId ? [...(item.history ?? []), { id: recordId, date: today, at: now, creditedAmount: amount }] : item.history;
+    : existingToday
+      ? item.history
+      : [...(item.history ?? []), { id: recordId!, date: today, at: now, creditedAmount: amount }];
   const expiryIndicators = completed
     ? platform.expiryIndicators?.filter((record) => record.id !== item.expiryRecordId)
     : created?.records ?? platform.expiryIndicators;
@@ -118,7 +123,7 @@ export function toggleCheckIn(platform: Platform, checkInId: string, today: stri
       ...entry,
       expiryRecordId,
       history,
-      completedRecordId: recordId,
+      completedRecordId: historyRecordId,
       completedDate: completed ? undefined : today,
       creditedAmount: completed ? undefined : amount,
     } : entry),
