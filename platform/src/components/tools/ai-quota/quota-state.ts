@@ -11,7 +11,7 @@ function makeExpiryRecord(platform: Platform, item: CheckIn, today: string, now:
     && record.nameZh.trim() === (item.nameZh ?? '').trim()
     && record.nameEn.trim() === (item.nameEn ?? '').trim();
   const reusable = records.find(matchesManual);
-  const startsAt = Math.floor(now / 60_000) * 60_000;
+  const startsAt = now;
   const id = reusable?.id ?? crypto.randomUUID();
   const record: ExpiryIndicator = {
     id, sourceCheckInId: item.id, nameZh: item.nameZh ?? '', nameEn: item.nameEn ?? '',
@@ -71,7 +71,7 @@ export function resetForNewDay(platform: Platform): Platform {
     balance: platform.balance?.resetDaily
       ? { ...platform.balance, current: platform.balance.initial }
       : platform.balance,
-    checkIns: platform.checkIns?.map((item) => ({ ...item, completedDate: undefined, creditedAmount: undefined, expiryRecordId: undefined })),
+    checkIns: platform.checkIns?.map((item) => ({ ...item, completedDate: undefined, completedRecordId: undefined, creditedAmount: undefined, expiryRecordId: undefined })),
   };
 }
 
@@ -84,6 +84,10 @@ export function toggleCheckIn(platform: Platform, checkInId: string, today: stri
   const amount = completed ? (alreadyDeducted ? 0 : item.creditedAmount ?? 0) : platform.balance ? item.reward : 0;
   const created = !completed && item.validityMinutes ? makeExpiryRecord(platform, item, today, now) : undefined;
   const expiryRecordId = created?.id;
+  const recordId = !completed && !item.validityMinutes ? crypto.randomUUID() : undefined;
+  const history = completed
+    ? item.history?.filter((record) => record.id !== item.completedRecordId)
+    : recordId ? [...(item.history ?? []), { id: recordId, date: today, at: now, creditedAmount: amount }] : item.history;
   const expiryIndicators = completed
     ? platform.expiryIndicators?.filter((record) => record.id !== item.expiryRecordId)
     : created?.records ?? platform.expiryIndicators;
@@ -95,6 +99,8 @@ export function toggleCheckIn(platform: Platform, checkInId: string, today: stri
     checkIns: platform.checkIns?.map((entry) => entry.id === checkInId ? {
       ...entry,
       expiryRecordId,
+      history,
+      completedRecordId: recordId,
       completedDate: completed ? undefined : today,
       creditedAmount: completed ? undefined : amount,
     } : entry),

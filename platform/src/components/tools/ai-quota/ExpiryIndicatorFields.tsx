@@ -30,7 +30,7 @@ export default function ExpiryIndicatorFields({ items, onChange }: {
       </label>
       {(['startsAt', 'expiresAt'] as const).map((field) => <label key={field} className="block text-xs text-zinc-600">
         {t(field === 'startsAt' ? 'expiryStart' : 'expiryAt')}
-        <input type="datetime-local" step="60" value={localDateTime(item[field])} onInput={(e) => update(item.id, { [field]: new Date(e.currentTarget.value).getTime() })}
+        <input type="datetime-local" step="1" value={localDateTime(item[field])} onInput={(e) => update(item.id, { [field]: new Date(e.currentTarget.value).getTime() })}
           onChange={(e) => update(item.id, { [field]: new Date(e.target.value).getTime() })}
           className="mt-1 w-full min-w-0 rounded-lg border border-zinc-200 bg-white p-2 text-base sm:text-sm" />
       </label>)}

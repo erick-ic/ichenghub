@@ -1,0 +1,20 @@
+.card {
+  transition: transform 200ms ease-out, box-shadow 200ms ease-out;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .card:not([data-sorting='true']):hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 24px -12px rgb(24 24 27 / 22%), 0 3px 8px -4px rgb(24 24 27 / 12%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card {
+    transition: none;
+  }
+
+  .card:not([data-sorting='true']):hover {
+    transform: none;
+  }
+}

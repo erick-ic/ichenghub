@@ -28,6 +28,12 @@ export function normalizeExpiryIndicators(value: unknown): ExpiryIndicator[] {
   });
 }
 
+export function recentExpiredIndicators(items: ExpiryIndicator[], now: number): ExpiryIndicator[] {
+  const oneWeekAgo = now - 7 * 24 * 60 * 60 * 1000;
+  return items.filter((item) => item.expiresAt <= now && item.expiresAt >= oneWeekAgo)
+    .sort((a, b) => b.expiresAt - a.expiresAt);
+}
+
 export function expiryProgress(item: ExpiryIndicator, now: number) {
   return {
     remainingMinutes: Math.max(0, Math.ceil((item.expiresAt - now) / 60_000)),
@@ -38,5 +44,5 @@ export function expiryProgress(item: ExpiryIndicator, now: number) {
 export function localDateTime(timestamp: number): string {
   if (!Number.isFinite(timestamp)) return '';
   const date = new Date(timestamp);
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}T${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}T${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}:${String(date.getSeconds()).padStart(2, '0')}`;
 }

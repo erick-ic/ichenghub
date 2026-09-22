@@ -1,0 +1,24 @@
+/* 操作控件使用底色标识键盘焦点，避免弹窗归还焦点时出现整块描边。
+   表单输入框保留原有焦点边框，复选框保留 peer-focus-visible 提示。 */
+.scope :is(button, a, summary, [tabindex]):focus,
+.scope:focus {
+  outline: none;
+}
+
+.scope :is(button, a, summary, [tabindex]):focus-visible {
+  outline: none;
+  box-shadow: none;
+  background-color: #f4f4f5;
+}
+
+/* 深色主按钮保留文字对比度。 */
+.scope button:focus-visible[class~="text-white"] {
+  background-color: #52525b;
+}
+
+/* 整行铺满的详情触发按钮，灰色底色易被误认为区域背景，改用描边标识焦点。 */
+.scope button.footerTrigger:focus-visible {
+  background-color: transparent;
+  box-shadow: 0 0 0 2px #a1a1aa;
+  border-radius: 0.5rem;
+}

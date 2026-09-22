@@ -29,6 +29,6 @@ export default function ExpiryIndicatorCard({ item }: { item: ExpiryIndicator })
     <div role="progressbar" aria-label={`${name} · ${t('expiryType')}`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(percent)} className="h-2 overflow-hidden rounded-full bg-zinc-200">
       <div className={`h-full rounded-full ${percent <= 20 ? 'bg-amber-500' : 'bg-emerald-600'}`} style={{ width: `${percent}%` }} />
     </div>
-    <p className="mt-2 text-xs text-zinc-500">{t('expiryAt')}: {new Intl.DateTimeFormat(locale, { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false }).format(item.expiresAt)}</p>
+    <p className="mt-2 text-xs text-zinc-500">{t('expiryAt')}: {new Intl.DateTimeFormat(locale, { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }).format(item.expiresAt)}</p>
   </div>;
 }

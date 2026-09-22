@@ -1,7 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Plus, Minus, Pencil, Trash2, RotateCcw, Search, ChevronDown, LayoutGrid, ExternalLink, Pin, PinOff, Hourglass } from 'lucide-react';
+import focusStyles from './quota-focus.module.css';
+import motionStyles from './card-motion.module.css';
+import { Plus, Pencil, Trash2, RotateCcw, Search, ChevronDown, LayoutGrid, ExternalLink } from 'lucide-react';
 import { useTranslations, useLocale } from 'next-intl';
 import { trackResourceAction } from '@/app/actions/statsActions';
 import PlatformConfigModal from './PlatformConfigModal';
@@ -11,10 +13,12 @@ import { normalizePlatformUrl } from './platform-url';
 import { normalizePlatformColor, PLATFORM_COLOR_STYLES, type PlatformColor } from './platform-colors';
 import { normalizeCheckIns } from './check-ins';
 import { settleExpiredCheckIns, resetForNewDay, syncCheckInExpiryRecords, toggleCheckIn } from './quota-state';
-import ExpiryIndicatorCard from './ExpiryIndicatorCard';
+import PlatformCardContent from './PlatformCardContent';
 import { normalizeExpiryIndicators, type ExpiryIndicator } from './expiry-indicators';
 import DailyCheckInDialog from './DailyCheckInDialog';
 import QuotaMoreActions from './QuotaMoreActions';
+import CardDragHandle from './CardDragHandle';
+import { migratePlatformOrder, movePlatform } from './platform-order';
 import { hasDailyQuota, hasPendingCheckIns } from './daily-overview';
 
 // ===== 类型定义 =====
@@ -35,6 +39,13 @@ export interface CreditBalance {
   resetDaily: boolean;
 }
 
+export interface CheckInRecord {
+  id: string;
+  date: string;
+  at?: number;
+  creditedAmount: number;
+}
+
 export interface CheckIn {
   id: string;
   nameZh?: string;
@@ -43,6 +54,8 @@ export interface CheckIn {
   validityMinutes?: number;
   expiryRecordId?: string;
   completedDate?: string;
+  completedRecordId?: string;
+  history?: CheckInRecord[];
   creditedAmount?: number;
 }
 
@@ -120,6 +133,8 @@ export default function AiQuotaTracker() {
   const [animated, setAnimated] = useState(false);
   const [platformFilter, setPlatformFilter] = useState<'all' | 'pending' | 'available'>('all');
   const [search, setSearch] = useState('');
+  const [dragPreview, setDragPreview] = useState<{ source: string | null; target: string | null }>({ source: null, target: null });
+  const [orderAnnouncement, setOrderAnnouncement] = useState('');
   const t = useTranslations('AiQuota');
   const locale = useLocale();
 
@@ -127,20 +142,6 @@ export default function AiQuotaTracker() {
   const pickName = (zh: string, en: string) => {
     if (locale === 'en') return en || zh;
     return zh || en;
-  };
-
-  // 取当前语言的单位，空时回退到另一种语言
-  const pickUnit = (zh?: string, en?: string) => {
-    if (locale === 'en') return en || zh;
-    return zh || en;
-  };
-
-  const formatValidity = (minutes: number) => {
-    const hours = Math.floor(minutes / 60);
-    const rest = minutes % 60;
-    return locale === 'en'
-      ? [hours && `${hours}h`, rest && `${rest}m`].filter(Boolean).join(' ')
-      : [hours && `${hours} 小时`, rest && `${rest} 分钟`].filter(Boolean).join(' ');
   };
 
   const getResetEffects = (items: Platform[]) => {
@@ -172,7 +173,7 @@ export default function AiQuotaTracker() {
       if (raw) {
         const stored = JSON.parse(raw) as Partial<QuotaStore>;
         // 兼容旧数据格式（name → nameZh/nameEn, unit → unitZh/unitEn）
-        const storedPlatforms = (stored.platforms ?? samplePlatforms).map((p) => {
+        const storedPlatforms = migratePlatformOrder(stored.platforms ?? samplePlatforms).map((p) => {
           const oldP = p as unknown as { name?: string; indicators: Array<{ name?: string; unit?: string } & Indicator> };
           return {
             ...p,
@@ -213,7 +214,7 @@ export default function AiQuotaTracker() {
           const reconciledPlatforms = storedPlatforms.map((platform) => settleExpiredCheckIns(syncCheckInExpiryRecords(platform, today)));
           setPlatforms(reconciledPlatforms);
           setLastResetDate(storedResetDate);
-          if (reconciledPlatforms.some((platform, index) => platform !== storedPlatforms[index])) {
+          if (stored.platforms?.some((platform) => platform.pinned) || reconciledPlatforms.some((platform, index) => platform !== storedPlatforms[index])) {
             persist(reconciledPlatforms, storedResetDate);
           }
         }
@@ -378,6 +379,7 @@ export default function AiQuotaTracker() {
     importedResetDate: string,
     mode: 'replace' | 'merge'
   ) => {
+    importedPlatforms = migratePlatformOrder(importedPlatforms);
     trackResourceAction(null, 'TOOL', 'AI_QUOTA_IMPORT', ANALYTICS_PATH).catch(() => {});
     const today = getTodayStr();
     const readyPlatforms = importedResetDate === today
@@ -412,12 +414,14 @@ export default function AiQuotaTracker() {
   };
 
   // ===== 打开编辑弹窗 =====
-  const handleTogglePin = (platformId: string) => {
+  const handleMovePlatform = (source: string, target: string) => {
+    if (source === target) return;
     setPlatforms((prev) => {
-      const next = prev.map((p) => p.id === platformId ? { ...p, pinned: !p.pinned } : p);
-      persist(next, lastResetDate);
+      const next = movePlatform(prev, visiblePlatforms.map((platform) => platform.id), source, target);
+      if (next !== prev) persist(next, lastResetDate);
       return next;
     });
+    setOrderAnnouncement(t('orderSaved'));
   };
 
   const handleEditPlatform = (platform: Platform) => {
@@ -432,7 +436,7 @@ export default function AiQuotaTracker() {
   };
 
   const today = getTodayStr();
-  const orderedPlatforms = [...platforms].sort((a, b) => Number(!!b.pinned) - Number(!!a.pinned));
+  const orderedPlatforms = platforms;
   const query = search.trim().toLocaleLowerCase();
   const visiblePlatforms = orderedPlatforms.filter((platform) => {
     const matchesName = !query || [platform.nameZh, platform.nameEn].some((name) => name.toLocaleLowerCase().includes(query));
@@ -444,7 +448,7 @@ export default function AiQuotaTracker() {
   // ===== 挂载前骨架：避免 Hydration 不匹配 =====
   if (!mounted) {
     return (
-      <div className="bg-[#f5f5f7] min-h-screen p-4 sm:p-12">
+      <div className={`${focusStyles.scope} bg-[#f5f5f7] min-h-screen p-4 sm:p-12`}>
         <div className="h-8 w-48 bg-zinc-200 rounded animate-pulse" />
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6 mt-6 sm:mt-8">
           {[0, 1].map((i) => (
@@ -462,7 +466,7 @@ export default function AiQuotaTracker() {
   }
 
   return (
-    <div className="bg-[#f5f5f7] min-h-screen p-4 sm:p-12">
+    <div className={`${focusStyles.scope} bg-[#f5f5f7] min-h-screen p-4 sm:p-12`}>
       {/* ===== 顶部标题区 ===== */}
       <header className="text-center mb-6 sm:mb-8">
         <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-zinc-900">
@@ -513,6 +517,7 @@ export default function AiQuotaTracker() {
       {platforms.length > 0 && platformFilter === 'available' &&
         <p id="daily-quota-hint" className="-mt-3 mb-4 text-xs text-zinc-500">{t('dailyQuotaHint')}</p>}
 
+      <p role="status" aria-live="polite" className="sr-only">{orderAnnouncement}</p>
       {/* ===== 平台卡片网格 / 空状态 ===== */}
       {platforms.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-12 sm:py-20 px-4">
@@ -537,13 +542,15 @@ export default function AiQuotaTracker() {
             className="mt-3 text-sm font-medium text-zinc-900 underline">{t('clearFilters')}</button>
         </div>
       ) : (
-      <div className="grid grid-cols-1 items-start gap-4 sm:gap-6 md:grid-cols-2 xl:grid-cols-3">
+      <div className="grid grid-cols-1 items-stretch gap-4 sm:gap-6 md:grid-cols-2 xl:grid-cols-3">
         {visiblePlatforms.map((platform) => {
           const colorStyle = PLATFORM_COLOR_STYLES[normalizePlatformColor(platform.color)];
           return (
           <div
             key={platform.id}
-            className={`relative flex max-h-[36rem] flex-col overflow-hidden bg-white rounded-2xl shadow-sm border p-4 sm:p-6 hover:-translate-y-1 transition-all duration-300 ${colorStyle.card}`}
+            data-quota-card={platform.id}
+            data-sorting={!!dragPreview.source}
+            className={`${motionStyles.card} relative flex h-[21rem] min-w-0 flex-col overflow-hidden bg-white rounded-2xl shadow-sm border p-4 sm:px-6 sm:py-5 ${colorStyle.card} ${dragPreview.source === platform.id ? 'opacity-50' : ''} ${dragPreview.target === platform.id && dragPreview.source !== platform.id ? 'ring-2 ring-zinc-500 ring-offset-2' : ''}`}
           >
             <div className={`absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r ${colorStyle.sheen}`} />
             {/* 卡片 Header */}
@@ -558,18 +565,16 @@ export default function AiQuotaTracker() {
                 )}
               </div>
               <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
-                <button
-                  type="button"
-                  aria-label={platform.pinned ? t('unpinPlatform') : t('pinPlatform')}
-                  title={platform.pinned ? t('unpinPlatform') : t('pinPlatform')}
-                  aria-pressed={!!platform.pinned}
-                  onClick={() => handleTogglePin(platform.id)}
-                  className={`w-9 h-9 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg transition-colors ${
-                    platform.pinned ? 'bg-amber-50 text-amber-700 hover:bg-amber-100' : 'text-gray-400 hover:text-amber-700 hover:bg-amber-50'
-                  }`}
-                >
-                  {platform.pinned ? <PinOff className="w-4 h-4" /> : <Pin className="w-4 h-4" />}
-                </button>
+                <CardDragHandle id={platform.id}
+                  label={t('dragSortCard', { name: pickName(platform.nameZh, platform.nameEn) })}
+                  hint={t('dragSortHint')}
+                  onPreview={(source, target) => { setDragPreview({ source, target }); setOrderAnnouncement(''); }}
+                  onMove={handleMovePlatform}
+                  onStep={(direction) => {
+                    const index = visiblePlatforms.findIndex((item) => item.id === platform.id);
+                    const target = visiblePlatforms[index + direction];
+                    if (target) handleMovePlatform(platform.id, target.id);
+                  }} />
                 {platform.url && (
                   <a
                     href={platform.url}
@@ -588,6 +593,7 @@ export default function AiQuotaTracker() {
                 <button
                   type="button"
                   aria-label={t('aria.edit')}
+                  title={t('aria.edit')}
                   onClick={() => handleEditPlatform(platform)}
                   className="w-9 h-9 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-50 transition-colors"
                 >
@@ -596,6 +602,7 @@ export default function AiQuotaTracker() {
                 <button
                   type="button"
                   aria-label={t('aria.reset')}
+                  title={t('aria.reset')}
                   onClick={() => handleResetPlatform(platform)}
                   className="w-9 h-9 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-amber-600 hover:bg-amber-50 transition-colors"
                 >
@@ -604,6 +611,7 @@ export default function AiQuotaTracker() {
                 <button
                   type="button"
                   aria-label={t('aria.delete')}
+                  title={t('aria.delete')}
                   onClick={() => handleDeletePlatform(platform)}
                   className="w-9 h-9 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-[#e52129] hover:bg-red-50 transition-colors"
                 >
@@ -612,101 +620,8 @@ export default function AiQuotaTracker() {
               </div>
             </div>
 
-            {/* 指标列表 */}
-            <div tabIndex={0} aria-label={pickName(platform.nameZh, platform.nameEn)}
-              className="mt-5 flex min-h-0 flex-col gap-4 overflow-y-auto overscroll-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-600 sm:mt-6 sm:gap-5">
-              {platform.balance && (
-                <div className="flex items-center justify-between gap-2 rounded-xl bg-zinc-50 p-3">
-                  <div>
-                    <div className="text-xs text-zinc-500">{t('balance')}</div>
-                    <div className="font-mono text-lg font-semibold text-zinc-900">{platform.balance.current.toFixed(2)}</div>
-                  </div>
-                  {!!platform.checkIns?.length &&
-                    <DailyCheckInDialog mode="platform" compact platforms={[platform]} today={today} onCheckIn={handleCheckIn} />}
-                </div>
-              )}
-              {!platform.balance && !!platform.checkIns?.length &&
-                <DailyCheckInDialog mode="platform" platforms={[platform]} today={today} onCheckIn={handleCheckIn} />}
-              {platform.expiryIndicators?.map((item) => <ExpiryIndicatorCard key={item.id} item={item} />)}
-              {platform.checkIns?.filter((item) => item.validityMinutes && !item.expiryRecordId).map((item) => (
-                <div key={`pending-expiry-${item.id}`} className="rounded-xl border border-dashed border-zinc-300 bg-zinc-50 p-3 text-sm text-zinc-500">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="flex min-w-0 items-center gap-1.5 font-medium"><Hourglass className="h-4 w-4 shrink-0" />{pickName(item.nameZh ?? '', item.nameEn ?? '') || t('dailyCheckIn')}</span>
-                    <span>{item.reward} {t('creditUnit')}</span>
-                  </div>
-                  <p className="my-2 text-xs">{t('expiryStartsOnCheckIn', { duration: formatValidity(item.validityMinutes ?? 0) })}</p>
-                  <div className="h-2 rounded-full bg-zinc-200" aria-hidden="true" />
-                </div>
-              ))}
-              {platform.indicators.map((ind) => {
-                const percent = Math.min(100, (ind.used / ind.limit) * 100);
-                const isExceeded = ind.used >= ind.limit;
-                const isWarning = !isExceeded && percent >= 80;
-                const barColor = isExceeded
-                  ? 'bg-[#e52129]'
-                  : isWarning
-                  ? 'bg-amber-500'
-                  : 'bg-zinc-800';
-                const trackColor = isExceeded
-                  ? 'bg-red-50'
-                  : isWarning
-                  ? 'bg-amber-50'
-                  : 'bg-gray-100';
-                const valueColor = isExceeded
-                  ? 'text-[#e52129]'
-                  : isWarning
-                  ? 'text-amber-600'
-                  : 'text-gray-900';
-                return (
-                  <div key={ind.id}>
-                    {/* 信息行：名称 + 今日消耗/上限徽章（窄屏自动换行） */}
-                    <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 mb-2">
-                      <span className="text-sm text-gray-600 truncate min-w-0 flex-1">{pickName(ind.nameZh, ind.nameEn)}</span>
-                      <div className="flex flex-wrap items-center justify-end gap-1">
-                        <span className={`font-mono text-sm font-medium ${valueColor}`}>
-                          {ind.used}
-                        </span>
-                        <span className="text-[10px] text-gray-400 px-1 bg-gray-100 rounded">{ind.resetDaily === false ? t('used') : t('today')}</span>
-                        <span className="text-sm text-gray-400">/</span>
-                        <span className="font-mono text-sm text-gray-500">{ind.limit}</span>
-                        {(() => { const u = pickUnit(ind.unitZh, ind.unitEn); return u ? <span className="text-xs text-gray-400 ml-0.5">{u}</span> : null; })()}
-                        <span className="text-[10px] text-gray-400 px-1 bg-gray-100 rounded">{t('limit')}</span>
-                        {isWarning && (
-                          <span className="text-[10px] text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded ml-1">
-                            {t('warning')}
-                          </span>
-                        )}
-                        {isExceeded && (
-                          <span className="text-[10px] text-white bg-[#e52129] px-1.5 py-0.5 rounded ml-1 animate-pulse">
-                            {t('exhausted')}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* 每日消费进度条与快捷加减 */}
-                    <div className="flex items-center gap-2 sm:gap-3">
-                      <div className={`flex-1 rounded-full h-2 overflow-hidden ${trackColor}`}>
-                        <div
-                          className={`h-full rounded-full transition-[width] duration-700 ease-out ${barColor}`}
-                          style={{ width: animated ? `${percent}%` : '0%' }}
-                        />
-                      </div>
-                      <button type="button" aria-label={t('aria.decrease')}
-                        onClick={() => handleUpdateQuota(platform.id, ind.id, -1)}
-                        className="w-8 h-8 sm:w-6 sm:h-6 flex items-center justify-center rounded-md border border-gray-200 text-gray-500 hover:text-[#e52129] hover:bg-red-50 transition-colors">
-                        <Minus className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
-                      </button>
-                      <button type="button" aria-label={t('aria.increase')}
-                        onClick={() => handleUpdateQuota(platform.id, ind.id, 1)}
-                        className="w-8 h-8 sm:w-6 sm:h-6 flex items-center justify-center rounded-md border border-gray-200 text-gray-500 hover:text-[#e52129] hover:bg-red-50 transition-colors">
-                        <Plus className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+            <PlatformCardContent platform={platform} today={today} animated={animated}
+              handleCheckIn={handleCheckIn} handleUpdateQuota={handleUpdateQuota} />
           </div>
           );
         })}
