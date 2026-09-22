@@ -34,10 +34,20 @@ export function recentExpiredIndicators(items: ExpiryIndicator[], now: number): 
     .sort((a, b) => b.expiresAt - a.expiresAt);
 }
 
-export function expiryProgress(item: ExpiryIndicator, now: number) {
+export type ExpiryState = 'pending' | 'active' | 'expired';
+
+export function expiryProgress(item: ExpiryIndicator, now: number): {
+  state: ExpiryState;
+  remainingMinutes: number;
+  percent: number;
+} {
+  // 窗口未开始：0%；进行中：剩余 ÷ 总有效时长；已结束：0%
+  if (now < item.startsAt) return { state: 'pending', remainingMinutes: 0, percent: 0 };
+  if (now >= item.expiresAt) return { state: 'expired', remainingMinutes: 0, percent: 0 };
   return {
-    remainingMinutes: Math.max(0, Math.ceil((item.expiresAt - now) / 60_000)),
-    percent: Math.max(0, Math.min(100, (item.expiresAt - now) / (item.expiresAt - item.startsAt) * 100)),
+    state: 'active',
+    remainingMinutes: Math.ceil((item.expiresAt - now) / 60_000),
+    percent: (item.expiresAt - now) / (item.expiresAt - item.startsAt) * 100,
   };
 }
 

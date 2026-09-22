@@ -27,7 +27,7 @@ interface IndicatorForm {
 interface PlatformConfigModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (platform: Platform) => void;
+  onSave: (platform: Platform, recomputeIds: string[]) => void;
   initialData?: Platform;
 }
 
@@ -92,6 +92,8 @@ export default function PlatformConfigModal({
   const [balanceInitial, setBalanceInitial] = useState(0);
   const [balanceResetDaily, setBalanceResetDaily] = useState(false);
   const [checkIns, setCheckIns] = useState<CheckIn[]>([]);
+  // 弹窗打开时签到类目的快照，用于「值对比」判定本轮是否修改了时长或起点
+  const [initialCheckIns, setInitialCheckIns] = useState<CheckIn[]>([]);
   const [nameError, setNameError] = useState(false);
   const [urlError, setUrlError] = useState(false);
   const [indicatorError, setIndicatorError] = useState(false);
@@ -119,7 +121,9 @@ export default function PlatformConfigModal({
       setBalanceCurrent(initialData.balance?.current ?? 0);
       setBalanceInitial(initialData.balance?.initial ?? 0);
       setBalanceResetDaily(initialData.balance?.resetDaily ?? false);
-      setCheckIns(normalizeCheckIns(initialData.checkIns, initialData.checkIn));
+      const initialSnapshot = normalizeCheckIns(initialData.checkIns, initialData.checkIn);
+      setCheckIns(initialSnapshot);
+      setInitialCheckIns(initialSnapshot);
     } else {
       setPlatformNameZh('');
       setPlatformNameEn('');
@@ -131,6 +135,7 @@ export default function PlatformConfigModal({
       setBalanceInitial(0);
       setBalanceResetDaily(false);
       setCheckIns([]);
+      setInitialCheckIns([]);
     }
     setNameError(false);
     setUrlError(false);
@@ -162,8 +167,8 @@ export default function PlatformConfigModal({
   const addIndicator = () => {
     if (indicatorType === 'expiry') {
       const startsAt = Math.floor(Date.now() / 60_000) * 60_000;
-      setExpiryIndicators((prev) => [...prev, { id: crypto.randomUUID(), nameZh: '', nameEn: '', amount: 0, startsAt, expiresAt: startsAt + 86400000 }]);
-    } else setIndicators((prev) => [...prev, createEmptyIndicator()]);
+      setExpiryIndicators((prev) => [{ id: crypto.randomUUID(), nameZh: '', nameEn: '', amount: 0, startsAt, expiresAt: startsAt + 86400000 }, ...prev]);
+    } else setIndicators((prev) => [createEmptyIndicator(), ...prev]);
   };
 
   const updateCheckIn = (id: string, field: 'nameZh' | 'nameEn' | 'reward', value: string) => {
@@ -251,7 +256,16 @@ export default function PlatformConfigModal({
       })),
     };
 
-    onSave(savedPlatform);
+    // 值对比：时长或起点的最终值与打开弹窗时不同，则该签到项以类目为准重算
+    const recomputeIds = checkIns.flatMap((item) => {
+      const initial = initialCheckIns.find((entry) => entry.id === item.id);
+      if (!initial) return [];
+      const modeChanged = (item.validityStartMode ?? 'checkin') !== (initial.validityStartMode ?? 'checkin');
+      const durationChanged = (item.validityMinutes ?? undefined) !== (initial.validityMinutes ?? undefined);
+      return modeChanged || durationChanged ? [item.id] : [];
+    });
+
+    onSave(savedPlatform, recomputeIds);
     onClose();
   };
 
@@ -371,6 +385,22 @@ export default function PlatformConfigModal({
         {/* ===== 监控指标列表 ===== */}
         <section className="mb-6 rounded-xl border border-zinc-200 bg-white p-4 shadow-sm">
           <h3 className="flex items-center gap-2 border-b border-zinc-200 pb-3 text-base font-semibold text-zinc-900 mb-4"><SlidersHorizontal className="h-4 w-4 text-zinc-500" aria-hidden="true" />{t('indicatorLabel')}</h3>
+          <div className="mb-4 flex flex-wrap items-end gap-2">
+            <label className="flex items-center gap-2 text-xs text-zinc-600">{t('indicatorType')}
+              <select value={indicatorType} onChange={(e) => setIndicatorType(e.target.value)} className="rounded-lg border border-zinc-200 bg-white p-2 text-sm">
+                <option value="usage">{t('usageType')}</option><option value="expiry">{t('manualExpiryType')}</option>
+              </select>
+            </label>
+            <button
+              ref={addIndicatorRef}
+              type="button"
+              onClick={addIndicator}
+              className="inline-flex items-center gap-1 rounded-lg border border-zinc-200 px-3 py-2 text-sm text-gray-600 transition-colors hover:border-[#e52129] hover:text-[#e52129]"
+            >
+              <Plus className="w-4 h-4" />
+              {t('addIndicator')}
+            </button>
+          </div>
           <div className="flex flex-col gap-2.5">
             {indicators.map((ind) => (
               <div key={ind.id} className="flex flex-wrap items-center gap-2">
@@ -426,20 +456,6 @@ export default function PlatformConfigModal({
             <p className="text-xs text-[#e52129] mt-1.5">{t('errors.indicatorRequired')}</p>
           )}
 
-          <label className="mt-4 flex items-center gap-2 text-xs text-zinc-600">{t('indicatorType')}
-            <select value={indicatorType} onChange={(e) => setIndicatorType(e.target.value)} className="rounded-lg border border-zinc-200 bg-white p-2 text-sm">
-              <option value="usage">{t('usageType')}</option><option value="expiry">{t('manualExpiryType')}</option>
-            </select>
-          </label>
-          <button
-            ref={addIndicatorRef}
-            type="button"
-            onClick={addIndicator}
-            className="mt-2.5 inline-flex items-center gap-1 text-sm text-gray-500 hover:text-[#e52129] transition-colors"
-          >
-            <Plus className="w-4 h-4" />
-            {t('addIndicator')}
-          </button>
         </section>
 
         <section className="mb-6 rounded-xl border border-zinc-200 bg-white p-4 shadow-sm space-y-4">
@@ -502,6 +518,19 @@ export default function PlatformConfigModal({
                   onChange={(e) => setCheckIns((prev) => prev.map((entry) => entry.id === item.id ? { ...entry, validityMinutes: e.target.value ? Math.round(Number(e.target.value) * 60) : NaN } : entry))}
                   className="mt-1 w-full rounded-lg border border-zinc-200 p-2 text-base sm:text-sm" />
               </label>
+              <div>
+                <span className="block text-xs text-zinc-600">{t('validityStart')}</span>
+                <div className="mt-1 grid grid-cols-2 gap-1 rounded-lg bg-zinc-100 p-1">
+                  {(['midnight', 'checkin'] as const).map((mode) => {
+                    const active = (item.validityStartMode ?? 'checkin') === mode;
+                    return <button key={mode} type="button" aria-pressed={active}
+                      onClick={() => setCheckIns((prev) => prev.map((entry) => entry.id === item.id ? { ...entry, validityStartMode: mode } : entry))}
+                      className={`rounded-md px-2 py-1.5 text-xs transition-colors ${active ? 'bg-white font-medium text-zinc-800 shadow-sm' : 'text-zinc-500 hover:text-zinc-700'}`}>
+                      {t(mode === 'midnight' ? 'startAtMidnight' : 'startAtCheckIn')}
+                    </button>;
+                  })}
+                </div>
+              </div>
               <p className="text-xs leading-relaxed text-zinc-500">{t('expiryRuleHint')}</p>
             </div>}
           </div>)}

@@ -1,6 +1,11 @@
 import type { CheckIn, Platform } from './AiQuotaTracker';
 import type { ExpiryIndicator } from './expiry-indicators';
 
+// 零点模式取本地自然日 00:00:00；其余以当前时刻（签到/保存）为起点。
+function validityStartsAt(item: CheckIn, today: string, now: number): number {
+  return item.validityStartMode === 'midnight' ? new Date(`${today}T00:00:00`).getTime() : now;
+}
+
 function makeExpiryRecord(platform: Platform, item: CheckIn, today: string, now: number): { records: ExpiryIndicator[]; id: string } {
   const records = platform.expiryIndicators ?? [];
   const linkedIds = new Set(platform.checkIns?.map((entry) => entry.expiryRecordId).filter(Boolean));
@@ -11,7 +16,7 @@ function makeExpiryRecord(platform: Platform, item: CheckIn, today: string, now:
     && record.nameZh.trim() === (item.nameZh ?? '').trim()
     && record.nameEn.trim() === (item.nameEn ?? '').trim();
   const reusable = records.find(matchesManual);
-  const startsAt = now;
+  const startsAt = validityStartsAt(item, today, now);
   const id = reusable?.id ?? crypto.randomUUID();
   const record: ExpiryIndicator = {
     id, sourceCheckInId: item.id, nameZh: item.nameZh ?? '', nameEn: item.nameEn ?? '',
@@ -21,11 +26,13 @@ function makeExpiryRecord(platform: Platform, item: CheckIn, today: string, now:
 }
 
 // 编辑已完成的签到时，启用有效期追踪也会立即显示对应记录。
-export function syncCheckInExpiryRecords(platform: Platform, today: string, now = Date.now()): Platform {
+// recomputeIds 中的签到项按类目配置重算起点/到期；其余记录保持手动调整后的时间不变。
+export function syncCheckInExpiryRecords(platform: Platform, today: string, now = Date.now(), recomputeIds?: ReadonlySet<string>): Platform {
   let result = platform;
   for (const item of platform.checkIns ?? []) {
     if (item.completedDate !== today || !item.validityMinutes) continue;
     if (item.expiryRecordId && result.expiryIndicators?.some((record) => record.id === item.expiryRecordId)) {
+      if (!recomputeIds?.has(item.id)) continue;
       // 旧数据里若已同时存在自动记录和当天同名的手动补录，保留签到关联的记录。
       const otherLinkedIds = new Set(result.checkIns?.map((entry) => entry.expiryRecordId).filter(Boolean));
       const deduplicated = result.expiryIndicators.filter((record) => record.id === item.expiryRecordId
@@ -35,6 +42,17 @@ export function syncCheckInExpiryRecords(platform: Platform, today: string, now 
         || record.nameZh.trim() !== (item.nameZh ?? '').trim()
         || record.nameEn.trim() !== (item.nameEn ?? '').trim());
       if (deduplicated.length !== result.expiryIndicators.length) result = { ...result, expiryIndicators: deduplicated };
+      // 类目重新生效：零点模式取当天 00:00，签到模式恢复为真实签到时刻（旧数据缺失时保留原起点）
+      result = { ...result, expiryIndicators: result.expiryIndicators?.map((record) => {
+        if (record.id !== item.expiryRecordId) return record;
+        const checkedInAt = item.history?.find((entry) => entry.date === today)?.at;
+        const startsAt = item.validityStartMode === 'midnight'
+          ? new Date(`${today}T00:00:00`).getTime()
+          : checkedInAt ?? record.startsAt;
+        const expiresAt = startsAt + item.validityMinutes! * 60_000;
+        return startsAt === record.startsAt && expiresAt === record.expiresAt
+          ? record : { ...record, startsAt, expiresAt };
+      }) };
       continue;
     }
     const { records, id } = makeExpiryRecord(result, item, today, now);

@@ -52,6 +52,8 @@ export interface CheckIn {
   nameEn?: string;
   reward: number;
   validityMinutes?: number;
+  // 有效期起点：当天零点或签到时刻，缺省按签到时刻
+  validityStartMode?: 'midnight' | 'checkin';
   expiryRecordId?: string;
   completedDate?: string;
   completedRecordId?: string;
@@ -293,8 +295,10 @@ export default function AiQuotaTracker() {
   };
 
   // ===== 保存平台：新增追加 / 编辑替换，统一持久化 =====
-  const handleSavePlatform = (platform: Platform) => {
-    const ready = settleExpiredCheckIns(syncCheckInExpiryRecords(platform, getTodayStr()));
+  const handleSavePlatform = (platform: Platform, recomputeIds: string[]) => {
+    const ready = settleExpiredCheckIns(
+      syncCheckInExpiryRecords(platform, getTodayStr(), Date.now(), new Set(recomputeIds)),
+    );
     const actionType = editingPlatform ? 'AI_QUOTA_EDIT_PLATFORM' : 'AI_QUOTA_ADD_PLATFORM';
     // 本地 localStorage 平台 id 不是 ToolCard.id，资源 ID 留空；工具级归属由页面 VIEW 埋点承载
     trackResourceAction(null, 'TOOL', actionType, ANALYTICS_PATH).catch(() => {});
