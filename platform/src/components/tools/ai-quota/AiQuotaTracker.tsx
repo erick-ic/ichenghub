@@ -10,7 +10,7 @@ import ImportExportModal from './ImportExportModal';
 import { normalizePlatformUrl } from './platform-url';
 import { normalizePlatformColor, PLATFORM_COLOR_STYLES, type PlatformColor } from './platform-colors';
 import { normalizeCheckIns } from './check-ins';
-import { resetForNewDay, syncCheckInExpiryRecords, toggleCheckIn } from './quota-state';
+import { settleExpiredCheckIns, resetForNewDay, syncCheckInExpiryRecords, toggleCheckIn } from './quota-state';
 import ExpiryIndicatorCard from './ExpiryIndicatorCard';
 import { normalizeExpiryIndicators, type ExpiryIndicator } from './expiry-indicators';
 import DailyCheckInDialog from './DailyCheckInDialog';
@@ -205,12 +205,12 @@ export default function AiQuotaTracker() {
 
         if (storedResetDate !== today) {
           // 跨天：所有指标 used 归零，刷新 lastResetDate
-          const resetPlatforms = storedPlatforms.map(resetForNewDay);
+          const resetPlatforms = storedPlatforms.map((platform) => settleExpiredCheckIns(resetForNewDay(platform)));
           setPlatforms(resetPlatforms);
           setLastResetDate(today);
           persist(resetPlatforms, today);
         } else {
-          const reconciledPlatforms = storedPlatforms.map((platform) => syncCheckInExpiryRecords(platform, today));
+          const reconciledPlatforms = storedPlatforms.map((platform) => settleExpiredCheckIns(syncCheckInExpiryRecords(platform, today)));
           setPlatforms(reconciledPlatforms);
           setLastResetDate(storedResetDate);
           if (reconciledPlatforms.some((platform, index) => platform !== storedPlatforms[index])) {
@@ -237,17 +237,23 @@ export default function AiQuotaTracker() {
   // 页面保持打开时也在本地日期变更后重置。
   useEffect(() => {
     if (!mounted) return;
-    const timer = window.setInterval(() => {
+    const reconcile = () => {
       const today = getTodayStr();
-      if (today === lastResetDate) return;
+      const crossedDay = today !== lastResetDate;
       setPlatforms((prev) => {
-        const next = prev.map(resetForNewDay);
+        const next = prev.map((platform) => settleExpiredCheckIns(crossedDay ? resetForNewDay(platform) : platform));
+        if (!crossedDay && next.every((platform, index) => platform === prev[index])) return prev;
         persist(next, today);
         return next;
       });
-      setLastResetDate(today);
-    }, 30_000);
-    return () => window.clearInterval(timer);
+      if (crossedDay) setLastResetDate(today);
+    };
+    const timer = window.setInterval(reconcile, 1_000);
+    window.addEventListener('focus', reconcile);
+    return () => {
+      window.clearInterval(timer);
+      window.removeEventListener('focus', reconcile);
+    };
   }, [mounted, lastResetDate]);
 
   const handleCheckIn = (platformId: string, checkInId: string) => {
@@ -287,7 +293,7 @@ export default function AiQuotaTracker() {
 
   // ===== 保存平台：新增追加 / 编辑替换，统一持久化 =====
   const handleSavePlatform = (platform: Platform) => {
-    const ready = syncCheckInExpiryRecords(platform, getTodayStr());
+    const ready = settleExpiredCheckIns(syncCheckInExpiryRecords(platform, getTodayStr()));
     const actionType = editingPlatform ? 'AI_QUOTA_EDIT_PLATFORM' : 'AI_QUOTA_ADD_PLATFORM';
     // 本地 localStorage 平台 id 不是 ToolCard.id，资源 ID 留空；工具级归属由页面 VIEW 埋点承载
     trackResourceAction(null, 'TOOL', actionType, ANALYTICS_PATH).catch(() => {});
@@ -375,7 +381,8 @@ export default function AiQuotaTracker() {
     trackResourceAction(null, 'TOOL', 'AI_QUOTA_IMPORT', ANALYTICS_PATH).catch(() => {});
     const today = getTodayStr();
     const readyPlatforms = importedResetDate === today
-      ? importedPlatforms : importedPlatforms.map(resetForNewDay);
+      ? importedPlatforms.map((platform) => settleExpiredCheckIns(platform))
+      : importedPlatforms.map((platform) => settleExpiredCheckIns(resetForNewDay(platform)));
     if (mode === 'replace') {
       setPlatforms(readyPlatforms);
       setLastResetDate(today);

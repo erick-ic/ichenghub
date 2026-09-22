@@ -347,7 +347,7 @@
     "expiryType": "Credit validity",
     "trackExpiry": "Track credit validity",
     "validityHours": "Validity duration (hours)",
-    "expiryRuleHint": "A pending bar appears after saving and starts automatically when you check in; no manual metric is needed. If already checked in today, it starts when you save. Duration changes apply to future check-ins only.",
+    "expiryRuleHint": "The countdown starts when you check in, and the credited reward is automatically deducted from your balance on expiry. If already checked in today, it starts when you save. Duration changes apply to future check-ins only.",
     "expiryStartsOnCheckIn": "Check in to start the {duration} validity countdown",
     "manualExpiryType": "Manually add validity record",
     "expiryBalanceHint": "Tracks validity only. Editing, deleting, or expiration does not change your credit balance.",

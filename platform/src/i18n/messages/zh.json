@@ -347,7 +347,7 @@
     "expiryType": "积分有效期",
     "trackExpiry": "追踪积分有效期",
     "validityHours": "有效时长（小时）",
-    "expiryRuleHint": "保存后卡片会显示待启动进度条；签到时自动开始计时，无需手动添加监控指标。若今天已签到，保存时立即开始计时。修改时长仅影响后续签到。",
+    "expiryRuleHint": "保存后卡片会显示待启动进度条；签到时自动开始计时，到期自动从积分余额扣除该次签到奖励。若今天已签到，保存时立即开始计时。修改时长仅影响后续签到。",
     "expiryStartsOnCheckIn": "签到后开启 {duration} 有效期倒计时",
     "manualExpiryType": "手动补录有效期",
     "expiryBalanceHint": "仅追踪有效期；修改、删除或到期均不会改变积分余额。",

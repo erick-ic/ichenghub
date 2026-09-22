@@ -15,7 +15,7 @@ function makeExpiryRecord(platform: Platform, item: CheckIn, today: string, now:
   const id = reusable?.id ?? crypto.randomUUID();
   const record: ExpiryIndicator = {
     id, sourceCheckInId: item.id, nameZh: item.nameZh ?? '', nameEn: item.nameEn ?? '',
-    amount: item.reward, startsAt, expiresAt: startsAt + item.validityMinutes! * 60_000,
+    amount: item.reward, creditedAmount: item.creditedAmount ?? (platform.balance ? item.reward : 0), startsAt, expiresAt: startsAt + item.validityMinutes! * 60_000,
   };
   return { records: reusable ? records.map((entry) => entry.id === id ? record : entry) : [...records, record], id };
 }
@@ -44,6 +44,26 @@ export function syncCheckInExpiryRecords(platform: Platform, today: string, now 
   return result;
 }
 
+// 每个签到批次仅结算一次；手动补录的倒计时不影响余额。
+export function settleExpiredCheckIns(platform: Platform, now = Date.now()): Platform {
+  let deduction = 0;
+  let changed = false;
+  const expiryIndicators = platform.expiryIndicators?.map((record) => {
+    if (!record.sourceCheckInId || record.expiredDeducted || record.expiresAt > now) return record;
+    const linked = platform.checkIns?.find((item) => item.expiryRecordId === record.id);
+    deduction += record.creditedAmount ?? linked?.creditedAmount ?? record.amount;
+    changed = true;
+    return { ...record, expiredDeducted: true };
+  });
+  if (!changed) return platform;
+  return {
+    ...platform,
+    expiryIndicators,
+    balance: platform.balance ? { ...platform.balance,
+      current: Number(Math.max(0, platform.balance.current - deduction).toFixed(2)) } : undefined,
+  };
+}
+
 export function resetForNewDay(platform: Platform): Platform {
   return {
     ...platform,
@@ -56,10 +76,12 @@ export function resetForNewDay(platform: Platform): Platform {
 }
 
 export function toggleCheckIn(platform: Platform, checkInId: string, today: string, now = Date.now()): Platform {
+  platform = settleExpiredCheckIns(platform, now);
   const item = platform.checkIns?.find((entry) => entry.id === checkInId);
   if (!item) return platform;
   const completed = item.completedDate === today;
-  const amount = completed ? item.creditedAmount ?? 0 : platform.balance ? item.reward : 0;
+  const alreadyDeducted = platform.expiryIndicators?.some((record) => record.id === item.expiryRecordId && record.expiredDeducted);
+  const amount = completed ? (alreadyDeducted ? 0 : item.creditedAmount ?? 0) : platform.balance ? item.reward : 0;
   const created = !completed && item.validityMinutes ? makeExpiryRecord(platform, item, today, now) : undefined;
   const expiryRecordId = created?.id;
   const expiryIndicators = completed

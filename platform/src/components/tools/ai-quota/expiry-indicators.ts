@@ -1,6 +1,8 @@
 export interface ExpiryIndicator {
   id: string;
   sourceCheckInId?: string;
+  creditedAmount?: number;
+  expiredDeducted?: boolean;
   nameZh: string;
   nameEn: string;
   amount: number;
@@ -18,6 +20,8 @@ export function normalizeExpiryIndicators(value: unknown): ExpiryIndicator[] {
       || item.expiresAt <= item.startsAt || !Number.isFinite(item.amount) || item.amount < 0) return [];
     ids.add(item.id);
     return [{ id: item.id, ...(typeof item.sourceCheckInId === 'string' ? { sourceCheckInId: item.sourceCheckInId } : {}),
+      creditedAmount: Number.isFinite(item.creditedAmount) && item.creditedAmount >= 0 ? item.creditedAmount : undefined,
+      expiredDeducted: item.expiredDeducted === true,
       nameZh: typeof item.nameZh === 'string' ? item.nameZh : '',
       nameEn: typeof item.nameEn === 'string' ? item.nameEn : '', amount: item.amount,
       startsAt: item.startsAt, expiresAt: item.expiresAt }];
