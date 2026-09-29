@@ -12,6 +12,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Input } from '@/components/ui/input'
 import { createPrompt, updatePrompt, deletePrompt, togglePromptStatus, movePromptToTop, movePromptUp, movePromptDown } from '@/app/actions/promptActions'
 import { SearchBar } from './SearchBar'
+import { PromptExportButton } from './PromptExportButton'
 
 interface Prompt {
   id: string
@@ -157,7 +158,8 @@ export function PromptTable({ prompts }: PromptTableProps) {
       )}
 
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <SearchBar />
+        <div className="flex-1"><SearchBar /></div>
+        <PromptExportButton />
         <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
           <DialogTrigger asChild>
             <Button 

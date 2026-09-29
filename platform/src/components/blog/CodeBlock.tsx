@@ -42,12 +42,12 @@ export default function CodeBlock({ code }: CodeBlockProps) {
       >
         {copied ? (
           <>
-            <Check className="h-4 w-4 text-green-400" />
+            <Check className="h-[18px] w-[18px] shrink-0 text-green-400" />
             <span className="text-xs text-green-400">{copied ? 'Copied' : 'Copy'}</span>
           </>
         ) : (
           <>
-            <Copy className="h-4 w-4" />
+            <Copy className="h-[18px] w-[18px] shrink-0" />
             <span className="text-xs opacity-0 group-hover:opacity-100 transition-opacity">Copy</span>
           </>
         )}

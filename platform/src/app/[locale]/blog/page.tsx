@@ -134,9 +134,9 @@ export default async function BlogListPage({ params }: PageProps) {
                       {/* 第三层：元数据行（分类 + 日期 + 阅读 + 收藏）。
                           整行 pointer-events-none，点击穿透到覆盖链接仍可跳转；
                           收藏按钮单独恢复 pointer-events-auto，与详情页共用同一组件 */}
-                      <div className="pointer-events-none relative z-10 flex flex-wrap items-center gap-x-3 text-xs mt-3">
+                      <div className="pointer-events-none relative z-10 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs mt-3">
                         <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-[11px] font-medium tracking-wide bg-gray-50/70 dark:bg-gray-800/60 text-gray-600 dark:text-gray-300 ring-1 ring-inset ring-gray-200/80 dark:ring-gray-700/70 transition-all duration-200 hover:bg-white hover:ring-[#e52129]/30 hover:text-[#e52129] dark:hover:bg-gray-800">
-                          <svg viewBox="0 0 24 24" className="w-3 h-3 shrink-0 opacity-70" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                          <svg viewBox="0 0 24 24" className="w-4 h-4 shrink-0 opacity-70" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                             <path d="M11.778 2.066H5.722A2.222 2.222 0 0 0 3.5 4.288v6.056a2.222 2.222 0 0 0 .654 1.576l7.412 7.412a2.222 2.222 0 0 0 3.143 0l4.426-4.426a2.222 2.222 0 0 0 0-3.143L13.35 2.72a2.222 2.222 0 0 0-1.572-.654Z"/>
                             <circle cx="7.556" cy="7.556" r="1.333"/>
                           </svg>
@@ -144,16 +144,16 @@ export default async function BlogListPage({ params }: PageProps) {
                         </span>
                         <time
                           dateTime={blog.date}
-                          className="inline-flex items-center gap-1 text-gray-400 dark:text-gray-500 font-normal tabular-nums"
+                          className="inline-flex items-center gap-1.5 text-gray-400 dark:text-gray-500 font-normal tabular-nums"
                         >
-                          <svg viewBox="0 0 24 24" className="w-3 h-3 shrink-0" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                          <svg viewBox="0 0 24 24" className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
                             <rect x="3" y="4.5" width="18" height="15" rx="2"/>
                             <path d="M8 3v4M16 3v4M3 10.5h18"/>
                           </svg>
                           {blog.date}
                         </time>
-                        <span className="inline-flex items-center gap-1 text-gray-400 dark:text-gray-500 font-normal tabular-nums">
-                          <svg viewBox="0 0 24 24" className="w-3 h-3 shrink-0" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                        <span className="inline-flex items-center gap-1.5 text-gray-400 dark:text-gray-500 font-normal tabular-nums">
+                          <svg viewBox="0 0 24 24" className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
                             <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
                             <circle cx="12" cy="12" r="3"/>
                           </svg>

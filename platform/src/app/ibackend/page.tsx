@@ -77,6 +77,7 @@ export default async function AdminDashboard() {
     favoritesThisMonth,
     favoritesLastMonth,
     systemMetrics,
+    blogInteractions,
   ] = await Promise.all([
     prisma.toolCard.count(),
     prisma.prompt.count(),
@@ -141,12 +142,12 @@ export default async function AdminDashboard() {
         },
       },
     }),
-    // 互动环比基于带时间戳的行为日志：本月 vs 上月的提示词浏览/点赞/收藏事件
+    // 浏览与收藏包含提示词和博客；点赞仅统计提示词，按行为日志比较月度事件量
     prisma.analyticsLog.count({
-      where: { actionType: 'VIEW', resourceType: 'PROMPT', timestamp: { gte: currentMonthStart } },
+      where: { actionType: 'VIEW', resourceType: { in: ['PROMPT', 'BLOG'] }, timestamp: { gte: currentMonthStart } },
     }),
     prisma.analyticsLog.count({
-      where: { actionType: 'VIEW', resourceType: 'PROMPT', timestamp: { gte: lastMonthStart, lt: currentMonthStart } },
+      where: { actionType: 'VIEW', resourceType: { in: ['PROMPT', 'BLOG'] }, timestamp: { gte: lastMonthStart, lt: currentMonthStart } },
     }),
     prisma.analyticsLog.count({
       where: { actionType: 'LIKE', resourceType: 'PROMPT', timestamp: { gte: currentMonthStart } },
@@ -155,18 +156,23 @@ export default async function AdminDashboard() {
       where: { actionType: 'LIKE', resourceType: 'PROMPT', timestamp: { gte: lastMonthStart, lt: currentMonthStart } },
     }),
     prisma.analyticsLog.count({
-      where: { actionType: 'FAVORITE', resourceType: 'PROMPT', timestamp: { gte: currentMonthStart } },
+      where: { actionType: 'FAVORITE', resourceType: { in: ['PROMPT', 'BLOG'] }, timestamp: { gte: currentMonthStart } },
     }),
     prisma.analyticsLog.count({
-      where: { actionType: 'FAVORITE', resourceType: 'PROMPT', timestamp: { gte: lastMonthStart, lt: currentMonthStart } },
+      where: { actionType: 'FAVORITE', resourceType: { in: ['PROMPT', 'BLOG'] }, timestamp: { gte: lastMonthStart, lt: currentMonthStart } },
     }),
     getSystemMetrics(),
+    prisma.blog.aggregate({ _sum: { views: true, favorites: true } }),
   ])
 
   // 头部大数字：全时累计总量
-  const views = totalViews._sum.views || 0
+  const promptViews = totalViews._sum.views || 0
+  const blogViews = blogInteractions._sum.views || 0
+  const promptFavorites = totalFavorites._sum.favorites || 0
+  const blogFavorites = blogInteractions._sum.favorites || 0
+  const views = promptViews + blogViews
   const likes = totalLikes._sum.likes || 0
-  const favorites = totalFavorites._sum.favorites || 0
+  const favorites = promptFavorites + blogFavorites
 
   // 互动数据环比：直接展示本月与上月互动量的绝对差值（基于行为日志计数，无事件即为 0）
   // 增加显示 +N（绿色），减少显示 -N（红色），持平显示 0（灰色）
@@ -319,6 +325,9 @@ export default async function AdminDashboard() {
             <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: '#e52129' }}></span>
             互动数据
           </h3>
+          <p className="mb-3 text-xs leading-relaxed text-slate-500">
+            月度变化按行为记录统计，博客收藏从启用记录后计入，历史收藏事件未补录。
+          </p>
           <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3">
             <Card className={`${mobileCardSpan(formatNumber(views))} min-w-0 bg-white border border-slate-100 shadow-sm hover:-translate-y-0.5 hover:shadow-xl hover:border-[#e52129]/20 transition-all duration-300 ease-out`}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 pb-2 sm:p-6 sm:pb-2">
@@ -327,9 +336,10 @@ export default async function AdminDashboard() {
               </CardHeader>
               <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
                 <div className="break-all text-2xl font-bold sm:text-3xl">{formatNumber(views)}</div>
+                <p className="mt-2 text-xs leading-relaxed text-slate-500">提示词 {promptViews.toLocaleString('zh-CN')} · 博客 {blogViews.toLocaleString('zh-CN')}</p>
                 <p
                   className={`text-[10px] mt-1 ${trendClass(viewsTrend.tone)}`}
-                  title="本月浏览量相比上月的变化（按行为日志统计）"
+                  title="本月提示词与博客浏览事件量相比上月的变化（按行为日志统计）"
                 >
                   {viewsTrend.text}
                 </p>
@@ -338,14 +348,15 @@ export default async function AdminDashboard() {
 
             <Card className={`${mobileCardSpan(formatNumber(likes))} min-w-0 bg-white border border-slate-100 shadow-sm hover:-translate-y-0.5 hover:shadow-xl hover:border-[#e52129]/20 transition-all duration-300 ease-out`}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 pb-2 sm:p-6 sm:pb-2">
-                <CardTitle className="text-sm font-medium">点赞数</CardTitle>
+                <CardTitle className="text-sm font-medium">提示词点赞量</CardTitle>
                 <Heart className="h-4 w-4" style={{ color: '#e52129' }} />
               </CardHeader>
               <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
                 <div className="break-all text-2xl font-bold sm:text-3xl">{formatNumber(likes)}</div>
+                <p className="mt-2 text-xs leading-relaxed text-slate-500">提示词 {likes.toLocaleString('zh-CN')} · 博客暂无点赞</p>
                 <p
                   className={`text-[10px] mt-1 ${trendClass(likesTrend.tone)}`}
-                  title="本月点赞量相比上月的变化（按行为日志统计）"
+                  title="本月提示词点赞事件量相比上月的变化（按行为日志统计）"
                 >
                   {likesTrend.text}
                 </p>
@@ -354,14 +365,15 @@ export default async function AdminDashboard() {
 
             <Card className="col-span-2 min-w-0 bg-white border border-slate-100 shadow-sm hover:-translate-y-0.5 hover:shadow-xl hover:border-[#e52129]/20 transition-all duration-300 ease-out md:col-span-1">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 pb-2 sm:p-6 sm:pb-2">
-                <CardTitle className="text-sm font-medium">收藏数</CardTitle>
+                <CardTitle className="text-sm font-medium">总收藏量</CardTitle>
                 <Star className="h-4 w-4" style={{ color: '#e52129' }} />
               </CardHeader>
               <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
                 <div className="break-all text-2xl font-bold sm:text-3xl">{formatNumber(favorites)}</div>
+                <p className="mt-2 text-xs leading-relaxed text-slate-500">提示词 {promptFavorites.toLocaleString('zh-CN')} · 博客 {blogFavorites.toLocaleString('zh-CN')}</p>
                 <p
                   className={`text-[10px] mt-1 ${trendClass(favoritesTrend.tone)}`}
-                  title="本月收藏量相比上月的变化（按行为日志统计）"
+                  title="本月提示词与博客新增收藏事件量相比上月的变化（按行为日志统计，博客历史收藏事件未补录）"
                 >
                   {favoritesTrend.text}
                 </p>

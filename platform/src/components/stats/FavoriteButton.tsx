@@ -115,14 +115,14 @@ export default function FavoriteButton({
         aria-pressed={isFavorited}
         aria-label={ariaLabel}
         title={ariaLabel}
-        className={`inline-flex items-center gap-1 text-xs font-normal tabular-nums transition-colors ${
+        className={`inline-flex items-center ${resourceType === 'BLOG' ? 'gap-1.5' : 'gap-1'} text-xs font-normal tabular-nums transition-colors ${
           isFavorited
             ? 'text-amber-500'
             : 'text-gray-400 dark:text-gray-500 hover:text-[#e52129]'
         }`}
       >
         <Star
-          className="w-3 h-3"
+          className={resourceType === 'BLOG' ? 'w-4 h-4 shrink-0' : 'w-3 h-3'}
           fill={isFavorited ? 'currentColor' : 'none'}
           strokeWidth={1.6}
         />

@@ -5,6 +5,7 @@ import remarkParse from 'remark-parse';
 import remarkGfm from 'remark-gfm';
 import remarkRehype from 'remark-rehype';
 import rehypePrism from 'rehype-prism-plus';
+import { codeHighlightOptions } from '@/lib/markdown-code-blocks';
 import rehypeStringify from 'rehype-stringify';
 
 export interface LocalizedString {
@@ -102,7 +103,7 @@ async function highlightMarkdown(content: string): Promise<string> {
       .use(remarkRehype, { allowDangerousHtml: true })
       .use(rehypeHeadingIds)
       .use(rehypeCodeBlockDefaultLanguage)
-      .use(rehypePrism, { ignoreMissing: true })
+      .use(rehypePrism, codeHighlightOptions)
       .use(rehypeStringify, { allowDangerousHtml: true })
       .process(content);
     

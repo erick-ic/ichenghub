@@ -168,15 +168,12 @@ const POST = withMetrics(async function POST(request: Request) {
       }
       favorited = true;
 
-      // 仅保留改动前就存在的 PROMPT + FAVORITE 埋点（后台环比统计依赖）。
-      // BLOG + FAVORITE 是新组合，不新增；取消收藏不写 UNFAVORITE。
-      // 用户收藏状态一律以 UserPromptFavorite / UserBlogFavorite 为准。
-      if (resourceType === 'PROMPT') {
-        try {
-          await trackResourceAction(resourceId, 'PROMPT', 'FAVORITE', '');
-        } catch {
-          // 日志失败不阻断
-        }
+      // 两类资源的新收藏均写行为日志，供后台月度趋势统计；取消收藏不写新增事件。
+      // 用户收藏状态仍以收藏关系表为准，日志失败不阻断成功的收藏。
+      try {
+        await trackResourceAction(resourceId, resourceType, 'FAVORITE', '');
+      } catch {
+        // 日志失败不阻断
       }
     }
 

@@ -5,6 +5,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
 import rehypePrism from 'rehype-prism-plus';
+import { codeHighlightOptions } from '@/lib/markdown-code-blocks';
 import { Copy } from 'lucide-react';
 import type { HeadingItem } from '@/lib/headingUtils';
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
@@ -193,7 +194,7 @@ function ImageLightbox({ src, alt, onClose }: { src?: string; alt?: string; onCl
         onClick={onClose}
         aria-label="Close preview"
       >
-        <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
         </svg>
       </button>
@@ -231,8 +232,10 @@ const LANGUAGE_DISPLAY_NAMES: Record<string, string> = {
   go: 'Go',
   rust: 'Rust',
   cpp: 'C++',
+  'c++': 'C++',
   c: 'C',
   csharp: 'C#',
+  'c#': 'C#',
   cs: 'C#',
   php: 'PHP',
   ruby: 'Ruby',
@@ -253,20 +256,21 @@ const LANGUAGE_DISPLAY_NAMES: Record<string, string> = {
   dockerfile: 'Dockerfile',
   graphql: 'GraphQL',
   regex: 'Regex',
+  redis: 'Redis',
   text: 'Text',
 };
 
 function CodeBlock({ children, className, ...props }: { children: React.ReactNode; className?: string; [key: string]: any }) {
   const codeElement = (children as React.ReactElement)?.props || {};
   const codeClassName = codeElement.className || '';
-  const langMatch = codeClassName.match(/language-(\w+)/);
+  const langMatch = codeClassName.match(/language-([^\s]+)/);
   const langKey = langMatch ? langMatch[1].toLowerCase() : '';
   const langDisplayName = LANGUAGE_DISPLAY_NAMES[langKey] || langKey || '';
   const shouldShowLangLabel = langDisplayName && langDisplayName !== 'Text';
 
   return (
-    <div className="relative group my-6">
-      <pre className={`bg-[#1e1e1e] rounded-xl overflow-hidden p-4 md:p-6 text-sm md:text-base ${className || ''}`} {...props}>
+    <div className="relative group my-6 min-w-0 max-w-full">
+      <pre className={`bg-[#1e1e1e] rounded-xl overflow-x-auto p-4 md:p-6 text-sm md:text-base ${className || ''}`} {...props}>
         {children}
       </pre>
       {shouldShowLangLabel && (
@@ -280,7 +284,7 @@ function CodeBlock({ children, className, ...props }: { children: React.ReactNod
         aria-label="Copy code"
       >
         <span className="copy-icon">
-          <Copy className="h-4 w-4" />
+          <Copy className="h-[18px] w-[18px] shrink-0" />
         </span>
         <span className="copy-icon-hidden">
           <CheckIcon />
@@ -294,7 +298,7 @@ function CodeBlock({ children, className, ...props }: { children: React.ReactNod
 
 function CheckIcon() {
   return (
-    <svg className="h-4 w-4 text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg className="h-[18px] w-[18px] shrink-0 text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <polyline points="20 6 9 17 4 12"></polyline>
     </svg>
   );
@@ -376,8 +380,8 @@ function BlogContentComponent({ content, headings }: BlogContentProps) {
   }), [handleImageClick]);
 
   return (
-    <div className="max-w-none">
-      <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw, rehypeHeadingIds, rehypePrism]} components={components}>
+    <div className="min-w-0 max-w-full">
+      <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw, rehypeHeadingIds, [rehypePrism, codeHighlightOptions]]} components={components}>
         {content}
       </ReactMarkdown>
       {previewImage && (

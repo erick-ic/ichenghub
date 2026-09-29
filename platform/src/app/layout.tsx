@@ -5,9 +5,16 @@ import TopLoader from '@/components/TopLoader';
 export const metadata: Metadata = {
   title: 'iChengHub',
   description: 'AI Tool Card Portal',
+  applicationName: 'iChengHub',
+  manifest: '/manifest.webmanifest',
+  appleWebApp: {
+    capable: true,
+    title: 'iChengHub',
+    statusBarStyle: 'default',
+  },
   icons: {
     icon: '/favicon.svg',
-    apple: '/favicon.svg',
+    apple: [{ url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
   },
 };
 

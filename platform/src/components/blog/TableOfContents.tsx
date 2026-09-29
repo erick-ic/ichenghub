@@ -114,8 +114,12 @@ export default function TableOfContents({ items, isEnglish }: TableOfContentsPro
 
   return (
     <aside className="hidden lg:block sticky top-24 self-start">
-      <div className="relative pl-4 border-l border-gray-200 dark:border-gray-700">
-        <nav className="space-y-1">
+      <div className="relative flex max-h-[calc(100dvh-7rem)] flex-col pl-4 border-l border-gray-200 dark:border-gray-700">
+        <nav
+          aria-label={isEnglish ? 'Table of contents' : '文章目录'}
+          tabIndex={0}
+          className="min-h-0 overflow-y-auto overscroll-contain space-y-1 pr-3 [scrollbar-width:thin] [scrollbar-gutter:stable]"
+        >
           {items.map((item) => (
             <a
               key={item.id}
@@ -130,14 +134,14 @@ export default function TableOfContents({ items, isEnglish }: TableOfContentsPro
           ))}
         </nav>
 
-        <div className="border-t border-gray-100 dark:border-gray-800 my-6" />
+        <div className="shrink-0 border-t border-gray-100 dark:border-gray-800 my-6" />
 
         {showBackToTop && (
           <button
             onClick={handleBackToTop}
-            className="flex items-center gap-2 px-4 py-2 bg-[#1e1e1e] text-white text-sm font-medium rounded-lg hover:bg-[#2a2a2a] transition-colors"
+            className="flex shrink-0 items-center gap-2 px-4 py-2 bg-[#1e1e1e] text-white text-sm font-medium rounded-lg hover:bg-[#2a2a2a] transition-colors"
           >
-            <ChevronUp className="h-4 w-4" />
+            <ChevronUp className="h-5 w-5 shrink-0" />
             {isEnglish ? 'Back to Top' : '回到顶部'}
           </button>
         )}
