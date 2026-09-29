@@ -114,6 +114,19 @@ html {
   scroll-behavior: smooth;
 }
 
+/* 移动端隐藏滚动条外观，保留页面与代码块等区域的正常滚动。 */
+@media (max-width: 1023px) {
+  * {
+    scrollbar-width: none;
+  }
+
+  *::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+  }
+}
+
 /* 复制按钮状态切换 */
 .copy-button .copy-icon-hidden,
 .copy-button .copy-text-hidden {
