@@ -32,6 +32,12 @@ export default function RootLayout({
             __html: `(function(){try{var avatar=localStorage.getItem('ichenghub.session-avatar');if(avatar){document.documentElement.classList.add('has-session-avatar');document.documentElement.style.setProperty('--session-avatar-image','url("'+encodeURI(avatar).replace(/"/g,'%22')+'")')}}catch(e){}})();`,
           }}
         />
+        {/* Google AdSense */}
+        <script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6703406106028729"
+          crossOrigin="anonymous"
+        />
       </head>
       <body className="font-sans">
         <TopLoader />
