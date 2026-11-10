@@ -125,15 +125,16 @@ function distinctResourceIds(
 // ToolCard.id 标准化留到第二阶段，本文件不改变任何埋点结果，只做读取侧解析。
 const STATIC_TOOL_NAME_MAP: Record<string, string> = {
   '/qrcode': '极简二维码生成器',
-  '/tools/image-compressor': '图片压缩器',
   '/imgcompress': '图片压缩器',
+  '/imgcrop': '图片裁剪工坊',
   '/aiquota': 'AI 额度追踪器',
 };
 
-// 静态工具的实际站内路由（旧埋点 label /tools/image-compressor 归一到真实页面 /imgcompress）
+// 静态工具名对应的实际站内路由
 const STATIC_TOOL_CANONICAL_URL: Record<string, string> = {
   极简二维码生成器: '/qrcode',
   图片压缩器: '/imgcompress',
+  图片裁剪工坊: '/imgcrop',
   'AI 额度追踪器': '/aiquota',
 };
 

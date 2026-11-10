@@ -48,7 +48,7 @@ export default async function QRCodePage({ params }: { params: Promise<{ locale:
             <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-zinc-900 mb-3">
               {t('title')}
             </h1>
-            <p className="text-base md:text-lg text-zinc-500 max-w-2xl mx-auto">
+            <p className="text-base md:text-lg text-zinc-500 max-w-3xl mx-auto lg:whitespace-nowrap">
               {t('description')}
             </p>
           </header>

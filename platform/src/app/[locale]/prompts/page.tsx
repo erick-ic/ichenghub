@@ -33,15 +33,15 @@ export default async function PromptsPage({ params }: PageProps) {
   return (
     <>
       <PageViewTracker path={`/${locale}/prompts`} />
-      <section className="container mx-auto px-4 py-16">
-      <div className="mb-12 text-center">
-        <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-zinc-900 mb-4">
+      <section className="container mx-auto px-4 py-12 md:py-16 max-w-6xl">
+      <header className="mb-10 text-center">
+        <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-zinc-900 mb-3">
           {isEnglish ? 'AI Prompt Architect' : 'AI 提示词构建器'}
         </h1>
-        <p className="text-lg text-zinc-500 max-w-4xl mx-auto">
-          {isEnglish ? 'Deconstruct vague intent into precision AI instructions. Chain your logic and master model output with zero latency.' : '将模糊需求解构为精准的 AI 指令。支持逻辑链式拆解，让复杂模型的输出可控且高效。'}
+        <p className="text-base md:text-lg text-zinc-500 max-w-3xl mx-auto lg:whitespace-nowrap">
+          {isEnglish ? 'Turn vague ideas into precise AI instructions with chained logic.' : '将模糊需求解构为精准的 AI 指令。支持逻辑链式拆解，让复杂模型的输出可控且高效。'}
         </p>
-      </div>
+      </header>
 
       {promptData.length === 0 ? (
         <div className="flex flex-col items-center justify-center min-h-[60vh]">

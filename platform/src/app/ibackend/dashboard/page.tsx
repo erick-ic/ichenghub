@@ -67,8 +67,8 @@ function isMobile(userAgent: string | null): boolean {
 // 自研静态工具名称映射（不经过 toolCard 表，通过 path 推断）
 const STATIC_TOOL_NAME_MAP: Record<string, string> = {
   '/qrcode': '极简二维码生成器',
-  '/tools/image-compressor': '图片压缩器',
   '/imgcompress': '图片压缩器',
+  '/imgcrop': '图片裁剪工坊',
   '/aiquota': 'AI 额度追踪器',
 }
 

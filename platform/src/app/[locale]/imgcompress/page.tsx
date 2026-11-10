@@ -40,15 +40,15 @@ export default async function ImageCompressorPage({ params }: { params: Promise<
 
   return (
     <div className="min-h-screen bg-background">
-      <section className="container mx-auto px-4 py-16">
-        <div className="mb-12 text-center">
-          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-zinc-900 mb-4">
+      <section className="container mx-auto px-4 py-12 md:py-16 max-w-6xl">
+        <header className="mb-10 text-center">
+          <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-zinc-900 mb-3">
             {t('title')}
           </h1>
-          <p className="text-lg text-zinc-500 max-w-4xl mx-auto">
+          <p className="text-base md:text-lg text-zinc-500 max-w-3xl mx-auto lg:whitespace-nowrap">
             {t('description')}
           </p>
-        </div>
+        </header>
 
         <div className="bg-white border border-gray-100 rounded-2xl p-8 shadow-sm">
           <ImageCompressor />
