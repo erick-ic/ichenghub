@@ -34,19 +34,43 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { id, locale } = await params;
+  const isEn = locale === 'en';
   try {
     const blog = await getBlogContentById(id, locale);
     if (!blog) {
       return { title: 'Blog Not Found' };
     }
 
+    const url = `https://ichenghub.cn/${locale}/blog/${id}`;
     return {
-      title: `${blog.title} | iChengHub Blog`,
+      // 只返回文章标题，品牌名由 layout 的 title.template 统一拼接
+      title: blog.title,
       description: blog.excerpt,
+      keywords: [blog.category, ...(isEn ? ['tech blog', 'AI', 'Next.js', 'Go'] : ['技术博客', 'AI', 'Next.js', 'Go'])],
+      alternates: {
+        canonical: `/${locale}/blog/${id}`,
+        languages: {
+          zh: `/zh/blog/${id}`,
+          en: `/en/blog/${id}`,
+          'x-default': `/zh/blog/${id}`,
+        },
+      },
       openGraph: {
         title: blog.title,
         description: blog.excerpt,
+        url,
+        siteName: isEn ? 'iChengHub' : 'iChengHub 热荐工坊',
+        locale: isEn ? 'en_US' : 'zh_CN',
         type: 'article',
+        publishedTime: blog.date,
+        modifiedTime: blog.updatedAt,
+        images: [{ url: '/brand/icon-512-v2.png', width: 512, height: 512, alt: blog.title }],
+      },
+      twitter: {
+        card: 'summary_large_image',
+        title: blog.title,
+        description: blog.excerpt,
+        images: ['/brand/icon-512-v2.png'],
       },
     };
   } catch (error) {
@@ -91,8 +115,66 @@ export default async function BlogDetailPage({ params }: PageProps) {
     console.error('[blog] resolve favorite state failed:', favoriteError);
   }
 
+  // 博客结构化数据：文章信息 + 面包屑，帮助搜索引擎生成更完整的搜索结果
+  const baseUrl = 'https://ichenghub.cn';
+  const blogUrl = `${baseUrl}/${locale}/blog/${id}`;
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'BlogPosting',
+        headline: blogPost.title,
+        description: blogPost.excerpt,
+        datePublished: blogPost.date,
+        dateModified: blogPost.updatedAt,
+        inLanguage: isEnglish ? 'en' : 'zh-CN',
+        articleSection: blogPost.category,
+        url: blogUrl,
+        mainEntityOfPage: {
+          '@type': 'WebPage',
+          '@id': blogUrl,
+        },
+        author: {
+          '@type': 'Organization',
+          name: isEnglish ? 'Heguang Studio' : '和光工作室',
+        },
+        publisher: {
+          '@type': 'Organization',
+          name: isEnglish ? 'iChengHub' : 'iChengHub 热荐工坊',
+          url: baseUrl,
+        },
+      },
+      {
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          {
+            '@type': 'ListItem',
+            position: 1,
+            name: isEnglish ? 'Home' : '首页',
+            item: `${baseUrl}/${locale}`,
+          },
+          {
+            '@type': 'ListItem',
+            position: 2,
+            name: isEnglish ? 'Blog' : '博客',
+            item: `${baseUrl}/${locale}/blog`,
+          },
+          {
+            '@type': 'ListItem',
+            position: 3,
+            name: blogPost.title,
+          },
+        ],
+      },
+    ],
+  };
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }}
+      />
       <CodeCopyHandler blogId={id} locale={locale} />
       {/* 博客浏览唯一入口：/api/blog/view（事务内去重 + 写日志 + 增 views），不再叠加 PageViewTracker */}
       <ViewCounter id={id} />

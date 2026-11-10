@@ -16,7 +16,8 @@ export function generateMetadata({ params }: PageProps): Metadata {
   const base = 'https://ichenghub.cn';
   return {
     metadataBase: new URL(base),
-    title: isEn ? 'Technical Blog - iChengHub' : '技术博客专栏 - iChengHub 热荐工坊',
+    // 只返回页面标题，品牌名由 layout 的 title.template 统一拼接
+    title: isEn ? 'Technical Blog' : '技术博客专栏',
     description: isEn
       ? 'Independent tech blog covering AI, full-stack development, engineering practices and industry thoughts.'
       : '涵盖 AI、全栈开发、工程实践与行业思考的独立技术博客专栏。',
@@ -40,6 +41,15 @@ export function generateMetadata({ params }: PageProps): Metadata {
       siteName: 'iChengHub',
       locale: isEn ? 'en_US' : 'zh_CN',
       type: 'website',
+      images: [{ url: '/brand/icon-512-v2.png', width: 512, height: 512, alt: isEn ? 'iChengHub Blog' : 'iChengHub 技术博客' }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: isEn ? 'Technical Blog - iChengHub' : '技术博客专栏 - iChengHub 热荐工坊',
+      description: isEn
+        ? 'Independent tech blog covering AI, full-stack development and engineering practices.'
+        : '涵盖 AI、全栈开发与工程实践的独立技术博客。',
+      images: ['/brand/icon-512-v2.png'],
     },
   };
 }

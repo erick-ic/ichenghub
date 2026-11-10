@@ -31,7 +31,7 @@ export default function QRCodeInput({
   ];
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex h-full flex-col gap-4">
       {/* Tabs */}
       <div role="tablist" className="inline-flex p-1 bg-gray-100 rounded-xl w-fit">
         {tabs.map(({ key, label, icon: Icon }) => {
@@ -45,7 +45,7 @@ export default function QRCodeInput({
               disabled={generating}
               onClick={() => onModeChange(key)}
               className={[
-                'inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors',
+                'inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-[13px] font-medium transition-colors',
                 active
                   ? 'bg-white text-[#e52129] shadow-sm'
                   : 'text-gray-500 hover:text-gray-700',
@@ -67,7 +67,7 @@ export default function QRCodeInput({
         placeholder={mode === 'text' ? t('placeholder.text') : t('placeholder.url')}
         aria-label={mode === 'text' ? t('tabs.text') : t('tabs.url')}
         spellCheck={false}
-        className="w-full min-h-[180px] md:min-h-[240px] resize-y rounded-xl border border-gray-200 bg-white px-4 py-3 text-base text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#e52129]/30 focus:border-[#e52129] transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+        className="w-full flex-1 min-h-[140px] md:min-h-[180px] resize-y rounded-xl border border-gray-200 bg-white px-4 py-3 text-base md:text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#e52129]/30 focus:border-[#e52129] transition-all disabled:opacity-60 disabled:cursor-not-allowed"
       />
 
       {/* Generate */}
@@ -75,16 +75,16 @@ export default function QRCodeInput({
         type="button"
         onClick={onGenerate}
         disabled={!canGenerate || generating}
-        className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#e52129] text-white rounded-xl font-semibold hover:bg-red-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+        className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#e52129] text-white rounded-xl text-[13px] font-medium hover:bg-red-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
       >
         {generating ? (
           <>
-            <Loader2 className="w-5 h-5 animate-spin" />
+            <Loader2 className="w-4 h-4 animate-spin" />
             {t('generating')}
           </>
         ) : (
           <>
-            <QrCodeIcon className="w-5 h-5" />
+            <QrCodeIcon className="w-4 h-4" />
             {t('actions.generate')}
           </>
         )}

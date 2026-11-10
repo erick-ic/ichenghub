@@ -11,6 +11,14 @@ type Props = {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const isEn = params.locale === 'en';
   const base = 'https://ichenghub.cn';
+  // 当前语言站点地址：作为布局层默认 canonical，避免相对路径解析到站点根目录
+  const canonical = `${base}/${params.locale}`;
+  const ogImage = {
+    url: '/brand/icon-512-v2.png',
+    width: 512,
+    height: 512,
+    alt: isEn ? 'iChengHub - AI Tools Portal' : 'iChengHub 热荐工坊 - AI 工具门户',
+  };
   return {
     metadataBase: new URL(base),
     title: {
@@ -29,7 +37,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       : ['AI工具', '提示词', '效率导航', '技术博客', 'iChengHub', '热荐工坊'],
     authors: [{ name: isEn ? 'Heguang Studio' : '和光工作室' }],
     alternates: {
-      canonical: './',
+      canonical: canonical,
       languages: {
         'zh': `${base}/zh`,
         'en': `${base}/en`,
@@ -41,10 +49,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description: isEn
         ? 'Self-developed AI tools, viral prompts, curated navigation, and technical blogs for digital creators.'
         : '自研 AI 工具、爆款提示词模板、全网热门导航与深度技术博客。',
-      url: base,
+      url: canonical,
       siteName: isEn ? 'iChengHub' : '热荐工坊',
       locale: isEn ? 'en_US' : 'zh_CN',
       type: 'website',
+      images: [ogImage],
     },
     twitter: {
       card: 'summary_large_image',
@@ -52,6 +61,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description: isEn
         ? 'Premium AI portal: self-developed tools, viral prompts, curated navigation, and technical blogs.'
         : 'AI 门户系统：自研工具 · 爆款提示词 · 效率导航 · 技术博客。',
+      images: [ogImage.url],
     },
     robots: {
       index: true,

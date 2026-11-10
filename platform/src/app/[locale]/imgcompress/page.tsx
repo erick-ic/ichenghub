@@ -26,10 +26,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title: t('metaTitle'),
       description: t('metaDescription'),
       url: `https://ichenghub.cn/${locale}/imgcompress`,
+      siteName: locale === 'en' ? 'iChengHub' : 'iChengHub 热荐工坊',
+      locale: locale === 'en' ? 'en_US' : 'zh_CN',
+      type: 'website',
+      images: [{ url: '/brand/icon-512-v2.png', width: 512, height: 512, alt: t('metaTitle') }],
     },
     twitter: {
+      card: 'summary_large_image',
       title: t('metaTitle'),
       description: t('metaDescription'),
+      images: ['/brand/icon-512-v2.png'],
     },
   };
 }

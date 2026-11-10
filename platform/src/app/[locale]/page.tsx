@@ -38,8 +38,26 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
     displayDesc: locale === 'en' && tool.descEn ? tool.descEn : tool.desc,
   }));
 
+  const isEnglish = locale === 'en';
+  // 站点级结构化数据：帮助搜索引擎识别站点名称、语言与主页地址
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: isEnglish ? 'iChengHub' : 'iChengHub 热荐工坊',
+    alternateName: isEnglish ? 'iChengHub 热荐工坊' : 'iChengHub',
+    url: `https://ichenghub.cn/${locale}`,
+    description: isEnglish
+      ? 'AI tools, viral prompts, curated navigation and technical blogs for digital creators.'
+      : '精选 AI 工具、爆款提示词、效率导航与深度技术博客。',
+    inLanguage: isEnglish ? 'en' : 'zh-CN',
+  };
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }}
+      />
       <PageViewTracker path={`/${locale}`} />
       <section className="container mx-auto px-4 py-16">
       <div className="mb-12 text-center">

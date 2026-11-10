@@ -29,6 +29,11 @@ export default function ClientLayout({ children, locale }: ClientLayoutProps) {
   const [sessionUser, setSessionUser] = useState<SessionUser | null>(null);
   const [sessionResolved, setSessionResolved] = useState(false);
 
+  // 根布局无法感知语言段，这里按当前 locale 修正 <html lang>，供搜索引擎与读屏软件识别页面语言。
+  useEffect(() => {
+    document.documentElement.lang = locale;
+  }, [locale]);
+
   // 导航栏只需要展示登录状态和头像。将会话读取放到客户端，避免公共 layout
   // 在服务端读取 Cookie；页面是否缓存仍由各自的数据获取策略决定。
   useEffect(() => {

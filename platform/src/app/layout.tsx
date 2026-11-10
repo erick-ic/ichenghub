@@ -3,8 +3,8 @@ import { Metadata } from 'next';
 import TopLoader from '@/components/TopLoader';
 
 export const metadata: Metadata = {
-  title: 'iChengHub',
-  description: 'AI Tool Card Portal',
+  title: 'iChengHub 热荐工坊',
+  description: '精选 AI 工具、爆款提示词、效率导航与深度技术博客，全方位赋能数字化创造。',
   applicationName: 'iChengHub',
   manifest: '/manifest.webmanifest',
   appleWebApp: {

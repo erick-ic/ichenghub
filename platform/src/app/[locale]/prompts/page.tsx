@@ -1,9 +1,53 @@
+import { Metadata } from 'next';
 import PromptCard, { PromptData } from '@/components/PromptCard';
 import PageViewTracker from '@/components/PageViewTracker';
 import prisma from '@/lib/prisma';
 
 interface PageProps {
   params: Promise<{ locale: string }>;
+}
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { locale } = await params;
+  const isEnglish = locale === 'en';
+  const title = isEnglish
+    ? 'AI Prompt Architect - Curated Prompt Templates'
+    : 'AI 提示词构建器 - 精选爆款提示词模板';
+  const description = isEnglish
+    ? 'Browse curated AI prompt templates for image generation, writing and productivity. Copy ready-to-use prompts and turn vague ideas into precise AI instructions.'
+    : '浏览精选 AI 提示词模板，覆盖图像生成、文本创作与效率场景。一键复制即用提示词，将模糊需求解构为精准的 AI 指令。';
+
+  return {
+    title,
+    description,
+    keywords: [
+      'AI提示词', '提示词模板', 'Prompt', 'AI绘画提示词', '提示词工程',
+      'AI prompts', 'prompt templates', 'prompt engineering', 'AI image prompts',
+    ],
+    alternates: {
+      canonical: `/${locale}/prompts`,
+      languages: {
+        zh: '/zh/prompts',
+        en: '/en/prompts',
+        'x-default': '/zh/prompts',
+      },
+    },
+    openGraph: {
+      title,
+      description,
+      url: `https://ichenghub.cn/${locale}/prompts`,
+      siteName: isEnglish ? 'iChengHub' : 'iChengHub 热荐工坊',
+      locale: isEnglish ? 'en_US' : 'zh_CN',
+      type: 'website',
+      images: [{ url: '/brand/icon-512-v2.png', width: 512, height: 512, alt: title }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: ['/brand/icon-512-v2.png'],
+    },
+  };
 }
 
 export default async function PromptsPage({ params }: PageProps) {

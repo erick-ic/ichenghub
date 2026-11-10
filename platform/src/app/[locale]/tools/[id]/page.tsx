@@ -23,18 +23,35 @@ export async function generateMetadata(
   const title = isEnglish && tool.nameEn ? tool.nameEn : tool.name;
   const description = isEnglish && tool.descEn ? tool.descEn : tool.desc;
   const siteName = isEnglish ? 'iChengHub' : 'iChengHub 热荐工坊';
+  const category = isEnglish && tool.categoryEn ? tool.categoryEn : tool.category;
+  const ogTitle = `${title} - ${siteName}`;
 
   return {
     title: title,
     description: description,
+    keywords: [title, category, ...(isEnglish ? ['AI tool', 'AI tools directory'] : ['AI工具', '工具导航'])].filter(Boolean),
+    alternates: {
+      canonical: `/${locale}/tools/${id}`,
+      languages: {
+        zh: `/zh/tools/${id}`,
+        en: `/en/tools/${id}`,
+        'x-default': `/zh/tools/${id}`,
+      },
+    },
     openGraph: {
-      title: `${title} - ${siteName}`,
+      title: ogTitle,
       description: description,
       url: `https://ichenghub.cn/${locale}/tools/${id}`,
+      siteName: siteName,
+      locale: isEnglish ? 'en_US' : 'zh_CN',
+      type: 'website',
+      images: [{ url: '/brand/icon-512-v2.png', width: 512, height: 512, alt: ogTitle }],
     },
     twitter: {
-      title: `${title} - ${siteName}`,
+      card: 'summary_large_image',
+      title: ogTitle,
       description: description,
+      images: ['/brand/icon-512-v2.png'],
     },
   };
 }
@@ -53,6 +70,7 @@ export default async function ToolDetailPage({ params }: { params: { id: string;
   const description = isEnglish && tool.descEn ? tool.descEn : tool.desc;
   const category = isEnglish && tool.categoryEn ? tool.categoryEn : tool.category;
 
+  // 结构化数据：仅声明真实可确认的字段，不再输出虚构的评分数据，避免触发搜索引擎的富媒体摘要惩罚
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'SoftwareApplication',
@@ -60,15 +78,12 @@ export default async function ToolDetailPage({ params }: { params: { id: string;
     description: description,
     url: `https://ichenghub.cn/${locale}/tools/${id}`,
     applicationCategory: category || 'Productivity',
+    operatingSystem: 'Web',
+    inLanguage: isEnglish ? 'en' : 'zh-CN',
     offers: {
       '@type': 'Offer',
       price: '0',
       priceCurrency: 'CNY',
-    },
-    aggregateRating: {
-      '@type': 'AggregateRating',
-      ratingValue: '4.8',
-      ratingCount: '100',
     },
   };
 
@@ -77,7 +92,7 @@ export default async function ToolDetailPage({ params }: { params: { id: string;
       <PageViewTracker path={`/${locale}/tools/${id}`} resourceId={id} resourceType="TOOL" />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }}
       />
 
       <div className="min-h-screen bg-background">

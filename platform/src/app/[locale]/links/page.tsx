@@ -12,11 +12,40 @@ type Props = {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const isEn = params.locale === 'en';
+  const title = isEn ? 'Useful Links - Resources Directory' : '实用链接 - 资源导航';
+  const description = isEn
+    ? 'Explore our curated directory of useful resources and AI-related links. Hand-picked for maximum value.'
+    : '探索我们精心整理的实用资源与 AI 相关链接。精挑细选，价值最大化。';
+
   return {
-    title: isEn ? 'Useful Links - Resources Directory' : '实用链接 - 资源导航',
-    description: isEn 
-      ? 'Explore our curated directory of useful resources and AI-related links. Hand-picked for maximum value.' 
-      : '探索我们精心整理的实用资源与 AI 相关链接。精挑细选，价值最大化。',
+    title,
+    description,
+    keywords: isEn
+      ? ['AI resources', 'useful links', 'AI directory', 'productivity resources']
+      : ['实用链接', '资源导航', 'AI 资源', '效率网站导航'],
+    alternates: {
+      canonical: `/${params.locale}/links`,
+      languages: {
+        zh: '/zh/links',
+        en: '/en/links',
+        'x-default': '/zh/links',
+      },
+    },
+    openGraph: {
+      title,
+      description,
+      url: `https://ichenghub.cn/${params.locale}/links`,
+      siteName: isEn ? 'iChengHub' : 'iChengHub 热荐工坊',
+      locale: isEn ? 'en_US' : 'zh_CN',
+      type: 'website',
+      images: [{ url: '/brand/icon-512-v2.png', width: 512, height: 512, alt: title }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: ['/brand/icon-512-v2.png'],
+    },
   };
 }
 

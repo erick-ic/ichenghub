@@ -23,25 +23,44 @@ export async function generateMetadata(
   const prompt = await prisma.prompt.findUnique({ where: { id: promptId } });
 
   if (!prompt || prompt.status !== 1) {
-    return { title: '提示词未找到 | 热荐工坊' };
+    return { title: locale === 'en' ? 'Prompt Not Found' : '提示词未找到' };
   }
 
   const isEnglish = locale === 'en';
   const title = isEnglish && prompt.titleEn ? prompt.titleEn : prompt.title;
   const description = prompt.promptText.substring(0, 150) + '...';
+  const siteName = isEnglish ? 'iChengHub' : 'iChengHub 热荐工坊';
+  const category = isEnglish && prompt.categoryEn ? prompt.categoryEn : prompt.category;
+  const ogTitle = `${title} - ${siteName}`;
+  const ogImage = prompt.imageUrl || '/brand/icon-512-v2.png';
 
   return {
-    title: `${title} | 热荐工坊`,
+    // 只返回页面自身标题，站点名由 layout 的 title.template 统一拼接，避免标签页出现两次品牌名
+    title: title,
     description: description,
+    keywords: [title, category, ...(isEnglish ? ['AI prompt', 'prompt template'] : ['AI提示词', '提示词模板'])].filter(Boolean),
+    alternates: {
+      canonical: `/${locale}/prompts/${promptId}`,
+      languages: {
+        zh: `/zh/prompts/${promptId}`,
+        en: `/en/prompts/${promptId}`,
+        'x-default': `/zh/prompts/${promptId}`,
+      },
+    },
     openGraph: {
-      title: `${title} - 热荐工坊`,
+      title: ogTitle,
       description: description,
       url: `https://ichenghub.cn/${locale}/prompts/${promptId}`,
+      siteName: siteName,
+      locale: isEnglish ? 'en_US' : 'zh_CN',
       type: 'article',
+      images: [{ url: ogImage, alt: title }],
     },
     twitter: {
-      title: `${title} - 热荐工坊`,
+      card: 'summary_large_image',
+      title: ogTitle,
       description: description,
+      images: [ogImage],
     },
   };
 }
@@ -91,28 +110,28 @@ export default async function PromptDetailPage({ params }: PageProps) {
     category: category,
   };
 
+  // 结构化数据：移除虚构评分，仅保留可验证的文章信息
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Article',
+    headline: promptTitle,
     name: promptTitle,
     description: prompt.promptText.substring(0, 200) + '...',
     url: `https://ichenghub.cn/${locale}/prompts/${promptId}`,
+    image: prompt.imageUrl ? [prompt.imageUrl] : undefined,
+    inLanguage: isEnglish ? 'en' : 'zh-CN',
     author: {
       '@type': 'Organization',
-      name: '和光工作室',
+      name: isEnglish ? 'Heguang Studio' : '和光工作室',
     },
     publisher: {
       '@type': 'Organization',
-      name: '热荐工坊',
+      name: isEnglish ? 'iChengHub' : 'iChengHub 热荐工坊',
+      url: 'https://ichenghub.cn',
     },
     articleSection: category,
-    keywords: [category, 'AI', 'Prompt', '提示词'],
-    aggregateRating: {
-      '@type': 'AggregateRating',
-      ratingValue: '4.8',
-      ratingCount: String(prompt.likes),
-    },
-    commentCount: String(prompt.comments),
+    keywords: [category, 'AI', 'Prompt', isEnglish ? 'prompt template' : '提示词'].filter(Boolean),
+    commentCount: prompt.comments,
   };
 
 
@@ -120,7 +139,7 @@ export default async function PromptDetailPage({ params }: PageProps) {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }}
       />
       <ViewsTracker promptId={promptId} path={`/${locale}/prompts/${promptId}`} />
       <div className="min-h-screen bg-background">

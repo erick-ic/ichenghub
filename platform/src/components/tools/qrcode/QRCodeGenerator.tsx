@@ -117,8 +117,9 @@ export default function QRCodeGenerator({ toolId = null }: QRCodeGeneratorProps)
   // 任何修改 draft 都不会影响已生成的结果，直至再次点击 Generate
   void generatedSnapshot;
 
+  // 桌面端按视口高度撑满首屏：扣除导航、标题与隐私声明的垂直空间，让隐私声明刚好落在首屏外
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 lg:gap-8">
+    <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 lg:gap-8 lg:min-h-[clamp(360px,calc(100vh_-_288px),620px)]">
       {/* Desktop: Input 60% / Preview 40%；Mobile/Tablet: 单列 */}
       <div className="lg:col-span-3">
         <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm h-full">
