@@ -9,8 +9,27 @@ const intlMiddleware = createMiddleware({
   localePrefix: 'always'
 });
 
+// 站点规范域名，用于把 www 统一到裸域（与 metadata、sitemap 中的地址保持一致）
+const CANONICAL_HOST = 'ichenghub.cn';
+
 export default async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
+
+  // 统一站点域名：www 与裸域同时可直接访问时，OAuth 登录会把 PKCE/state Cookie
+  // 写在发起登录的域名上（如 www），而回调地址固定为裸域，导致回调阶段读不到 Cookie，
+  // Auth.js 回跳 /profile?error=Configuration，用户看到“登录暂时未完成”。
+  // 使用 308 保留请求方法与请求体，避免 Server Action / API 的 POST 在跳转后失效。
+  // 仅匹配站点的 www 域名，避免依据可伪造的 Host 头产生开放重定向。
+  const forwardedHost = (request.headers.get('x-forwarded-host') ?? request.headers.get('host') ?? '')
+    .split(',')[0]
+    .trim()
+    .toLowerCase();
+  if (forwardedHost.split(':')[0] === `www.${CANONICAL_HOST}`) {
+    return NextResponse.redirect(
+      new URL(`https://${CANONICAL_HOST}${pathname}${request.nextUrl.search}`),
+      308
+    );
+  }
 
   // 排除 API 路径
   if (pathname.startsWith('/api')) {

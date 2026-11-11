@@ -1,9 +1,14 @@
-import NextAuth from 'next-auth';
+import NextAuth, { customFetch } from 'next-auth';
 import GitHub from 'next-auth/providers/github';
 import type { OAuthConfig, OAuthUserConfig } from 'next-auth/providers';
 import { PrismaAdapter } from '@auth/prisma-adapter';
 import prisma from '@/lib/prisma';
+import { createResilientFetch } from '@/lib/oauth-fetch';
 import { recordApiError, recordFailed } from '@/app/actions/metricsActions';
+
+// GitHub 在国内网络下会间歇性超时；token 交换与用户资料请求统一走带重试的 fetch，
+// 避免单次网络抖动直接变成一次登录失败。
+const githubFetch = createResilientFetch({ timeoutMs: 10_000, attempts: 2 });
 
 interface GiteeProfile {
   id: number;
@@ -79,6 +84,40 @@ function Gitee(config: OAuthUserConfig<GiteeProfile>): OAuthConfig<GiteeProfile>
   };
 }
 
+// 内置 GitHub Provider 的 userinfo 请求使用无超时的全局 fetch，
+// 这里覆盖该实现，让它与 token 交换共用同一套超时与重试策略。
+function GitHubResilient() {
+  return GitHub({
+    [customFetch]: githubFetch,
+    userinfo: {
+      url: 'https://api.github.com/user',
+      async request({ tokens }: { tokens: { access_token?: string } }) {
+        const headers = {
+          Authorization: `Bearer ${tokens.access_token}`,
+          'User-Agent': 'authjs',
+          Accept: 'application/vnd.github+json',
+        };
+        const profile = await githubFetch('https://api.github.com/user', { headers })
+          .then((response) => response.json());
+
+        // 没有公开邮箱时再查一次已验证邮箱列表
+        if (!profile.email) {
+          const emailResponse = await githubFetch('https://api.github.com/user/emails', { headers });
+          if (emailResponse.ok) {
+            const emails = await emailResponse.json() as Array<{ email?: string; primary?: boolean }>;
+            const preferred = Array.isArray(emails)
+              ? emails.find((item) => item.primary) ?? emails[0]
+              : null;
+            if (preferred?.email) profile.email = preferred.email;
+          }
+        }
+
+        return profile;
+      },
+    },
+  });
+}
+
 function getSafeAuthErrorDetail(error: Error) {
   const cause = error.cause && typeof error.cause === 'object'
     ? error.cause as { err?: unknown; provider?: unknown }
@@ -99,7 +138,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   // 复用项目内 Prisma 单例，会话持久化到 PostgreSQL
   adapter: PrismaAdapter(prisma),
   providers: [
-    GitHub,
+    GitHubResilient(),
     Gitee({
       clientId: process.env.AUTH_GITEE_ID,
       clientSecret: process.env.AUTH_GITEE_SECRET,

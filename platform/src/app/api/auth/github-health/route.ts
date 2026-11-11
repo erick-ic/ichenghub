@@ -1,22 +1,22 @@
 import { NextResponse } from 'next/server';
 import { recordApiError, recordFailed, recordSuccess } from '@/app/actions/metricsActions';
+import { createResilientFetch } from '@/lib/oauth-fetch';
 
 export const dynamic = 'force-dynamic';
 
 const GITHUB_OAUTH_ORIGIN = 'https://github.com/login/oauth/authorize';
 // 这里只检查 DNS/TCP/TLS/HTTP 是否可达，不执行真正的 OAuth 请求。
-// 8 秒为跨境网络保留抖动空间，同时低于 GitHub 常见的 10 秒请求处理上限，
-// 避免登录前探测本身长期占用用户操作。
-const CHECK_TIMEOUT_MS = 8000;
+// 单次探测 4 秒，失败后立即重试一次：网络抖动时避免一次探测超时就拦下登录，
+// 真正不可达时总耗时仍与原来的 8 秒上限接近。
+const githubCheck = createResilientFetch({ timeoutMs: 4000, attempts: 2 });
 
 // OAuth 跳转前的轻量可用性检查。GitHub 不可达时让用户留在站内，
 // 避免浏览器进入一个无法结束的外部导航；不返回上游错误细节。
 export async function GET() {
   try {
-    const response = await fetch(GITHUB_OAUTH_ORIGIN, {
+    const response = await githubCheck(GITHUB_OAUTH_ORIGIN, {
       method: 'HEAD',
       cache: 'no-store',
-      signal: AbortSignal.timeout(CHECK_TIMEOUT_MS),
     });
 
     recordSuccess();
