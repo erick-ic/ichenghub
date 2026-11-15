@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import focusStyles from './quota-focus.module.css';
 import motionStyles from './card-motion.module.css';
-import { Plus, Pencil, Trash2, RotateCcw, Search, ChevronDown, LayoutGrid, ExternalLink } from 'lucide-react';
+import { Plus, Pencil, Trash2, RotateCcw, Search, ChevronDown, LayoutGrid, ExternalLink, Sparkles } from 'lucide-react';
 import { useTranslations, useLocale } from 'next-intl';
 import { trackResourceAction } from '@/app/actions/statsActions';
 import PlatformConfigModal from './PlatformConfigModal';
@@ -96,7 +96,7 @@ const samplePlatforms: Platform[] = [
     url: MIDJOURNEY_PLATFORM_URL,
     indicators: [
       // Fast GPU Time：Standard 每月 15 小时
-      { id: 's1', nameZh: '快速GPU时长', nameEn: 'Fast GPU Time', used: 3.2, limit: 15, unitZh: '小时', unitEn: 'hrs' },
+      { id: 's1', nameZh: '快速GPU时长', nameEn: 'Fast GPU Time', used: 3, limit: 15, unitZh: '小时', unitEn: 'hrs' },
       // Maximum Queued Jobs：Standard 最多排队 10 个任务
       { id: 's2', nameZh: '排队任务', nameEn: 'Queued Jobs', used: 8, limit: 10, unitZh: '个', unitEn: 'jobs' },
       // Maximum Concurrent Prompts：Standard 最多 3 个并发 Fast 任务
@@ -104,6 +104,9 @@ const samplePlatforms: Platform[] = [
     ],
   },
 ];
+
+// 重建示例数据：与首次访问一致，三个指标分别展示正常(深灰)/预警(黄)/耗尽(红)三种进度颜色
+const rebuildSamplePlatforms: Platform[] = samplePlatforms;
 
 // YYYY-MM-DD 本地日期字符串
 function getTodayStr(): string {
@@ -131,6 +134,9 @@ export default function AiQuotaTracker() {
   const [isResetAllOpen, setIsResetAllOpen] = useState(false);
   // 导入导出弹窗
   const [isImportExportOpen, setIsImportExportOpen] = useState(false);
+  // 示例平台引导弹窗（删除全部平台后触发）
+  const [isExampleGuideOpen, setIsExampleGuideOpen] = useState(false);
+  const [exampleCreateError, setExampleCreateError] = useState('');
   // 进度条挂载动画：挂载后从 0 填充到目标值
   const [animated, setAnimated] = useState(false);
   const [platformFilter, setPlatformFilter] = useState<'all' | 'pending' | 'available'>('all');
@@ -324,14 +330,56 @@ export default function AiQuotaTracker() {
   const handleConfirmDelete = () => {
     const id = deletingPlatformId;
     trackResourceAction(null, 'TOOL', 'AI_QUOTA_DELETE_PLATFORM', ANALYTICS_PATH).catch(() => {});
+    let isBecomingEmpty = false;
     setPlatforms((prev) => {
       const next = prev.filter((p) => p.id !== id);
       persist(next, lastResetDate);
+      isBecomingEmpty = prev.length > 0 && next.length === 0;
       return next;
     });
     setIsDeleteOpen(false);
     setDeletingPlatformId('');
     setDeletingPlatformName('');
+    // 删光所有平台 → 弹出示例引导（用 requestAnimationFrame 等 setState 生效后再触发）
+    if (isBecomingEmpty) {
+      requestAnimationFrame(() => {
+        setExampleCreateError('');
+        setIsExampleGuideOpen(true);
+      });
+    }
+  };
+
+  // ===== 创建示例平台（删除全部后引导） =====
+  const handleCreateSamples = () => {
+    try {
+      const today = getTodayStr();
+      trackResourceAction(null, 'TOOL', 'AI_QUOTA_CREATE_SAMPLES', ANALYTICS_PATH).catch(() => {});
+      setPlatforms(rebuildSamplePlatforms);
+      setLastResetDate(today);
+      persist(rebuildSamplePlatforms, today);
+      setIsExampleGuideOpen(false);
+      setExampleCreateError('');
+      // 创建完成后自动滚动聚焦第一张示例卡片
+      requestAnimationFrame(() => {
+        const card = document.querySelector<HTMLElement>('[data-quota-card]');
+        if (card) {
+          card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          // 短暂的视觉高亮提示
+          card.classList.add('ring-2', 'ring-zinc-500', 'ring-offset-2');
+          setTimeout(() => {
+            card.classList.remove('ring-2', 'ring-zinc-500', 'ring-offset-2');
+          }, 1500);
+        }
+      });
+    } catch {
+      setExampleCreateError(t('exampleCreateError'));
+    }
+  };
+
+  // ===== 跳过示例引导 =====
+  const handleCancelExampleGuide = () => {
+    setIsExampleGuideOpen(false);
+    setExampleCreateError('');
   };
 
   // ===== 打开重置确认弹窗 =====
@@ -529,14 +577,24 @@ export default function AiQuotaTracker() {
           </div>
           <h3 className="text-xl font-bold text-zinc-800 mb-2">{t('emptyTitle')}</h3>
           <p className="text-sm text-zinc-400 text-center max-w-sm mb-8">{t('emptyDesc')}</p>
-          <button
-            type="button"
-            onClick={handleOpenAdd}
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#e52129] text-white text-sm font-medium hover:bg-[#c81c24] transition-colors shadow-sm"
-          >
-            <Plus className="w-4 h-4" />
-            {t('addPlatform')}
-          </button>
+          <div className="flex flex-col sm:flex-row items-center gap-3">
+            <button
+              type="button"
+              onClick={handleOpenAdd}
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#e52129] text-white text-sm font-medium hover:bg-[#c81c24] transition-colors shadow-sm"
+            >
+              <Plus className="w-4 h-4" />
+              {t('addPlatform')}
+            </button>
+            <button
+              type="button"
+              onClick={handleCreateSamples}
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-white border border-zinc-200 text-zinc-700 text-sm font-medium hover:bg-zinc-50 hover:border-zinc-300 transition-colors shadow-sm"
+            >
+              <Sparkles className="w-4 h-4 text-amber-500" />
+              {t('addSamplePlatform')}
+            </button>
+          </div>
         </div>
       ) : visiblePlatforms.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-zinc-300 bg-white p-8 text-center">
@@ -679,6 +737,16 @@ export default function AiQuotaTracker() {
         resetProtection={platforms.some((p) => p.checkIns?.some((item) => item.validityMinutes)) ? t('resetExpiryProtected') : undefined}
         onCancel={() => setIsResetAllOpen(false)}
         onConfirm={handleConfirmResetAll}
+      />
+
+      {/* ===== 删除全部后：示例平台引导弹窗 ===== */}
+      <ConfirmModal
+        isOpen={isExampleGuideOpen}
+        platformName=""
+        variant="exampleGuide"
+        error={exampleCreateError}
+        onCancel={handleCancelExampleGuide}
+        onConfirm={handleCreateSamples}
       />
 
       {/* ===== 导入导出弹窗 ===== */}

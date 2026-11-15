@@ -471,6 +471,7 @@
     "today": "今日",
     "limit": "上限",
     "exhausted": "今日已耗尽",
+    "exhaustedPermanent": "已耗尽",
     "warning": "即将耗尽",
     "sample": "示例",
     "emptyTitle": "还没有添加任何平台",
@@ -525,7 +526,14 @@
     "importFileError": "文件读取失败",
     "importPasteError": "无法读取剪贴板",
     "importParseError": "数据格式无效，请检查 JSON 内容",
-    "confirmImport": "确认导入"
+    "confirmImport": "确认导入",
+    "exampleGuideTitle": "还没有任何平台？",
+    "exampleGuideDesc": "为你准备了一组完整的示例数据，包含 Midjourney 标准套餐的真实配额。创建后可以直接编辑、删除或重置为空白状态。",
+    "exampleGuideConfirm": "创建示例平台",
+    "exampleGuideCancel": "从空白开始",
+    "exampleCreateSuccess": "示例平台已创建",
+    "exampleCreateError": "创建示例平台失败，请稍后重试",
+    "addSamplePlatform": "创建示例平台"
   },
   "AboutPage": {
     "badge": "关于 iChengHub",

@@ -56,7 +56,7 @@ export default function PlatformCardContent(props: Props) {
   const urgentQuota = primaryQuota && primaryQuota.used / primaryQuota.limit >= 0.8;
   const remaining = active[0] ? Math.max(1, Math.ceil((active[0].expiresAt - now) / 60000)) : 0;
   const status = urgentQuota
-    ? `${pickName(primaryQuota.nameZh, primaryQuota.nameEn)} · ${t(primaryQuota.used >= primaryQuota.limit ? 'exhausted' : 'warning')}`
+    ? `${pickName(primaryQuota.nameZh, primaryQuota.nameEn)} · ${t(primaryQuota.used >= primaryQuota.limit ? (primaryQuota.resetDaily === false ? 'exhaustedPermanent' : 'exhausted') : 'warning')}`
     : active.length ? t('nextCreditExpiry', { amount: active[0].amount, duration: formatValidity(remaining) })
     : pending.length ? t('pendingExpirySummary', { count: pending.length })
     : platform.checkIns?.length ? t(platform.checkIns.every((item) => item.completedDate === today) ? 'checklistComplete' : 'notCheckedInToday')
@@ -136,7 +136,7 @@ export default function PlatformCardContent(props: Props) {
                 )}
                 {isExceeded && (
                   <span className="text-[10px] text-white bg-[#e52129] px-1.5 py-0.5 rounded ml-1 animate-pulse">
-                    {t('exhausted')}
+                    {t(ind.resetDaily === false ? 'exhaustedPermanent' : 'exhausted')}
                   </span>
                 )}
               </div>

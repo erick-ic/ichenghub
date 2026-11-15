@@ -471,6 +471,7 @@
     "today": "Today",
     "limit": "Limit",
     "exhausted": "Exhausted today",
+    "exhaustedPermanent": "Exhausted",
     "warning": "Almost exhausted",
     "sample": "Sample",
     "emptyTitle": "No platforms yet",
@@ -525,7 +526,14 @@
     "importFileError": "Failed to read file",
     "importPasteError": "Cannot read clipboard",
     "importParseError": "Invalid data format, please check the JSON content",
-    "confirmImport": "Import"
+    "confirmImport": "Import",
+    "exampleGuideTitle": "No platforms yet?",
+    "exampleGuideDesc": "We've prepared a full set of sample data with real quotas for a Midjourney Standard plan. Feel free to edit, delete, or reset to a blank state afterward.",
+    "exampleGuideConfirm": "Create sample platform",
+    "exampleGuideCancel": "Start from scratch",
+    "exampleCreateSuccess": "Sample platform created",
+    "exampleCreateError": "Failed to create sample platform. Please try again.",
+    "addSamplePlatform": "Load sample platform"
   },
   "AboutPage": {
     "badge": "About iChengHub",

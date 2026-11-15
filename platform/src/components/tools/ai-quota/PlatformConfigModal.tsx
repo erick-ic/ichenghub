@@ -272,11 +272,12 @@ export default function PlatformConfigModal({
   return (
     <div
       className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center sm:p-4"
-      onClick={onClose}
+      onMouseDown={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
     >
       <div
         className="bg-zinc-50 rounded-t-2xl sm:rounded-2xl shadow-xl w-full sm:max-w-lg max-h-[92vh] overflow-y-auto p-5 sm:p-6 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:pb-6 relative"
-        onClick={(e) => e.stopPropagation()}
       >
         {/* ===== 头部 ===== */}
         <div className="flex items-start justify-between gap-3 mb-6 border-b border-zinc-200 pb-5">
