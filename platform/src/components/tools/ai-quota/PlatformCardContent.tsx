@@ -92,7 +92,7 @@ export default function PlatformCardContent(props: Props) {
       tabIndex={!detailed ? 0 : undefined}
       aria-label={!detailed ? t('scrollQuotaIndicators') : undefined}
       className={detailed ? 'mt-5 flex flex-col gap-4 sm:mt-6 sm:gap-5'
-        : 'mt-3 flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto overscroll-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [&>*]:shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-300'}>
+        : 'mt-3 flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [&>*]:shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-300'}>
       {balancePanel}
       {!!platform.balance && <CheckInHistory items={regularCheckIns} today={today} detailed={detailed} color={platform.color} />}
       {active.map((item) => <ExpiryIndicatorCard key={item.id} item={item} />)}
@@ -190,7 +190,7 @@ export default function PlatformCardContent(props: Props) {
             </div>
             <Dialog.Close asChild><button type="button" aria-label={t('closeDetails')} className="shrink-0 rounded-full p-2 text-zinc-500 hover:bg-zinc-100"><X className="h-5 w-5" /></button></Dialog.Close>
           </div>
-          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-6 sm:px-6">
+          <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-6 sm:px-6">
             <PlatformCardContent {...props} animated detailed />
           </div>
         </Dialog.Content>
