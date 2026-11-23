@@ -14,7 +14,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: t('metaTitle'),
     description: t('metaDescription'),
-    keywords: ['图片裁剪', '圆形头像', '形状裁剪', '在线裁图', '头像生成器', '本地裁剪', '隐私保护', 'image cropper', 'circle avatar', 'shape crop'],
+    keywords: ['图片裁剪', '圆形头像', '形状裁剪', '多边形裁剪', '自定义形状裁剪', '五角星裁剪', '在线裁图', '头像生成器', '本地裁剪', '隐私保护', 'image cropper', 'circle avatar', 'shape crop', 'polygon crop', 'custom shape crop', 'star avatar'],
     alternates: {
       canonical: `/${locale}/imgcrop`,
       languages: {
