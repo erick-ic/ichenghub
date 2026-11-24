@@ -20,10 +20,17 @@ import QuotaMoreActions from './QuotaMoreActions';
 import CardDragHandle from './CardDragHandle';
 import { migratePlatformOrder, movePlatform } from './platform-order';
 import { hasDailyQuota, hasPendingCheckIns } from './daily-overview';
+import {
+  isRemainingIndicator,
+  normalizeIndicator,
+  remainingPercentToUsed,
+  type IndicatorMode,
+} from './indicator-utils';
 
 // ===== 类型定义 =====
 export interface Indicator {
   id: string;
+  mode?: IndicatorMode;
   nameZh: string;
   nameEn: string;
   used: number;
@@ -154,7 +161,8 @@ export default function AiQuotaTracker() {
 
   const getResetEffects = (items: Platform[]) => {
     const effects = [
-      items.some((p) => p.indicators.some((ind) => ind.resetDaily !== false)) && t('resetEffectUsage'),
+      items.some((p) => p.indicators.some((ind) => !isRemainingIndicator(ind) && ind.resetDaily !== false)) && t('resetEffectUsage'),
+      items.some((p) => p.indicators.some((ind) => isRemainingIndicator(ind) && ind.resetDaily !== false)) && t('resetEffectRemaining'),
       items.some((p) => p.balance?.resetDaily) && t('resetEffectBalance'),
       items.some((p) => p.checkIns?.length) && t('resetEffectCheckIn'),
     ].filter(Boolean);
@@ -197,17 +205,9 @@ export default function AiQuotaTracker() {
             checkIn: undefined,
             checkIns: normalizeCheckIns(p.checkIns, p.checkIn),
             expiryIndicators: normalizeExpiryIndicators(p.expiryIndicators),
-            indicators: p.indicators.map((ind) => {
-              const oldInd = ind as unknown as { name?: string; unit?: string };
-              return {
-                ...ind,
-                nameZh: ind.nameZh ?? oldInd.name ?? '',
-                nameEn: ind.nameEn ?? oldInd.name ?? '',
-                unitZh: ind.unitZh ?? oldInd.unit,
-                unitEn: ind.unitEn ?? oldInd.unit,
-                resetDaily: ind.resetDaily !== false,
-              };
-            }),
+            indicators: p.indicators.map((ind) =>
+              normalizeIndicator(ind as Partial<Indicator> & { name?: string; unit?: string }),
+            ),
           };
         });
         const storedResetDate = stored.lastResetDate ?? '';
@@ -290,7 +290,30 @@ export default function AiQuotaTracker() {
           ...ready,
           indicators: ready.indicators.map((ind) => ind.id !== indicatorId ? ind : {
             ...ind,
-            used: Math.max(0, Math.min(ind.limit, ind.used + delta)),
+            used: Math.max(0, Math.min(ind.limit, Number((ind.used + delta).toFixed(1)))),
+          }),
+        };
+      });
+      persist(next, today);
+      return next;
+    });
+    if (crossedDay) setLastResetDate(today);
+  };
+
+  // 剩余额度百分比支持在卡片上直接输入目标百分比。
+  const handleSetRemainingPercent = (platformId: string, indicatorId: string, remainingPercent: number) => {
+    const today = getTodayStr();
+    const crossedDay = lastResetDate !== today;
+    const nextUsed = remainingPercentToUsed(remainingPercent);
+    setPlatforms((prev) => {
+      const next = prev.map((p) => {
+        const ready = crossedDay ? resetForNewDay(p) : p;
+        return ready.id !== platformId ? ready : {
+          ...ready,
+          indicators: ready.indicators.map((ind) => ind.id !== indicatorId ? ind : {
+            ...ind,
+            limit: 100,
+            used: nextUsed,
           }),
         };
       });
@@ -682,7 +705,8 @@ export default function AiQuotaTracker() {
             </div>
 
             <PlatformCardContent platform={platform} today={today} animated={animated}
-              handleCheckIn={handleCheckIn} handleUpdateQuota={handleUpdateQuota} />
+              handleCheckIn={handleCheckIn} handleUpdateQuota={handleUpdateQuota}
+              handleSetRemainingPercent={handleSetRemainingPercent} />
           </div>
           );
         })}

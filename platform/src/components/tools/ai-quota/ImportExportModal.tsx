@@ -3,12 +3,13 @@
 import { useState, useRef } from 'react';
 import { Download, Copy, Check, Upload, ClipboardPaste, X, FileJson } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import type { Platform } from './AiQuotaTracker';
+import type { Indicator, Platform } from './AiQuotaTracker';
 import { getBeijingDayKey } from '@/lib/time';
 import { normalizePlatformUrl } from './platform-url';
 import { normalizePlatformColor } from './platform-colors';
 import { normalizeExpiryIndicators } from './expiry-indicators';
 import { normalizeCheckIns } from './check-ins';
+import { normalizeIndicator } from './indicator-utils';
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 import { useEscapeKey } from '@/hooks/useEscapeKey';
 
@@ -135,19 +136,9 @@ export default function ImportExportModal({
           checkIns: normalizeCheckIns(p.checkIns, p.checkIn),
           expiryIndicators: normalizeExpiryIndicators(p.expiryIndicators),
           indicators: Array.isArray(p.indicators)
-            ? p.indicators.map((ind) => {
-                const oldInd = ind as unknown as { name?: string; unit?: string };
-                return {
-                  id: String(ind.id),
-                  nameZh: String(ind.nameZh ?? oldInd.name ?? ''),
-                  nameEn: String(ind.nameEn ?? oldInd.name ?? ''),
-                  used: Number(ind.used) || 0,
-                  limit: Number(ind.limit) || 0,
-                  resetDaily: ind.resetDaily !== false,
-                  unitZh: ind.unitZh ? String(ind.unitZh) : oldInd.unit ? String(oldInd.unit) : undefined,
-                  unitEn: ind.unitEn ? String(ind.unitEn) : oldInd.unit ? String(oldInd.unit) : undefined,
-                };
-              })
+            ? p.indicators.map((ind) =>
+                normalizeIndicator(ind as Partial<Indicator> & { name?: string; unit?: string }),
+              )
             : [],
         };
       });

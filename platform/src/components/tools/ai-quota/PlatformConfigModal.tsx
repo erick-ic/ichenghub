@@ -1,9 +1,15 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Check, X, Plus, Minus, Settings2, SlidersHorizontal, Coins, CalendarCheck } from 'lucide-react';
+import { Check, X, Plus, Minus, ChevronDown, Settings2, SlidersHorizontal, Coins, CalendarCheck } from 'lucide-react';
 import { useTranslations, useLocale } from 'next-intl';
 import type { Platform, Indicator, CheckIn } from './AiQuotaTracker';
+import {
+  getRemainingPercent,
+  isRemainingIndicator,
+  remainingPercentToUsed,
+  type IndicatorMode,
+} from './indicator-utils';
 import ExpiryIndicatorFields from './ExpiryIndicatorFields';
 import { normalizeExpiryIndicators, type ExpiryIndicator } from './expiry-indicators';
 import { normalizeCheckIns } from './check-ins';
@@ -15,10 +21,12 @@ import { useEscapeKey } from '@/hooks/useEscapeKey';
 // ===== 表单态指标 =====
 interface IndicatorForm {
   id: string;
+  mode: IndicatorMode;
   nameZh: string;
   nameEn: string;
   limit: number;
   used: number;
+  remaining: number;
   unitZh: string;
   unitEn: string;
   resetDaily: boolean;
@@ -32,14 +40,16 @@ interface PlatformConfigModalProps {
 }
 
 // 生成一个空指标行
-const createEmptyIndicator = (): IndicatorForm => ({
+const createEmptyIndicator = (mode: IndicatorMode = 'usage'): IndicatorForm => ({
   id: crypto.randomUUID(),
+  mode,
   nameZh: '',
   nameEn: '',
   limit: 100,
   used: 0,
-  unitZh: '',
-  unitEn: '',
+  remaining: 100,
+  unitZh: mode === 'remaining' ? '%' : '',
+  unitEn: mode === 'remaining' ? '%' : '',
   resetDaily: true,
 });
 
@@ -52,16 +62,21 @@ const createEmptyCheckIn = (): CheckIn => ({
 
 // 将存储态指标转为表单态
 const toFormIndicators = (list: Indicator[]): IndicatorForm[] =>
-  list.map((ind) => ({
-    id: ind.id,
-    nameZh: ind.nameZh,
-    nameEn: ind.nameEn,
-    limit: ind.limit,
-    used: ind.used,
-    unitZh: ind.unitZh ?? '',
-    unitEn: ind.unitEn ?? '',
-    resetDaily: ind.resetDaily !== false,
-  }));
+  list.map((ind) => {
+    const mode: IndicatorMode = isRemainingIndicator(ind) ? 'remaining' : 'usage';
+    return {
+      id: ind.id,
+      mode,
+      nameZh: ind.nameZh,
+      nameEn: ind.nameEn,
+      limit: ind.limit,
+      used: ind.used,
+      remaining: mode === 'remaining' ? getRemainingPercent(ind) : 100,
+      unitZh: ind.unitZh ?? '',
+      unitEn: ind.unitEn ?? '',
+      resetDaily: ind.resetDaily !== false,
+    };
+  });
 
 export default function PlatformConfigModal({
   isOpen,
@@ -84,7 +99,7 @@ export default function PlatformConfigModal({
     createEmptyIndicator(),
   ]);
   const [expiryIndicators, setExpiryIndicators] = useState<ExpiryIndicator[]>([]);
-  const [indicatorType, setIndicatorType] = useState('usage');
+  const [indicatorType, setIndicatorType] = useState<'usage' | 'remaining' | 'expiry'>('usage');
   const [expiryError, setExpiryError] = useState(false);
   const [validityError, setValidityError] = useState(false);
   const [hasBalance, setHasBalance] = useState(false);
@@ -148,15 +163,18 @@ export default function PlatformConfigModal({
   // ===== 指标行操作 =====
   const updateIndicator = (
     id: string,
-    field: 'nameZh' | 'nameEn' | 'limit' | 'unitZh' | 'unitEn' | 'resetDaily',
+    field: 'nameZh' | 'nameEn' | 'limit' | 'remaining' | 'unitZh' | 'unitEn' | 'resetDaily',
     value: string | boolean
   ) => {
     setIndicators((prev) =>
-      prev.map((ind) =>
-        ind.id === id
-          ? { ...ind, [field]: field === 'limit' ? Number(value) : value }
-          : ind
-      )
+      prev.map((ind) => {
+        if (ind.id !== id) return ind;
+        if (field === 'limit') return { ...ind, limit: Number(value) };
+        if (field === 'remaining') {
+          return { ...ind, remaining: value === '' ? NaN : Number(value) };
+        }
+        return { ...ind, [field]: value };
+      })
     );
   };
 
@@ -168,7 +186,11 @@ export default function PlatformConfigModal({
     if (indicatorType === 'expiry') {
       const startsAt = Math.floor(Date.now() / 60_000) * 60_000;
       setExpiryIndicators((prev) => [{ id: crypto.randomUUID(), nameZh: '', nameEn: '', amount: 0, startsAt, expiresAt: startsAt + 86400000 }, ...prev]);
-    } else setIndicators((prev) => [createEmptyIndicator(), ...prev]);
+    } else if (indicatorType === 'remaining') {
+      setIndicators((prev) => [createEmptyIndicator('remaining'), ...prev]);
+    } else {
+      setIndicators((prev) => [createEmptyIndicator('usage'), ...prev]);
+    }
   };
 
   const updateCheckIn = (id: string, field: 'nameZh' | 'nameEn' | 'reward', value: string) => {
@@ -244,16 +266,31 @@ export default function PlatformConfigModal({
         reward: Math.max(0, Number(item.reward) || 0),
       })) : [],
       expiryIndicators,
-      indicators: validIndicators.map((ind) => ({
-        id: ind.id,
-        nameZh: ind.nameZh.trim(),
-        nameEn: ind.nameEn.trim(),
-        limit: Math.max(1, Number(ind.limit) || 0),
-        used: ind.used,
-        unitZh: ind.unitZh.trim() || undefined,
-        unitEn: ind.unitEn.trim() || undefined,
-        resetDaily: ind.resetDaily,
-      })),
+      indicators: validIndicators.map((ind) => {
+        if (ind.mode === 'remaining') {
+          return {
+            id: ind.id,
+            mode: 'remaining' as const,
+            nameZh: ind.nameZh.trim(),
+            nameEn: ind.nameEn.trim(),
+            limit: 100,
+            used: remainingPercentToUsed(ind.remaining),
+            unitZh: '%',
+            unitEn: '%',
+            resetDaily: ind.resetDaily,
+          };
+        }
+        return {
+          id: ind.id,
+          nameZh: ind.nameZh.trim(),
+          nameEn: ind.nameEn.trim(),
+          limit: Math.max(1, Number(ind.limit) || 0),
+          used: ind.used,
+          unitZh: ind.unitZh.trim() || undefined,
+          unitEn: ind.unitEn.trim() || undefined,
+          resetDaily: ind.resetDaily,
+        };
+      }),
     };
 
     // 值对比：时长或起点的最终值与打开弹窗时不同，则该签到项以类目为准重算
@@ -367,7 +404,7 @@ export default function PlatformConfigModal({
                   onClick={() => setPlatformColor(color)}
                   className={`flex items-center gap-2 rounded-xl border p-2 text-left transition-all ${
                     selected
-                      ? 'border-zinc-800 bg-zinc-50 ring-1 ring-zinc-800 shadow-sm'
+                      ? style.selected
                       : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'
                   }`}
                 >
@@ -387,10 +424,23 @@ export default function PlatformConfigModal({
         <section className="mb-6 rounded-xl border border-zinc-200 bg-white p-4 shadow-sm">
           <h3 className="flex items-center gap-2 border-b border-zinc-200 pb-3 text-base font-semibold text-zinc-900 mb-4"><SlidersHorizontal className="h-4 w-4 text-zinc-500" aria-hidden="true" />{t('indicatorLabel')}</h3>
           <div className="mb-4 flex flex-wrap items-end gap-2">
-            <label className="flex items-center gap-2 text-xs text-zinc-600">{t('indicatorType')}
-              <select value={indicatorType} onChange={(e) => setIndicatorType(e.target.value)} className="rounded-lg border border-zinc-200 bg-white p-2 text-sm">
-                <option value="usage">{t('usageType')}</option><option value="expiry">{t('manualExpiryType')}</option>
-              </select>
+            <label className="flex items-center gap-2 text-xs text-zinc-600">
+              <span>{t('indicatorType')}</span>
+              <span className="relative inline-flex items-center">
+                <select
+                  value={indicatorType}
+                  onChange={(e) => setIndicatorType(e.target.value as 'usage' | 'remaining' | 'expiry')}
+                  className="appearance-none rounded-lg border border-zinc-200 bg-white py-2 pl-3 pr-9 text-sm text-zinc-900 outline-none transition-colors hover:border-zinc-300 focus:border-[#e52129]"
+                >
+                  <option value="usage">{t('usageType')}</option>
+                  <option value="remaining">{t('remainingPercentType')}</option>
+                  <option value="expiry">{t('manualExpiryType')}</option>
+                </select>
+                <ChevronDown
+                  className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400"
+                  aria-hidden="true"
+                />
+              </span>
             </label>
             <button
               ref={addIndicatorRef}
@@ -402,9 +452,24 @@ export default function PlatformConfigModal({
               {t('addIndicator')}
             </button>
           </div>
-          <div className="flex flex-col gap-2.5">
-            {indicators.map((ind) => (
-              <div key={ind.id} className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-col gap-3">
+            {indicators.map((ind) => {
+              const isRemaining = ind.mode === 'remaining';
+              return (
+              <div key={ind.id} className="rounded-xl border border-zinc-200 bg-zinc-50 p-3 space-y-3">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-xs font-semibold text-zinc-600">
+                    {t(isRemaining ? 'remainingPercentType' : 'usageType')}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => removeIndicator(ind.id)}
+                    aria-label={t('removeIndicator')}
+                    className="rounded-md border border-zinc-200 bg-white p-2 text-zinc-500 hover:text-[#e52129] hover:bg-red-50 transition-colors"
+                  >
+                    <Minus className="w-4 h-4" />
+                  </button>
+                </div>
                 <div className="grid w-full grid-cols-2 items-end gap-2">
                   {nameLanguages.map((language, index) => <label key={language} className="min-w-0 text-xs text-zinc-600">
                     {t(language === 'zh' ? 'nameChinese' : 'nameEnglish')}
@@ -416,39 +481,53 @@ export default function PlatformConfigModal({
                         if (indicatorError) setIndicatorError(false);
                       }}
                       placeholder={t('indicatorName')}
-                      className="mt-1 w-full min-w-0 rounded-lg border border-zinc-200 px-3 py-2 text-base sm:text-sm text-zinc-900 outline-none focus:border-[#e52129]" />
+                      className="mt-1 w-full min-w-0 rounded-lg border border-zinc-200 bg-white px-3 py-2 text-base sm:text-sm text-zinc-900 outline-none focus:border-[#e52129]" />
                   </label>)}
                 </div>
-                <input
-                  type="number"
-                  min={1}
-                  value={ind.limit}
-                  onChange={(e) => updateIndicator(ind.id, 'limit', e.target.value)}
-                  placeholder={t('dailyLimit')}
-                  className="w-14 sm:w-16 shrink-0 px-2 py-2 rounded-lg border border-gray-200 bg-white text-base sm:text-sm text-gray-900 outline-none focus:border-[#e52129] transition-colors"
-                />
-                <input
-                  type="text"
-                  value={isEn ? ind.unitEn : ind.unitZh}
-                  onChange={(e) => updateIndicator(ind.id, isEn ? 'unitEn' : 'unitZh', e.target.value)}
-                  placeholder={t('unitPlaceholder')}
-                  className="w-12 sm:w-14 shrink-0 px-2 py-2 rounded-lg border border-gray-200 bg-white text-base sm:text-sm text-gray-900 outline-none focus:border-[#e52129] transition-colors"
-                />
-                <button
-                  type="button"
-                  onClick={() => removeIndicator(ind.id)}
-                  aria-label={t('cancel')}
-                  className="w-9 h-9 sm:w-8 sm:h-8 shrink-0 flex items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:text-[#e52129] hover:bg-red-50 transition-colors"
-                >
-                  <Minus className="w-4 h-4" />
-                </button>
-                <label className="w-full text-xs text-zinc-600 flex items-center gap-2 pl-1">
+                {isRemaining ? (
+                  <label className="flex items-center gap-2 text-xs text-zinc-600">
+                    <span>{t('remainingPercentLabel')}</span>
+                    <div className="relative inline-flex items-center">
+                      <input
+                        type="number"
+                        min={0}
+                        max={100}
+                        step="any"
+                        value={Number.isFinite(ind.remaining) ? ind.remaining : ''}
+                        onChange={(e) => updateIndicator(ind.id, 'remaining', e.target.value)}
+                        placeholder="100"
+                        className="w-20 rounded-lg border border-gray-200 bg-white py-2 pl-2.5 pr-7 text-base sm:text-sm text-gray-900 outline-none focus:border-[#e52129] transition-colors"
+                      />
+                      <span className="pointer-events-none absolute right-2.5 text-xs text-zinc-400">%</span>
+                    </div>
+                  </label>
+                ) : (
+                  <div className="flex flex-wrap items-center gap-2">
+                    <input
+                      type="number"
+                      min={1}
+                      value={ind.limit}
+                      onChange={(e) => updateIndicator(ind.id, 'limit', e.target.value)}
+                      placeholder={t('dailyLimit')}
+                      className="w-16 shrink-0 px-2 py-2 rounded-lg border border-gray-200 bg-white text-base sm:text-sm text-gray-900 outline-none focus:border-[#e52129] transition-colors"
+                    />
+                    <input
+                      type="text"
+                      value={isEn ? ind.unitEn : ind.unitZh}
+                      onChange={(e) => updateIndicator(ind.id, isEn ? 'unitEn' : 'unitZh', e.target.value)}
+                      placeholder={t('unitPlaceholder')}
+                      className="w-16 shrink-0 px-2 py-2 rounded-lg border border-gray-200 bg-white text-base sm:text-sm text-gray-900 outline-none focus:border-[#e52129] transition-colors"
+                    />
+                  </div>
+                )}
+                <label className="w-full text-xs text-zinc-600 flex items-center gap-2 pl-0.5">
                   <input type="checkbox" checked={ind.resetDaily}
                     onChange={(e) => updateIndicator(ind.id, 'resetDaily', e.target.checked)} />
-                  {t('resetDaily')}
+                  {t(isRemaining ? 'resetRemainingDaily' : 'resetDaily')}
                 </label>
               </div>
-            ))}
+              );
+            })}
           </div>
 
           <ExpiryIndicatorFields items={expiryIndicators} onChange={setExpiryIndicators} />
