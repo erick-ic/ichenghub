@@ -48,10 +48,10 @@ export default function PromptCard({ data }: PromptCardProps) {
 
   return (
     <div
-      className="flex flex-col bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1 cursor-pointer"
+      className="flex flex-col rounded-2xl apple-glass-card overflow-hidden cursor-pointer"
       onClick={handleCardClick}
     >
-      <div className="relative w-full aspect-[4/3] overflow-hidden bg-gray-50 border border-gray-50">
+      <div className="relative w-full aspect-[4/3] overflow-hidden bg-gray-50">
         <Image
           src={data.imageUrl}
           alt={data.title}

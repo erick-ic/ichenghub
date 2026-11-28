@@ -178,26 +178,28 @@ export default async function BlogDetailPage({ params }: PageProps) {
       <CodeCopyHandler blogId={id} locale={locale} />
       {/* 博客浏览唯一入口：/api/blog/view（事务内去重 + 写日志 + 增 views），不再叠加 PageViewTracker */}
       <ViewCounter id={id} />
-      <main className="bg-background min-h-[calc(100vh-4rem)]">
-        <article className="max-w-7xl mx-auto px-4 md:px-8 py-12 grid grid-cols-1 lg:grid-cols-4 gap-10">
+      <main className="min-h-[calc(100vh-4rem)]">
+        <article className="container mx-auto px-4 py-12 grid grid-cols-1 lg:grid-cols-4 gap-10">
           {/* 左侧正文区：占 lg:col-span-3 */}
           <div className="min-w-0 lg:col-span-3">
             {/* 面包屑 */}
-            <nav className="flex items-center gap-2 mb-12 text-sm text-zinc-500">
-              <Link href="/" className="hover:text-zinc-800 transition-colors font-medium">
+            <nav className="flex items-center gap-2 mb-6 sm:mb-10 text-xs sm:text-sm text-zinc-500 min-w-0">
+              <Link href="/" className="shrink-0 whitespace-nowrap hover:text-zinc-800 transition-colors font-medium">
                 {isEnglish ? 'Home' : '首页'}
               </Link>
-              <span className="text-zinc-400">/</span>
-              <Link href="/blog" className="hover:text-zinc-800 transition-colors font-medium">
+              <span className="shrink-0 text-zinc-400">/</span>
+              <Link href="/blog" className="shrink-0 whitespace-nowrap hover:text-zinc-800 transition-colors font-medium">
                 {isEnglish ? 'Blog' : '博客'}
               </Link>
-              <span className="text-zinc-400">/</span>
-              <span className="text-zinc-800 font-semibold">{blogPost.title}</span>
+              <span className="shrink-0 text-zinc-400">/</span>
+              <span className="min-w-0 truncate text-zinc-800 font-semibold" title={blogPost.title}>
+                {blogPost.title}
+              </span>
             </nav>
 
             {/* 标题 + 元数据 */}
             <header className="mb-10">
-              <h1 className="text-3xl md:text-[32px] font-bold text-zinc-900 tracking-tight mb-6">
+              <h1 className="text-2xl md:text-[28px] font-bold text-zinc-900 tracking-tight leading-snug mb-6">
                 {blogPost.title}
               </h1>
               <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs">

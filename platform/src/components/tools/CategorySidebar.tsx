@@ -71,7 +71,7 @@ export default function CategorySidebar({ categories, totalCount, isEnglish }: C
   };
 
   return (
-    <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 sticky top-8">
+    <div className="apple-glass-card rounded-xl p-4 sticky top-24">
       <h2 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
         <Wrench className="w-4 h-4" />
         {isEnglish ? 'Categories' : '工具分类'}

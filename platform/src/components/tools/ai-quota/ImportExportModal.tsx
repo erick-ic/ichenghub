@@ -170,21 +170,21 @@ export default function ImportExportModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 bg-black/40 backdrop-blur-sm">
-      <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-xl w-full sm:max-w-2xl max-h-[92vh] sm:max-h-[85vh] flex flex-col overflow-hidden">
+      <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-xl w-full sm:max-w-2xl max-h-[92dvh] sm:max-h-[85dvh] flex flex-col overflow-hidden">
         {/* 头部 */}
-        <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-gray-100">
+        <div className="shrink-0 flex items-center justify-between px-4 sm:px-6 py-4 border-b border-gray-100">
           <h3 className="text-lg font-bold text-gray-900">{t('backupRestore')}</h3>
           <button
             type="button"
             onClick={onClose}
-            className="w-9 h-9 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+            className="w-9 h-9 sm:w-8 sm:h-8 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Tab 切换 */}
-        <div className="flex px-4 sm:px-6 pt-4 gap-2">
+        <div className="shrink-0 flex px-4 sm:px-6 pt-4 gap-2">
           <button
             type="button"
             onClick={() => setTab('export')}
@@ -206,7 +206,7 @@ export default function ImportExportModal({
         </div>
 
         {/* 内容区 */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4 sm:p-6">
           {tab === 'export' ? (
             <div className="flex flex-col gap-4">
               <p className="text-sm text-gray-500">{t('exportDesc')}</p>

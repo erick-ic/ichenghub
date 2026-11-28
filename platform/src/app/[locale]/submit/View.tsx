@@ -185,7 +185,7 @@ export default function SubmitView() {
     <>
       <Confetti show={showConfetti} />
       <div className="min-h-screen bg-[#f5f5f7] py-12 px-4">
-        <div className="max-w-2xl mx-auto bg-white rounded-2xl shadow-sm p-6 sm:p-10">
+        <div className="max-w-2xl mx-auto apple-glass-card rounded-2xl p-6 sm:p-10">
           {/* 顶部切换器 */}
           <div className="bg-[#f5f5f7] p-1 rounded-lg flex mb-8">
             <button

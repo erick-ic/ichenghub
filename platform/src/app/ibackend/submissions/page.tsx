@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { Check, X, Trash2, Clock, CheckCircle, XCircle, Search, RefreshCw, ExternalLink, Copy, RotateCcw, User, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -57,7 +56,6 @@ interface ToolDemand {
 type SubmissionItem = ToolSubmission | ToolDemand;
 
 export default function AdminSubmissionsPage() {
-  const router = useRouter();
   const [mode, setMode] = useState<'TOOL' | 'DEMAND'>('TOOL');
   const [submissions, setSubmissions] = useState<ToolSubmission[]>([]);
   const [demands, setDemands] = useState<ToolDemand[]>([]);

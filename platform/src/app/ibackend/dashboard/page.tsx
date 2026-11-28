@@ -1,6 +1,6 @@
 import prisma from '@/lib/prisma'
 import { getBeijingDayKey, getBeijingHour } from '@/lib/time'
-import { Eye, Users, MousePointerClick, Copy, Activity, Wrench, Lightbulb, Globe, Clock, FolderOpen, Smartphone, Monitor, Link2, FileText, Code } from 'lucide-react'
+import { Eye, Users, MousePointerClick, Copy, Activity, Wrench, Lightbulb, Globe, Clock, FolderOpen, Smartphone, Link2, FileText, Code } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import RefreshButton from './RefreshButton'
@@ -215,7 +215,7 @@ async function getAnalyticsData(): Promise<AnalyticsData> {
   const topBlogs = Array.from(blogPopularityMap.entries())
     .sort((a, b) => b[1] - a[1])
     .slice(0, 5)
-    .map(([id, total]) => ({
+    .map(([id]) => ({
       id,
       title: blogMap.get(id) || 'Unknown Blog',
       views: blogViewMap.get(id) || 0,
@@ -232,7 +232,7 @@ async function getAnalyticsData(): Promise<AnalyticsData> {
   const topTools = Array.from(toolPopularityMap.entries())
     .sort((a, b) => b[1] - a[1])
     .slice(0, 5)
-    .map(([id, total]) => ({
+    .map(([id]) => ({
       id,
       name: toolMap.get(id) || 'Unknown Tool',
       clicks: toolClickMap.get(id) || 0,

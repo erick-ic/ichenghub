@@ -29,7 +29,6 @@ export default function PromptDetailCard({ data, isEnglish = false, isPortrait =
   const [copied, setCopied] = useState(false);
   const locale = useLocale();
   const pathname = usePathname();
-  const commentsCount = data.commentsCount || 0;
 
   const handleCopy = async () => {
     const success = await copyToClipboard(data.promptText);
@@ -40,13 +39,6 @@ export default function PromptDetailCard({ data, isEnglish = false, isPortrait =
 
     const fullPath = `/${locale}${pathname}`;
     trackResourceAction(data.id, 'PROMPT', 'COPY', fullPath).catch(() => {});
-  };
-
-  const scrollToComments = () => {
-    const commentsSection = document.getElementById('comments-section');
-    if (commentsSection) {
-      commentsSection.scrollIntoView({ behavior: 'smooth' });
-    }
   };
 
   if (isPortrait) {
@@ -90,7 +82,7 @@ export default function PromptDetailCard({ data, isEnglish = false, isPortrait =
 
   return (
     <div className="space-y-4">
-      <div className="bg-white border border-zinc-200 rounded-xl overflow-hidden shadow-sm">
+      <div className="apple-glass-card rounded-2xl overflow-hidden">
         <div className="flex justify-between items-center px-4 py-3 border-b border-zinc-200 bg-zinc-50/50">
           <span className="text-zinc-700 text-sm font-semibold">
             {isEnglish ? 'Prompt' : '提示词'}

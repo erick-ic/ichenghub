@@ -1,7 +1,10 @@
 import { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
+import { Link } from '@/navigation';
 import ImageCropper from '@/components/tools/ImageCropper';
 import PageViewTracker from '@/components/PageViewTracker';
+import ToolGuideSection from '@/components/tools/ToolGuideSection';
+import { getToolGuide } from '@/data/tool-guides';
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -44,22 +47,38 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function ImageCropperPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'ImageCropper' });
+  const isEn = locale === 'en';
+  const guide = getToolGuide(locale, 'imgcrop');
 
   return (
     <>
       <PageViewTracker path="/imgcrop" resourceType="TOOL" />
-      <div className="min-h-screen bg-background">
-        <section className="container mx-auto px-4 py-12 md:py-16 max-w-6xl">
+      <div className="min-h-screen">
+        <section className="container mx-auto px-4 py-10 md:py-14">
+          <nav className="flex items-center gap-2 mb-8 text-xs sm:text-sm text-zinc-500">
+            <Link href="/" className="hover:text-zinc-900 transition-colors">
+              {isEn ? 'Home' : '首页'}
+            </Link>
+            <span className="text-zinc-400">/</span>
+            <Link href="/tools" className="hover:text-zinc-900 transition-colors">
+              {isEn ? 'Tools' : '工具分类'}
+            </Link>
+            <span className="text-zinc-400">/</span>
+            <span className="text-zinc-900 font-medium">{guide.name}</span>
+          </nav>
+
           <header className="mb-10 text-center">
-            <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-zinc-900 mb-3">
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-900 mb-3">
               {t('title')}
             </h1>
-            <p className="text-base md:text-lg text-zinc-500 max-w-3xl mx-auto lg:whitespace-nowrap">
+            <p className="text-base md:text-lg text-zinc-500 mx-auto xl:whitespace-nowrap">
               {t('description')}
             </p>
           </header>
 
           <ImageCropper />
+
+          <ToolGuideSection guide={guide} locale={locale} />
         </section>
       </div>
     </>

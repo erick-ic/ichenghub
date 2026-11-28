@@ -1,4 +1,4 @@
-import { Metadata, ResolvingMetadata } from 'next';
+import { Metadata } from 'next';
 import PromptDetailCard, { PromptDetailData } from '@/components/PromptDetailCard';
 import ColorExtractedImage from '@/components/ColorExtractedImage';
 import LikeButton from '@/components/stats/LikeButton';
@@ -16,8 +16,7 @@ import { auth } from '../../../../../auth';
 export const revalidate = 0;
 
 export async function generateMetadata(
-  { params }: { params: { promptId: string; locale: string } },
-  parent: ResolvingMetadata
+  { params }: { params: { promptId: string; locale: string } }
 ): Promise<Metadata> {
   const { promptId, locale } = params;
   const prompt = await prisma.prompt.findUnique({ where: { id: promptId } });
@@ -99,6 +98,23 @@ export default async function PromptDetailPage({ params }: PageProps) {
   const category = isEnglish ? (prompt.categoryEn || prompt.category) : prompt.category;
   const platformName = isEnglish ? (prompt.platformEn || prompt.platform) : prompt.platform;
 
+  const relatedPrompts = await prisma.prompt.findMany({
+    where: {
+      status: 1,
+      category: prompt.category,
+      id: { not: prompt.id },
+    },
+    orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }],
+    take: 3,
+    select: {
+      id: true,
+      title: true,
+      titleEn: true,
+      category: true,
+      categoryEn: true,
+    },
+  });
+
   const promptData: PromptDetailData = {
     id: prompt.id,
     title: prompt.title,
@@ -142,22 +158,24 @@ export default async function PromptDetailPage({ params }: PageProps) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }}
       />
       <ViewsTracker promptId={promptId} path={`/${locale}/prompts/${promptId}`} />
-      <div className="min-h-screen bg-background">
-        <section className="container mx-auto px-4 py-8 sm:py-16 max-w-6xl">
-          <nav className="flex flex-wrap items-center gap-x-2 gap-y-1 mb-6 sm:mb-12 text-xs sm:text-sm text-zinc-500">
-            <Link href="/" className="shrink-0 hover:text-zinc-800 transition-colors font-medium">
+      <div className="min-h-screen">
+        <section className="container mx-auto px-4 py-8 sm:py-16">
+          <nav className="flex items-center gap-2 mb-6 sm:mb-10 text-xs sm:text-sm text-zinc-500 min-w-0">
+            <Link href="/" className="shrink-0 whitespace-nowrap hover:text-zinc-800 transition-colors font-medium">
               {isEnglish ? 'Home' : '首页'}
             </Link>
-            <span className="text-zinc-400">/</span>
-            <Link href="/prompts" className="shrink-0 hover:text-zinc-800 transition-colors font-medium">
+            <span className="shrink-0 text-zinc-400">/</span>
+            <Link href="/prompts" className="shrink-0 whitespace-nowrap hover:text-zinc-800 transition-colors font-medium">
               {isEnglish ? 'Prompt List' : '提示词列表'}
             </Link>
-            <span className="text-zinc-400">/</span>
-            <span className="text-zinc-800 font-semibold min-w-0 break-words">{promptTitle}</span>
+            <span className="shrink-0 text-zinc-400">/</span>
+            <span className="min-w-0 truncate text-zinc-800 font-semibold" title={promptTitle}>
+              {promptTitle}
+            </span>
           </nav>
 
           <div className="mb-5 sm:mb-8">
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-zinc-900 tracking-tight">
+            <h1 className="text-2xl md:text-[28px] font-bold text-zinc-900 tracking-tight leading-snug">
               {promptTitle}
             </h1>
           </div>
@@ -212,7 +230,7 @@ export default async function PromptDetailPage({ params }: PageProps) {
             <div className="flex flex-col justify-between h-full">
               {/* 上盒子：浏览、点赞、收藏 */}
               <div className="space-y-4">
-                <div className="relative bg-white/90 backdrop-blur-md border border-zinc-100 rounded-2xl p-5 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 overflow-hidden h-24">
+                <div className="relative bg-white/90 backdrop-blur-md border border-zinc-100 rounded-2xl p-5 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 overflow-hidden h-24">
                   <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-blue-100/40 to-transparent rounded-bl-full"></div>
                   <div className="relative h-full flex items-center justify-between">
                     <div className="flex items-center gap-3">
@@ -261,6 +279,76 @@ export default async function PromptDetailPage({ params }: PageProps) {
           <div className="mt-8">
             <PromptDetailCard data={promptData} isEnglish={isEnglish} />
           </div>
+
+          {/* 提示词拆解与定制指南 */}
+          <div className="mt-8 apple-glass-card rounded-2xl p-6 md:p-8 space-y-5">
+            <h2 className="text-xl font-bold text-zinc-900">
+              {isEnglish ? 'How to Customize and Adapt This Prompt' : '提示词结构拆解与定制建议'}
+            </h2>
+            <p className="text-sm md:text-base text-zinc-600 leading-relaxed">
+              {isEnglish
+                ? `Rather than copying this ${category} prompt verbatim every time, treat it as a reusable template. Adjust one variable at a time so you can see how ${platformName || 'your chosen model'} responds.`
+                : `建议将这条「${category}」提示词视为可复用的结构模板，而非一次性固定文案。每次只修改一个维度，更容易观察 ${platformName || '目标模型'} 对不同关键词的响应规律。`}
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+              <div className="rounded-xl bg-zinc-50/80 border border-zinc-100 p-4 space-y-1.5 transition-all duration-300 hover:bg-white hover:shadow-md hover:-translate-y-0.5">
+                <div className="font-semibold text-zinc-900">
+                  {isEnglish ? '1. Subject & Action' : '1. 替换主体与动作'}
+                </div>
+                <p className="text-xs md:text-sm text-zinc-600 leading-relaxed">
+                  {isEnglish
+                    ? 'Swap the core subject, pose, or object while keeping lighting and camera framing intact to preserve the overall aesthetic.'
+                    : '保留构图与光影描述，仅替换画面核心人物、产品或动作细节，即可快速迁移到你的具体创作主题。'}
+                </p>
+              </div>
+              <div className="rounded-xl bg-zinc-50/80 border border-zinc-100 p-4 space-y-1.5 transition-all duration-300 hover:bg-white hover:shadow-md hover:-translate-y-0.5">
+                <div className="font-semibold text-zinc-900">
+                  {isEnglish ? '2. Lighting & Palette' : '2. 调整光线与色调'}
+                </div>
+                <p className="text-xs md:text-sm text-zinc-600 leading-relaxed">
+                  {isEnglish
+                    ? 'Modify time of day, key light direction, or color temperature to shift the mood from warm editorial to clean studio lighting.'
+                    : '通过调整光线方向、色温与环境氛围词（如柔和自然光、高对比棚拍光）控制成片情绪。'}
+                </p>
+              </div>
+              <div className="rounded-xl bg-zinc-50/80 border border-zinc-100 p-4 space-y-1.5 transition-all duration-300 hover:bg-white hover:shadow-md hover:-translate-y-0.5">
+                <div className="font-semibold text-zinc-900">
+                  {isEnglish ? '3. Model Differences' : '3. 跨模型适配与偏差'}
+                </div>
+                <p className="text-xs md:text-sm text-zinc-600 leading-relaxed">
+                  {isEnglish
+                    ? 'Different image models weigh keywords differently; if details drift, shorten repetitive adjectives and specify aspect ratio explicitly.'
+                    : '不同生图模型对权重语法和词序敏感度不同；若生成结果出现偏差，可精简重复修饰词并显式指定画幅比例。'}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {relatedPrompts.length > 0 && (
+            <div className="mt-8">
+              <h2 className="text-lg font-bold text-zinc-900 mb-4">
+                {isEnglish ? `Related ${category} Prompts` : `更多「${category}」相关提示词`}
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {relatedPrompts.map((item) => {
+                  const itemTitle = isEnglish ? (item.titleEn || item.title) : item.title;
+                  const itemCat = isEnglish ? (item.categoryEn || item.category) : item.category;
+                  return (
+                    <Link
+                      key={item.id}
+                      href={`/prompts/${item.id}`}
+                      className="group rounded-xl apple-glass-card p-4"
+                    >
+                      <div className="text-xs text-zinc-400 mb-1">{itemCat}</div>
+                      <div className="font-semibold text-sm text-zinc-900 group-hover:text-[#e52129] transition-colors line-clamp-2">
+                        {itemTitle}
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </section>
       </div>
       <style>{`

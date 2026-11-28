@@ -99,10 +99,10 @@ export default async function BlogListPage({ params }: PageProps) {
   return (
     <>
       <PageViewTracker path={`/${locale}/blog`} />
-      <main className="bg-background min-h-[calc(100vh-4rem)]">
+      <main className="min-h-[calc(100vh-4rem)]">
         <BlogHeroTypewriter phrases={phrases} />
 
-        <div className="max-w-4xl mx-auto px-6">
+        <div className="container mx-auto px-4">
           {blogs.length === 0 ? (
             <div className="flex flex-col items-center justify-center min-h-[40vh] text-center">
               <p className="text-2xl font-semibold text-foreground mb-2">
@@ -129,7 +129,7 @@ export default async function BlogListPage({ params }: PageProps) {
                     ].join(' ')}
                   >
                     <div
-                      className="group relative block py-8 px-4 transition-all duration-300 hover:bg-white hover:shadow-md hover:-translate-y-0.5 -mx-4 rounded-lg"
+                      className="group relative block py-8 px-4 transition-all duration-300 hover:bg-white/75 hover:backdrop-blur-md hover:shadow-lg hover:-translate-y-1 -mx-4 rounded-2xl"
                     >
                       {/* 第一层：标题（hover 时变品牌红） */}
                       <h2 className="text-xl md:text-2xl font-bold tracking-tight text-foreground transition-all duration-300 group-hover:text-[#e52129]">

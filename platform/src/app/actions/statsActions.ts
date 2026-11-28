@@ -57,7 +57,7 @@ export async function toggleLike(promptId: string) {
   }
 }
 
-export async function incrementViews(promptId: string, path: string = '') {
+export async function incrementViews(promptId: string, _path: string = '') {
   if (!promptId) return;
 
   const cookieStore = await cookies();

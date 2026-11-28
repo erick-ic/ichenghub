@@ -23,18 +23,18 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     metadataBase: new URL(base),
     title: {
       template: isEn
-        ? '%s | iChengHub: AI Tools, Prompts, Navigation & Tech Blog'
-        : '%s | iChengHub 热荐工坊：AI 工具 · 爆款提示词 · 效率导航 · 技术博客',
+        ? '%s | iChengHub'
+        : '%s | iChengHub 热荐工坊',
       default: isEn
-        ? 'iChengHub | AI Tools Portal, Prompts, Navigation & Tech Blog'
-        : 'iChengHub 热荐工坊 | AI 工具门户 · 爆款提示词 · 效率导航 · 技术博客',
+        ? 'iChengHub | Privacy-First Browser Tools, Practical Guides & Tech Blog'
+        : 'iChengHub 热荐工坊 | 隐私优先在线工具 · 实用指南 · 效率导航 · 技术博客',
     },
     description: isEn
-      ? 'iChengHub is a premium portal empowering digital creators. Explore self-developed AI tools, viral prompt templates, essential efficiency directories, and professional technical blogs.'
-      : 'iChengHub（热荐工坊）是专为开发者与创造者打造的 AI 门户系统。提供自研 AI 工具、爆款图像提示词模板、全网热门效率网站导航、以及涵盖 Go/Next.js 等前沿技术的独立技术博客专栏。',
+      ? 'Discover practical browser-based tools, carefully reviewed digital resources, straightforward guides, and technical articles designed for privacy-conscious everyday work.'
+      : 'iChengHub（热荐工坊）提供浏览器本地处理的实用在线工具、人工筛选的数字资源导航、原创实战指南与技术博客，助力更高效、更注重隐私的数字工作流。',
     keywords: isEn
-      ? ['AI Tools', 'AI Prompts', 'Prompt Templates', 'AI Productivity', 'Tech Blog', 'iChengHub']
-      : ['AI工具', '提示词', '效率导航', '技术博客', 'iChengHub', '热荐工坊'],
+      ? ['Browser Tools', 'Local Image Compressor', 'Shape Cropper', 'QR Code Generator', 'AI Productivity', 'Tech Blog', 'iChengHub']
+      : ['在线工具', '本地图片压缩', '形状裁剪', '二维码生成', '实用指南', '效率导航', '技术博客', 'iChengHub'],
     authors: [{ name: isEn ? 'Heguang Studio' : '和光工作室' }],
     alternates: {
       canonical: canonical,
@@ -45,10 +45,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       },
     },
     openGraph: {
-      title: isEn ? 'iChengHub | AI Tools, Prompts, Navigation & Tech Blog' : 'iChengHub 热荐工坊 | AI 工具门户',
+      title: isEn ? 'iChengHub | Privacy-First Browser Tools & Guides' : 'iChengHub 热荐工坊 | 隐私优先在线工具与实用指南',
       description: isEn
-        ? 'Self-developed AI tools, viral prompts, curated navigation, and technical blogs for digital creators.'
-        : '自研 AI 工具、爆款提示词模板、全网热门导航与深度技术博客。',
+        ? 'Practical browser-based utilities, reviewed digital resources, and technical guides.'
+        : '浏览器本地处理工具、实用效率指南、精选数字资源与原创技术博客。',
       url: canonical,
       siteName: isEn ? 'iChengHub' : '热荐工坊',
       locale: isEn ? 'en_US' : 'zh_CN',
@@ -57,10 +57,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     },
     twitter: {
       card: 'summary_large_image',
-      title: isEn ? 'iChengHub | AI Tools & Tech Blog' : 'iChengHub 热荐工坊',
+      title: isEn ? 'iChengHub | Practical Tools & Guides' : 'iChengHub 热荐工坊',
       description: isEn
-        ? 'Premium AI portal: self-developed tools, viral prompts, curated navigation, and technical blogs.'
-        : 'AI 门户系统：自研工具 · 爆款提示词 · 效率导航 · 技术博客。',
+        ? 'Browser-based tools, practical guides, reviewed resources, and technical blogs.'
+        : '隐私优先在线工具、实用指南、精选导航与技术博客。',
       images: [ogImage.url],
     },
     robots: {

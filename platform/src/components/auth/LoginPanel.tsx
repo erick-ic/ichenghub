@@ -15,7 +15,7 @@ interface LoginPanelProps {
 // 登录卡片 Client Component：使用 useTranslations() 取文案。
 // Next.js 14 不允许 Client Component import Server Component，
 // 因此 LoginPanel 必须也是 client。signInAction 通过独立 'use server' 文件调用。
-export default function LoginPanel({ locale, redirectTo, error, mounted }: LoginPanelProps) {
+export default function LoginPanel({ locale: _locale, redirectTo, error, mounted }: LoginPanelProps) {
   const t = useTranslations('Profile.login');
 
   // 仅启用 enabled = true 的 Provider（当前只有 GitHub）

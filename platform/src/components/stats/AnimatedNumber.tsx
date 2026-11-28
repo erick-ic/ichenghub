@@ -10,13 +10,11 @@ interface AnimatedNumberProps {
 
 export default function AnimatedNumber({ value, duration = 1500, className = '' }: AnimatedNumberProps) {
   const [displayValue, setDisplayValue] = useState(0)
-  const [isAnimating, setIsAnimating] = useState(false)
   const prevValueRef = useRef(0)
 
   useEffect(() => {
     if (value === prevValueRef.current) return
     
-    setIsAnimating(true)
     const startValue = prevValueRef.current
     const endValue = value
     const startTime = performance.now()
@@ -34,7 +32,6 @@ export default function AnimatedNumber({ value, duration = 1500, className = '' 
       if (progress < 1) {
         requestAnimationFrame(animate)
       } else {
-        setIsAnimating(false)
         prevValueRef.current = endValue
       }
     }

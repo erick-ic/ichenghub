@@ -56,7 +56,7 @@ export default function CategoryContent({ categories, isEnglish, t }: CategoryCo
       {categories.length === 0 ? (
         <EmptyState t={t} />
       ) : (
-        <div className="space-y-12">
+        <div className="space-y-9 md:space-y-10">
           {categories.map((category) => (
             <div
               key={category.categoryName}

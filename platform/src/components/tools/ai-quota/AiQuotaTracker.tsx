@@ -523,7 +523,7 @@ export default function AiQuotaTracker() {
   // ===== 挂载前骨架：避免 Hydration 不匹配 =====
   if (!mounted) {
     return (
-      <div className={`${focusStyles.scope} bg-[#f5f5f7] min-h-screen pt-12 md:pt-16 px-4 sm:px-12 pb-4 sm:pb-12`}>
+      <div className={`${focusStyles.scope} container mx-auto min-h-screen pt-8 md:pt-10 px-4 pb-4 sm:pb-12`}>
         <div className="h-8 w-48 bg-zinc-200 rounded animate-pulse" />
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6 mt-6 sm:mt-8">
           {[0, 1].map((i) => (
@@ -541,13 +541,13 @@ export default function AiQuotaTracker() {
   }
 
   return (
-    <div className={`${focusStyles.scope} bg-[#f5f5f7] min-h-screen pt-12 md:pt-16 px-4 sm:px-12 pb-4 sm:pb-12`}>
+    <div className={`${focusStyles.scope} container mx-auto min-h-screen pt-8 md:pt-10 px-4 pb-4 sm:pb-12`}>
       {/* ===== 顶部标题区 ===== */}
       <header className="text-center mb-10">
-        <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-zinc-900">
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-900">
           {t('title')}
         </h1>
-        <p className="text-base md:text-lg text-zinc-500 max-w-3xl mx-auto mt-3 lg:whitespace-nowrap">
+        <p className="text-base md:text-lg text-zinc-500 mx-auto mt-3 xl:whitespace-nowrap">
           {t('description')}
         </p>
       </header>

@@ -13,7 +13,7 @@ const getEnvValue = (value: string | undefined): string => {
   return value.replace(/^["']|["']$/g, '')
 }
 
-export async function login(state: LoginState, formData: FormData): Promise<LoginState> {
+export async function login(_state: LoginState, formData: FormData): Promise<LoginState> {
   await new Promise((resolve) => setTimeout(resolve, 1500))
 
   const username = formData.get('username') as string

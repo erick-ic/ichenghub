@@ -21,6 +21,7 @@ type SessionUser = {
 };
 
 const SESSION_AVATAR_STORAGE_KEY = 'ichenghub.session-avatar';
+const SESSION_ACTIVE_STORAGE_KEY = 'ichenghub.session-active';
 
 export default function ClientLayout({ children, locale }: ClientLayoutProps) {
   const pathname = usePathname();
@@ -34,25 +35,73 @@ export default function ClientLayout({ children, locale }: ClientLayoutProps) {
     document.documentElement.lang = locale;
   }, [locale]);
 
+  // 路由切换时（无锚点 hash）立即回到页面顶部，避免受历史滚动位置或 smooth 滚动动画残留影响。
+  useEffect(() => {
+    if (typeof window === 'undefined' || window.location.hash) return;
+    const scrollTop = () => {
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior });
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    };
+    scrollTop();
+    const rafId = window.requestAnimationFrame(scrollTop);
+    return () => window.cancelAnimationFrame(rafId);
+  }, [pathname]);
+
   // 导航栏只需要展示登录状态和头像。将会话读取放到客户端，避免公共 layout
   // 在服务端读取 Cookie；页面是否缓存仍由各自的数据获取策略决定。
   useEffect(() => {
     let active = true;
 
+    const syncSessionDom = (user: SessionUser | null) => {
+      try {
+        if (user) {
+          window.localStorage.setItem(SESSION_ACTIVE_STORAGE_KEY, '1');
+          document.documentElement.classList.add('has-session-user');
+          if (user.image) {
+            window.localStorage.setItem(SESSION_AVATAR_STORAGE_KEY, user.image);
+            document.documentElement.classList.add('has-session-avatar');
+            document.documentElement.style.setProperty(
+              '--session-avatar-image',
+              `url("${encodeURI(user.image).replace(/"/g, '%22')}")`,
+            );
+          } else {
+            window.localStorage.removeItem(SESSION_AVATAR_STORAGE_KEY);
+            document.documentElement.classList.remove('has-session-avatar');
+            document.documentElement.style.removeProperty('--session-avatar-image');
+          }
+        } else {
+          window.localStorage.removeItem(SESSION_ACTIVE_STORAGE_KEY);
+          window.localStorage.removeItem(SESSION_AVATAR_STORAGE_KEY);
+          document.documentElement.classList.remove('has-session-user', 'has-session-avatar');
+          document.documentElement.style.removeProperty('--session-avatar-image');
+        }
+      } catch {
+        // 本地缓存只是视觉优化，失败时不影响会话状态。
+      }
+    };
+
     const handleSessionChanged = (event: Event) => {
       const customEvent = event as CustomEvent<SessionUser | null>;
       // 使当前尚未完成的会话请求失效，避免退出后被旧响应重新写回登录态。
       active = false;
-      setSessionUser(customEvent.detail ?? null);
+      const nextUser = customEvent.detail ?? null;
+      setSessionUser(nextUser);
+      syncSessionDom(nextUser);
       setSessionResolved(true);
     };
 
     window.addEventListener('ichenghub:session-changed', handleSessionChanged);
 
-    // React 接管页面后同步继承 head 脚本已经用于首帧的头像状态。
+    // React 接管页面后同步继承 head 脚本已经用于首帧的登录与头像状态。
     try {
       const cachedAvatar = window.localStorage.getItem(SESSION_AVATAR_STORAGE_KEY);
-      if (cachedAvatar) setSessionUser({ image: cachedAvatar });
+      const cachedActive = window.localStorage.getItem(SESSION_ACTIVE_STORAGE_KEY) === '1';
+      if (cachedAvatar) {
+        setSessionUser({ image: cachedAvatar });
+      } else if (cachedActive) {
+        setSessionUser({ image: null });
+      }
     } catch {
       // 本地缓存不可用时继续请求真实会话。
     }
@@ -67,23 +116,7 @@ export default function ClientLayout({ children, locale }: ClientLayoutProps) {
 
         const user = session?.user ?? null;
         setSessionUser(user);
-
-        try {
-          if (user?.image) {
-            window.localStorage.setItem(SESSION_AVATAR_STORAGE_KEY, user.image);
-            document.documentElement.classList.add('has-session-avatar');
-            document.documentElement.style.setProperty(
-              '--session-avatar-image',
-              `url("${encodeURI(user.image).replace(/"/g, '%22')}")`,
-            );
-          } else {
-            window.localStorage.removeItem(SESSION_AVATAR_STORAGE_KEY);
-            document.documentElement.classList.remove('has-session-avatar');
-            document.documentElement.style.removeProperty('--session-avatar-image');
-          }
-        } catch {
-          // 本地缓存只是视觉优化，失败时不影响会话状态。
-        }
+        syncSessionDom(user);
         setSessionResolved(true);
       })
       .catch(() => {
@@ -114,7 +147,7 @@ export default function ClientLayout({ children, locale }: ClientLayoutProps) {
   };
 
   return (
-    <div className={`flex min-h-screen flex-col ${isProfilePath ? 'bg-[#f6f6f4]' : 'bg-background'}`}>
+    <div className={`flex min-h-screen flex-col ${isProfilePath ? 'bg-[#f6f6f4]' : 'apple-glass-bg'}`}>
       {!hideChrome && (
         <div className={chromePending ? 'profile-session-pending' : 'contents'}>
           <Navbar locale={locale} isLoggedIn={isLoggedIn} userImage={userImage} />

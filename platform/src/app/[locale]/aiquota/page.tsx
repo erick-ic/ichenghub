@@ -1,7 +1,10 @@
 import { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
+import { Link } from '@/navigation';
 import AiQuotaTracker from '@/components/tools/ai-quota/AiQuotaTracker';
 import PageViewTracker from '@/components/PageViewTracker';
+import ToolGuideSection from '@/components/tools/ToolGuideSection';
+import { getToolGuide } from '@/data/tool-guides';
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -40,11 +43,33 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default async function AiQuotaPage() {
+export default async function AiQuotaPage({ params }: Props) {
+  const { locale } = await params;
+  const isEn = locale === 'en';
+  const guide = getToolGuide(locale, 'aiquota');
+
   return (
     <>
       <PageViewTracker path="/aiquota" resourceType="TOOL" />
-      <AiQuotaTracker />
+      <div>
+        <div className="container mx-auto px-4 pt-8">
+          <nav className="flex items-center gap-2 text-xs sm:text-sm text-zinc-500">
+            <Link href="/" className="hover:text-zinc-900 transition-colors">
+              {isEn ? 'Home' : '首页'}
+            </Link>
+            <span className="text-zinc-400">/</span>
+            <Link href="/tools" className="hover:text-zinc-900 transition-colors">
+              {isEn ? 'Tools' : '工具分类'}
+            </Link>
+            <span className="text-zinc-400">/</span>
+            <span className="text-zinc-900 font-medium">{guide.name}</span>
+          </nav>
+        </div>
+        <AiQuotaTracker />
+        <section className="container mx-auto px-4 pb-16">
+          <ToolGuideSection guide={guide} locale={locale} />
+        </section>
+      </div>
     </>
   );
 }

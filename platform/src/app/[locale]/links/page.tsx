@@ -1,5 +1,5 @@
 import { Metadata } from 'next';
-import { PackageOpen } from 'lucide-react';
+import { PackageOpen, ShieldCheck } from 'lucide-react';
 import prisma from '@/lib/prisma';
 import { SidebarNav } from '@/components/SidebarNav';
 import { ToolCard } from '@/components/navigation/ToolCard';
@@ -151,12 +151,14 @@ export default async function LinksPage({ params }: { params: Promise<{ locale: 
         />
         
         <div className="mt-6">
-          <h1 className="text-xl font-bold text-gray-900 mb-2">
-            {t('title')}
-          </h1>
-          <p className="text-gray-500 mb-6">
-            {t('description')}
-          </p>
+          <header className="pb-4 mb-6 border-b border-zinc-200/70">
+            <h1 className="text-2xl font-bold tracking-tight text-zinc-900 mb-1.5">
+              {t('title')}
+            </h1>
+            <p className="text-sm text-zinc-500 leading-relaxed">
+              {t('description')}
+            </p>
+          </header>
 
           {tools.length === 0 ? (
             <EmptyState t={t} />
@@ -204,14 +206,14 @@ export default async function LinksPage({ params }: { params: Promise<{ locale: 
           </aside>
 
           <main className="flex-1 min-w-0">
-            <div className="mb-6">
-              <h1 className="text-2xl font-bold text-gray-900 mb-2">
+            <header className="pb-5 mb-7 border-b border-zinc-200/70">
+              <h1 className="text-2xl md:text-[28px] font-bold tracking-tight text-zinc-900 mb-2">
                 {t('title')}
               </h1>
-              <p className="text-gray-500">
+              <p className="text-sm md:text-base text-zinc-500 leading-relaxed">
                 {t('description')}
               </p>
-            </div>
+            </header>
 
             {tools.length === 0 ? (
               <EmptyState t={t} />
@@ -244,6 +246,18 @@ export default async function LinksPage({ params }: { params: Promise<{ locale: 
                 ))}
               </div>
             )}
+
+            <section className="mt-10 rounded-2xl apple-glass-card p-6 space-y-2.5">
+              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-emerald-700">
+                <ShieldCheck className="w-4 h-4" />
+                <span>{isEnglish ? 'Directory Quality & Privacy Note' : '导航筛选与隐私提示'}</span>
+              </div>
+              <p className="text-sm text-zinc-600 leading-relaxed">
+                {isEnglish
+                  ? 'Resources listed on this page are verified manually for active official links and practical utility. When visiting external websites, please review their terms and privacy policies before uploading sensitive files.'
+                  : '本页收录的外部效率资源均经人工核实官方链接与实用价值，并定期清理失效站点。访问外部网站时，请注意查看对方隐私条款，避免随意上传敏感文件。'}
+              </p>
+            </section>
           </main>
         </div>
       </div>

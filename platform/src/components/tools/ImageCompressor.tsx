@@ -23,7 +23,7 @@ interface ImagePreviewProps {
   onPreview: () => void;
 }
 
-const ImagePreview = memo<ImagePreviewProps>(({ url, title, size, formatFileSize, onPreview }) => (
+const ImagePreview = memo<ImagePreviewProps>(({ url, title, onPreview }) => (
   <div className="aspect-video bg-gray-50 rounded-xl overflow-hidden flex items-center justify-center relative cursor-pointer group">
     <Image
       src={url}
@@ -343,7 +343,8 @@ export default function ImageCompressor({ toolId = null }: ImageCompressorProps)
     : false;
 
   return (
-    <div className="max-w-2xl mx-auto" onPaste={handlePaste}>
+    <div onPaste={handlePaste}>
+      <div className="max-w-2xl mx-auto">
       {!originalImage ? (
         <div
           className={`
@@ -597,7 +598,9 @@ export default function ImageCompressor({ toolId = null }: ImageCompressorProps)
         </div>
       )}
 
-      <p className="text-center text-xs text-gray-400 mt-8">
+      </div>
+
+      <p className="text-center text-xs text-gray-400 mt-8 lg:whitespace-nowrap">
         {t('privacyNotice')}
       </p>
     </div>

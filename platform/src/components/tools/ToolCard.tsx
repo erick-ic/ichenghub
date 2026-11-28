@@ -60,7 +60,7 @@ export default function ToolCard({ tool, isEnglish }: ToolCardProps) {
       <div className="group relative">
         <div
           onClick={handleClick}
-          className="flex items-center gap-4 p-4 bg-white rounded-xl border border-gray-100 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer"
+          className="flex items-center gap-4 p-4 rounded-xl apple-glass-card cursor-pointer"
         >
           <ToolIcon url={tool.url || ''} title={tool.name} iconUrl={tool.logoUrl} />
 
@@ -76,7 +76,7 @@ export default function ToolCard({ tool, isEnglish }: ToolCardProps) {
           <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-primary group-hover:translate-x-1 transition-all flex-shrink-0" />
         </div>
 
-        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3 bg-zinc-900 text-white text-sm rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50 shadow-xl">
+        <div className="hidden md:block absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3 bg-zinc-900 text-white text-sm rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50 shadow-xl pointer-events-none">
           <div className="font-semibold mb-1">{title}</div>
           <div className="text-zinc-300 text-xs leading-relaxed">{description}</div>
           <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-zinc-900"></div>

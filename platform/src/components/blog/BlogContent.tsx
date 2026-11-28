@@ -304,10 +304,7 @@ function CheckIcon() {
   );
 }
 
-function BlogContentComponent({ content, headings }: BlogContentProps) {
-  const h2List = headings.filter((h) => h.level === 2);
-  const h3List = headings.filter((h) => h.level === 3);
-
+function BlogContentComponent({ content, headings: _headings }: BlogContentProps) {
   const h2CounterRef = useRef(0);
   const h3CounterRef = useRef(0);
 

@@ -1,166 +1,198 @@
 'use client';
 
-import { useState } from 'react';
 import { Link } from '@/navigation';
-import QRCode from 'react-qr-code';
-import { useTranslations } from 'next-intl';
-import { Sparkles, ShieldCheck, Wand2, MessageCircle, BookOpen, Mail, Check } from 'lucide-react';
-import { copyToClipboard } from '@/lib/copyUtils';
+import { useLocale, useTranslations } from 'next-intl';
+import {
+  Sparkles,
+  ShieldCheck,
+  Wrench,
+  BookOpenCheck,
+  FileText,
+  Mail,
+  ArrowRight,
+} from 'lucide-react';
 
 export default function AboutView() {
   const t = useTranslations('AboutPage');
-  const [showToast, setShowToast] = useState(false);
+  const locale = useLocale();
+  const isEn = locale === 'en';
 
-  const handleCopyEmail = async () => {
-    const email = 'ichenghub@gmail.com';
-    const success = await copyToClipboard(email);
-    if (success) {
-      setShowToast(true);
-      setTimeout(() => setShowToast(false), 2000);
-    }
-  };
+  const policyLinks = isEn
+    ? [
+        {
+          href: '/editorial-policy',
+          title: 'Editorial Policy & Review Methodology',
+          desc: 'How we write guides, verify tool claims, and review third-party directory submissions.',
+          icon: BookOpenCheck,
+        },
+        {
+          href: '/privacy',
+          title: 'Privacy Policy',
+          desc: 'Details on browser-local processing, optional OAuth sign-in, analytics, and Google AdSense.',
+          icon: ShieldCheck,
+        },
+        {
+          href: '/terms',
+          title: 'Terms of Service',
+          desc: 'Usage boundaries for browser utilities, external links, and site content.',
+          icon: FileText,
+        },
+        {
+          href: '/contact',
+          title: 'Contact Us',
+          desc: 'Report bugs, request corrections, or get in touch with Heguang Studio directly.',
+          icon: Mail,
+        },
+      ]
+    : [
+        {
+          href: '/editorial-policy',
+          title: '内容编辑规范与审核标准',
+          desc: '了解我们如何编写核验指南、审核第三方工具导航及处理错误反馈。',
+          icon: BookOpenCheck,
+        },
+        {
+          href: '/privacy',
+          title: '隐私政策',
+          desc: '如实说明浏览器本地处理机制、可选 OAuth 登录、匿名统计与 Google AdSense 说明。',
+          icon: ShieldCheck,
+        },
+        {
+          href: '/terms',
+          title: '服务条款',
+          desc: '说明在线工具使用边界、第三方链接免责与知识产权归属。',
+          icon: FileText,
+        },
+        {
+          href: '/contact',
+          title: '联系我们',
+          desc: '反馈工具 Bug、内容纠错、隐私咨询或直接联系和光工作室。',
+          icon: Mail,
+        },
+      ];
 
   return (
-    <div className="min-h-screen bg-[#f5f5f7]">
-      <div className="max-w-4xl mx-auto py-20 px-6">
-        {/* Hero 区与工作室故事 */}
-        <div className="mb-16">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-50 text-[#e52129] text-sm font-medium mb-6">
-            <Sparkles size={16} />
+    <div className="min-h-screen">
+      <div className="container mx-auto px-4 py-8 md:py-12">
+        {/* Hero & Studio Story */}
+        <div className="mb-10">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-50 text-[#e52129] text-xs font-semibold mb-4">
+            <Sparkles className="w-3.5 h-3.5" />
             <span>{t('badge')}</span>
           </div>
-          <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-gray-900 mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight leading-snug text-gray-900 mb-6">
             {t('title')}
           </h1>
 
-          <div className="relative border-l-4 border-[#e52129]/20 pl-6 space-y-6 text-gray-600 text-lg leading-relaxed">
-            <p className="text-xl text-gray-800 font-medium">
-              {t('subtitle')}
+          <div className="relative border-l-4 border-[#e52129]/20 pl-4 sm:pl-6 space-y-5 text-gray-600 text-[15px] sm:text-base md:text-lg leading-[1.85]">
+            <p className="text-base sm:text-lg md:text-xl text-gray-700 font-medium leading-[1.7]">
+              {t.rich('subtitle', {
+                strong: (chunks) => <strong className="font-semibold text-gray-900">{chunks}</strong>,
+                highlight: (chunks) => (
+                  <span className="font-semibold text-gray-900 underline decoration-[#e52129]/40 decoration-2 underline-offset-4">
+                    {chunks}
+                  </span>
+                ),
+              })}
             </p>
             <p>
-              {t('story1')}
+              {t.rich('story1', {
+                strong: (chunks) => <strong className="font-semibold text-gray-900">{chunks}</strong>,
+                highlight: (chunks) => (
+                  <span className="font-semibold text-gray-900 underline decoration-[#e52129]/40 decoration-2 underline-offset-4">
+                    {chunks}
+                  </span>
+                ),
+              })}
             </p>
             <p>
-              {t('story2')}
+              {t.rich('story2', {
+                strong: (chunks) => <strong className="font-semibold text-gray-900">{chunks}</strong>,
+                highlight: (chunks) => (
+                  <span className="font-semibold text-gray-900 underline decoration-[#e52129]/40 decoration-2 underline-offset-4">
+                    {chunks}
+                  </span>
+                ),
+              })}
             </p>
-            <p className="font-medium text-gray-900 italic mt-4">
-              {t('signature')}
-            </p>
+            <p className="font-medium text-gray-900 italic mt-4">{t('signature')}</p>
           </div>
         </div>
 
-        {/* 核心价值 Bento 卡片 */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {/* 核心理念 */}
-          <div className="md:col-span-2 p-8 bg-white border border-gray-100 rounded-3xl shadow-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
-            <div className="bg-red-50 w-12 h-12 rounded-2xl flex items-center justify-center text-[#e52129] mb-6">
+        {/* Core Pillars */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6 mb-10">
+          <div className="p-5 sm:p-8 apple-glass-card rounded-2xl sm:rounded-3xl">
+            <div className="bg-emerald-50 w-11 h-11 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center text-emerald-700 mb-4 sm:mb-5">
               <ShieldCheck size={24} />
             </div>
-            <h3 className="text-xl font-bold mb-3">{t('feature1Title')}</h3>
-            <p className="text-gray-500 leading-relaxed">
+            <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-2.5 sm:mb-3 leading-[1.4]">
+              {isEn ? 'Privacy-Conscious Browser Tools' : '隐私优先的浏览器本地工具'}
+            </h2>
+            <p className="text-gray-600 text-[15px] md:text-base leading-[1.85]">
+              {isEn
+                ? 'Our self-developed utilities—Image Compressor, Shape Cropper, QR Code Generator, and AI Quota Tracker—run locally in your browser using Canvas, Web Workers, and localStorage so your everyday files stay on your device.'
+                : '自研的图片压缩器、形状裁剪器、二维码生成器与 AI 额度追踪器均基于浏览器本地 Canvas、Web Worker 与 localStorage 构建，尽可能避免不必要的文件上传。'}
+            </p>
+          </div>
+
+          <div className="p-5 sm:p-8 apple-glass-card rounded-2xl sm:rounded-3xl">
+            <div className="bg-red-50 w-11 h-11 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center text-[#e52129] mb-4 sm:mb-5">
+              <Wrench size={24} />
+            </div>
+            <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-2.5 sm:mb-3 leading-[1.4]">{t('feature1Title')}</h2>
+            <p className="text-gray-600 text-[15px] md:text-base leading-[1.85]">
               {t('feature1Desc')}
             </p>
           </div>
-
-          {/* 实战提示词 */}
-          <div className="p-8 bg-gray-900 text-white rounded-3xl shadow-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
-            <Wand2 className="text-red-400 mb-6" size={24} />
-            <h3 className="text-xl font-bold mb-3 text-white">{t('feature2Title')}</h3>
-            <p className="text-gray-400 text-sm">{t('feature2Desc')}</p>
-          </div>
         </div>
 
-        {/* 热荐工坊 自媒体引流区 */}
-        {/* <div className="mt-16">
-          <h3 className="text-2xl font-bold mb-6 text-gray-900">{t('socialTitle')}</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-12">
-            <div className="flex items-center justify-between p-6 sm:p-8 bg-white border border-gray-100 rounded-[2rem] hover:shadow-lg hover:shadow-green-500/5 hover:border-green-100 transition-all duration-300 group">
-              <div className="flex flex-col pr-4">
-                <div className="flex items-center gap-2.5 mb-3 text-green-600">
-                  <div className="w-8 h-8 rounded-full bg-green-50 flex items-center justify-center">
-                    <MessageCircle size={16} strokeWidth={2.5} />
-                  </div>
-                  <span className="text-sm font-bold tracking-wide">{t('wechatLabel')}</span>
-                </div>
-                <h4 className="text-2xl font-extrabold text-gray-900 mb-2">{t('wechatName')}</h4>
-                <p className="text-sm text-gray-500 leading-relaxed">
-                  {t('wechatDesc')}
-                </p>
-              </div>
-              <div className="flex-shrink-0 relative w-24 h-24 sm:w-28 sm:h-28 bg-white rounded-2xl p-2 border border-gray-100 group-hover:scale-105 transition-transform duration-300 shadow-sm flex items-center justify-center">
-                <QRCode
-                  value="http://weixin.qq.com/r/mp/-SPP1z-EZ2IYrXu093bv"
-                  size={256}
-                  style={{ height: "auto", maxWidth: "100%", width: "100%" }}
-                  viewBox={`0 0 256 256`}
-                  bgColor="#ffffff"
-                  fgColor="#000000"
-                  level="M"
-                />
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between p-6 sm:p-8 bg-white border border-gray-100 rounded-[2rem] hover:shadow-lg hover:shadow-red-500/5 hover:border-red-100 transition-all duration-300 group">
-              <div className="flex flex-col pr-4">
-                <div className="flex items-center gap-2.5 mb-3 text-[#ff2442]">
-                  <div className="w-8 h-8 rounded-full bg-red-50 flex items-center justify-center">
-                    <BookOpen size={16} strokeWidth={2.5} />
-                  </div>
-                  <span className="text-sm font-bold tracking-wide">{t('xiaohongshuLabel')}</span>
-                </div>
-                <h4 className="text-2xl font-extrabold text-gray-900 mb-2">{t('xiaohongshuName')}</h4>
-                <p className="text-sm text-gray-500 leading-relaxed">
-                  {t('xiaohongshuDesc')}
-                </p>
-              </div>
-              <div className="flex-shrink-0 relative w-24 h-24 sm:w-28 sm:h-28 bg-white rounded-2xl p-2 border border-gray-100 group-hover:scale-105 transition-transform duration-300 shadow-sm flex items-center justify-center">
-                <QRCode
-                  value="http://xhslink.com/m/1zwWrtMsiTL"
-                  size={256}
-                  style={{ height: "auto", maxWidth: "100%", width: "100%" }}
-                  viewBox={`0 0 256 256`}
-                  bgColor="#ffffff"
-                  fgColor="#000000"
-                  level="M"
-                />
-              </div>
-            </div>
-          </div>
-        </div> */}
-
-        {/* 底部共建按钮 */}
-        <div className="mt-16 bg-gray-50 rounded-3xl p-10 flex flex-col items-center text-center transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
-          <p className="text-gray-600 leading-relaxed mb-6">
-            {t('ctaText')}
+        {/* Transparency & Policies Grid */}
+        <section className="mb-10">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2.5">
+            {isEn ? 'Transparency & Site Policies' : '平台规范与透明信息'}
+          </h2>
+          <p className="text-[15px] md:text-base text-gray-600 leading-[1.8] mb-6">
+            {isEn
+              ? 'To keep iChengHub sustainable as an independent project, we display non-intrusive advertisements that stay out of the way of core tool workflows.'
+              : '作为独立维护的长期项目，本站会以克制、不干扰核心工具操作的方式展示广告以支持服务器与研发成本，并公开完整的编辑与隐私政策。'}
           </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {policyLinks.map((item) => {
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="group flex items-start gap-4 p-4 sm:p-5 apple-glass-card rounded-2xl"
+                >
+                  <div className="w-10 h-10 rounded-xl bg-gray-100 text-gray-700 flex items-center justify-center shrink-0 group-hover:bg-red-50 group-hover:text-[#e52129] transition-colors">
+                    <Icon className="w-5 h-5" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="font-semibold text-gray-900 group-hover:text-[#e52129] transition-colors flex items-center justify-between gap-2">
+                      <span>{item.title}</span>
+                      <ArrowRight className="w-4 h-4 shrink-0 text-gray-400 group-hover:text-[#e52129]" />
+                    </div>
+                    <p className="text-sm text-gray-500 mt-1.5 leading-[1.75]">
+                      {item.desc}
+                    </p>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* Bottom CTA */}
+        <div className="apple-glass rounded-2xl sm:rounded-3xl p-6 sm:p-8 md:p-10 flex flex-col items-center text-center">
+          <p className="text-[15px] sm:text-base text-gray-600 leading-[1.8] mb-6 max-w-xl">{t('ctaText')}</p>
           <Link
             href="/submit"
             className="inline-flex items-center px-8 py-3 bg-[#e52129] text-white rounded-full font-medium hover:bg-red-600 transition-all shadow-md"
           >
             {t('ctaButton')}
           </Link>
-
-          {/* 联系方式 */}
-          <div className="flex flex-wrap items-center justify-center gap-6 mt-10 pt-8 border-t border-gray-200">
-            <button
-              onClick={handleCopyEmail}
-              className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors cursor-pointer"
-            >
-              <Mail className="w-5 h-5" />
-              <span>{t('contact')}</span>
-            </button>
-          </div>
         </div>
-
-        {/* Toast 弹窗 */}
-        {showToast && (
-          <div className="fixed inset-0 flex items-center justify-center z-[100] pointer-events-none">
-            <div className="bg-gray-900 text-white px-6 py-3 rounded-full flex items-center gap-2 shadow-lg animate-bounce pointer-events-auto">
-              <Check className="w-5 h-5 text-green-400" />
-              <span>{t('copiedEmail')} <span className="text-gray-300 font-mono">ichenghub@gmail.com</span></span>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

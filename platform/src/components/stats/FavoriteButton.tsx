@@ -136,7 +136,7 @@ export default function FavoriteButton({
       type="button"
       aria-pressed={isFavorited}
       aria-label={ariaLabel}
-      className="relative w-full bg-white/90 backdrop-blur-md border border-zinc-100 rounded-2xl p-5 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 cursor-pointer overflow-hidden h-24 text-left"
+      className="relative w-full bg-white/90 backdrop-blur-md border border-zinc-100 rounded-2xl p-5 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden h-24 text-left"
       onClick={handleFavorite}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}

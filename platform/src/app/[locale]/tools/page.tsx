@@ -1,6 +1,7 @@
 import { Metadata } from 'next';
 import prisma from '@/lib/prisma';
 import { getTranslations } from 'next-intl/server';
+import { ShieldCheck } from 'lucide-react';
 import CategorySidebar from '@/components/tools/CategorySidebar';
 import CategoryContent from '@/components/tools/CategoryContent';
 import MobileCategorySelector from '@/components/tools/MobileCategorySelector';
@@ -139,12 +140,14 @@ export default async function ToolsPage({ params }: { params: Promise<{ locale: 
         />
         
         <div className="mt-6">
-          <h1 className="text-xl font-bold text-gray-900 mb-2">
-            {t('title')}
-          </h1>
-          <p className="text-gray-500 mb-6">
-            {t('description')}
-          </p>
+          <header className="pb-4 mb-6 border-b border-zinc-200/70">
+            <h1 className="text-2xl font-bold tracking-tight text-zinc-900 mb-1.5">
+              {t('title')}
+            </h1>
+            <p className="text-sm text-zinc-500 leading-relaxed">
+              {t('description')}
+            </p>
+          </header>
 
           <CategoryContent 
             categories={displayGroups} 
@@ -166,20 +169,36 @@ export default async function ToolsPage({ params }: { params: Promise<{ locale: 
           </aside>
 
           <main className="flex-1 min-w-0">
-            <div className="mb-6">
-              <h1 className="text-2xl font-bold text-gray-900 mb-2">
+            <header className="pb-5 mb-7 border-b border-zinc-200/70">
+              <h1 className="text-2xl md:text-[28px] font-bold tracking-tight text-zinc-900 mb-2">
                 {t('title')}
               </h1>
-              <p className="text-gray-500">
+              <p className="text-sm md:text-base text-zinc-500 leading-relaxed">
                 {t('description')}
               </p>
-            </div>
+            </header>
 
             <CategoryContent 
               categories={displayGroups} 
               isEnglish={isEnglish} 
               t={t} 
             />
+
+            {/* Editorial Selection & Verification Note */}
+            <section className="mt-10 rounded-2xl apple-glass-card p-6 space-y-2.5">
+              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-emerald-700">
+                <ShieldCheck className="w-4 h-4" />
+                <span>{isEnglish ? 'Curation & Verification Standards' : '工具收录与审核说明'}</span>
+              </div>
+              <h2 className="text-base font-bold text-zinc-900">
+                {isEnglish ? 'How Tools Are Selected for This Directory' : '我们如何筛选并维护这份工具目录'}
+              </h2>
+              <p className="text-sm text-zinc-600 leading-relaxed">
+                {isEnglish
+                  ? 'Every listed tool is manually checked for active official availability, clear practical value, and transparent pricing or free-tier boundaries before publication. External third-party websites are governed by their own privacy policies; for privacy-sensitive image or QR tasks, try our browser-local utilities first.'
+                  : '目录中的每一款工具均需经过人工核验官网可用性、核心使用场景与基础免费/收费边界后才会收录。第三方工具受各自隐私政策约束；如果你需要处理敏感图片或生成静态二维码，建议优先使用本站的浏览器本地自研工具。'}
+              </p>
+            </section>
           </main>
         </div>
       </div>

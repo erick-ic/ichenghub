@@ -18,11 +18,22 @@ html.has-session-avatar .session-default-user {
   display: none;
 }
 
+/* 已登录用户的消息通知图标在 hydration 前由 head 内联脚本恢复显示，避免刷新时闪烁与布局抖动。 */
+.session-notification-bell {
+  display: none;
+}
+
+html.has-session-user .session-notification-bell,
+html.has-session-avatar .session-notification-bell {
+  display: block;
+}
+
 /* Profile 首屏等待会话时：游客保持沉浸式登录页；有缓存会话的用户立即显示页面框架。 */
 .profile-session-pending {
   display: none;
 }
 
+html.has-session-user .profile-session-pending,
 html.has-session-avatar .profile-session-pending {
   display: contents;
 }
@@ -112,6 +123,116 @@ html.has-session-avatar .profile-session-pending {
 /* 额外的平滑滚动优化 */
 html {
   scroll-behavior: smooth;
+}
+
+/* ======== 苹果毛玻璃（Apple Vibrancy / Frosted Glass）视觉体系 ======== */
+.apple-glass-bg {
+  background-color: #f5f5f7;
+  background-image:
+    radial-gradient(at 12% 8%, rgba(229, 33, 41, 0.045) 0px, transparent 42%),
+    radial-gradient(at 88% 12%, rgba(99, 102, 241, 0.055) 0px, transparent 45%),
+    radial-gradient(at 50% 85%, rgba(14, 165, 233, 0.04) 0px, transparent 50%);
+  background-attachment: fixed;
+}
+
+.apple-glass-nav {
+  background-color: rgba(255, 255, 255, 0.72);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  backdrop-filter: saturate(180%) blur(20px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.7) inset;
+  transition: background-color 280ms ease, box-shadow 280ms ease, border-color 280ms ease;
+}
+
+.apple-glass-nav-scrolled {
+  background-color: rgba(255, 255, 255, 0.86);
+  border-bottom-color: rgba(15, 23, 42, 0.08);
+  box-shadow:
+    0 6px 24px rgba(15, 23, 42, 0.06),
+    0 1px 0 rgba(255, 255, 255, 0.85) inset;
+}
+
+.scroll-reveal {
+  transition:
+    opacity 620ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 620ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
+}
+
+.scroll-reveal-hidden {
+  opacity: 0;
+  transform: translate3d(0, 22px, 0) scale(0.985);
+}
+
+.scroll-reveal-visible {
+  opacity: 1;
+  transform: translate3d(0, 0, 0) scale(1);
+}
+
+.apple-glass-footer {
+  background-color: rgba(255, 255, 255, 0.62);
+  -webkit-backdrop-filter: saturate(160%) blur(16px);
+  backdrop-filter: saturate(160%) blur(16px);
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.apple-glass {
+  background-color: rgba(255, 255, 255, 0.76);
+  -webkit-backdrop-filter: saturate(180%) blur(18px);
+  backdrop-filter: saturate(180%) blur(18px);
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);
+}
+
+.apple-glass-card {
+  background-color: rgba(255, 255, 255, 0.76);
+  -webkit-backdrop-filter: saturate(180%) blur(18px);
+  backdrop-filter: saturate(180%) blur(18px);
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);
+  transition: transform 300ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 300ms cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 300ms ease,
+    border-color 300ms ease;
+}
+
+.apple-glass-card:hover {
+  background-color: rgba(255, 255, 255, 0.9);
+  border-color: rgba(15, 23, 42, 0.09);
+  transform: translateY(-0.25rem);
+  box-shadow: 0 14px 32px rgba(15, 23, 42, 0.08);
+}
+
+.dark .apple-glass-bg {
+  background-color: #0a0a0d;
+  background-image:
+    radial-gradient(at 15% 10%, rgba(229, 33, 41, 0.08) 0px, transparent 45%),
+    radial-gradient(at 85% 15%, rgba(99, 102, 241, 0.09) 0px, transparent 45%);
+}
+
+.dark .apple-glass-nav,
+.dark .apple-glass-footer,
+.dark .apple-glass,
+.dark .apple-glass-card {
+  background-color: rgba(24, 24, 28, 0.72);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.dark .apple-glass-card:hover {
+  background-color: rgba(32, 32, 38, 0.86);
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+/* 隐藏横向滚动胶囊等区域的滚动条外观，保留流畅滑动体验 */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 /* 移动端隐藏滚动条外观，保留页面与代码块等区域的正常滚动。 */
@@ -470,6 +591,13 @@ html {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .scroll-reveal,
+  .scroll-reveal-hidden,
+  .scroll-reveal-visible {
+    transition: none;
+    opacity: 1;
+    transform: none;
+  }
   .fade-slide-up {
     animation: none;
     opacity: 1;

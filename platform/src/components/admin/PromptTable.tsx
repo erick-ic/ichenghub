@@ -1,9 +1,9 @@
 "use client"
 
 import { useState } from 'react'
-import { usePathname, useRouter } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { Search, Plus, Pencil, Trash2, ChevronUp, ChevronDown, ArrowUpToLine, Eye, Heart, MessageSquare } from 'lucide-react'
+import { Plus, Pencil, Trash2, ChevronUp, ChevronDown, ArrowUpToLine, Eye, Heart, MessageSquare } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '@/components/ui/dialog'
@@ -38,7 +38,6 @@ interface PromptTableProps {
 }
 
 export function PromptTable({ prompts }: PromptTableProps) {
-  const pathname = usePathname()
   const router = useRouter()
   const [showToast, setShowToast] = useState(false)
   const [toastMessage, setToastMessage] = useState('')

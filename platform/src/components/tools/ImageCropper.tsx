@@ -1473,7 +1473,7 @@ export default function ImageCropper({ toolId = null }: ImageCropperProps) {
           </div>
         </div>
         </div>
-        <p className="mt-8 text-center text-xs text-gray-400">{t('privacyNotice')}</p>
+        <p className="mt-8 text-center text-xs text-gray-400 lg:whitespace-nowrap">{t('privacyNotice')}</p>
         </div>
       ) : (
         <>
@@ -1823,7 +1823,7 @@ export default function ImageCropper({ toolId = null }: ImageCropperProps) {
           </aside>
         </div>
         </div>
-        <p className="mt-8 text-center text-xs text-gray-400">{t('privacyNotice')}</p>
+        <p className="mt-8 text-center text-xs text-gray-400 lg:whitespace-nowrap">{t('privacyNotice')}</p>
         </>
       )}
     </>

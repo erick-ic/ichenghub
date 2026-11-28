@@ -1,5 +1,6 @@
 import { MetadataRoute } from 'next';
 import prisma from '@/lib/prisma';
+import { getAllGuideSlugs } from '@/data/guides';
 
 // 1. 强制动态渲染：确保搜索引擎每次访问都能获取最新的工具和提示词链接
 export const dynamic = 'force-dynamic';
@@ -9,19 +10,28 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = 'https://ichenghub.cn';
   const locales = ['zh', 'en'] as const;
 
-  // 2. 定义基础静态路由
+  // 2. 定义基础静态路由（仅收录具有独立信息价值的规范页面，排除表单类页面如 /submit）
   const staticPaths = [
     { path: '', priority: 1, changeFrequency: 'daily' as const },
-    { path: '/about', priority: 0.8, changeFrequency: 'monthly' as const },
     { path: '/tools', priority: 0.9, changeFrequency: 'daily' as const },
-    { path: '/prompts', priority: 0.9, changeFrequency: 'daily' as const },
-    { path: '/links', priority: 0.7, changeFrequency: 'weekly' as const },
+    { path: '/guides', priority: 0.9, changeFrequency: 'weekly' as const },
     { path: '/blog', priority: 0.9, changeFrequency: 'daily' as const },
+    { path: '/prompts', priority: 0.8, changeFrequency: 'daily' as const },
+    { path: '/links', priority: 0.7, changeFrequency: 'weekly' as const },
+    { path: '/imgcompress', priority: 0.9, changeFrequency: 'monthly' as const },
+    { path: '/imgcrop', priority: 0.9, changeFrequency: 'monthly' as const },
+    { path: '/qrcode', priority: 0.8, changeFrequency: 'monthly' as const },
     { path: '/aiquota', priority: 0.8, changeFrequency: 'weekly' as const },
-    { path: '/imgcompress', priority: 0.8, changeFrequency: 'monthly' as const },
-    { path: '/imgcrop', priority: 0.8, changeFrequency: 'monthly' as const },
-    { path: '/qrcode', priority: 0.7, changeFrequency: 'monthly' as const },
-    { path: '/submit', priority: 0.5, changeFrequency: 'monthly' as const },
+    { path: '/about', priority: 0.7, changeFrequency: 'monthly' as const },
+    { path: '/editorial-policy', priority: 0.6, changeFrequency: 'monthly' as const },
+    { path: '/privacy', priority: 0.5, changeFrequency: 'monthly' as const },
+    { path: '/terms', priority: 0.5, changeFrequency: 'monthly' as const },
+    { path: '/contact', priority: 0.5, changeFrequency: 'monthly' as const },
+    ...getAllGuideSlugs().map((slug) => ({
+      path: `/guides/${slug}`,
+      priority: 0.8,
+      changeFrequency: 'monthly' as const,
+    })),
   ];
 
   const localizedRoutes = (

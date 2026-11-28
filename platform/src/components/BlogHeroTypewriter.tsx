@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import type { MouseEvent } from 'react';
-import { useTranslations, useLocale } from 'next-intl';
+import { useTranslations } from 'next-intl';
 
 interface BlogHeroTypewriterProps {
   phrases: string[];
@@ -10,8 +10,6 @@ interface BlogHeroTypewriterProps {
 
 export default function BlogHeroTypewriter({ phrases }: BlogHeroTypewriterProps) {
   const t = useTranslations('blog');
-  const locale = useLocale();
-  const isEnglish = locale === 'en';
 
   const [text, setText] = useState('');
   const [phraseIndex, setPhraseIndex] = useState(0);

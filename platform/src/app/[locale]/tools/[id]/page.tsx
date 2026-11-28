@@ -1,4 +1,4 @@
-import { Metadata, ResolvingMetadata } from 'next';
+import { Metadata } from 'next';
 import Image from 'next/image';
 import prisma from '@/lib/prisma';
 import { notFound } from 'next/navigation';
@@ -9,8 +9,7 @@ import PageViewTracker from '@/components/PageViewTracker';
 export const revalidate = 0;
 
 export async function generateMetadata(
-  { params }: { params: { id: string; locale: string } },
-  parent: ResolvingMetadata
+  { params }: { params: { id: string; locale: string } }
 ): Promise<Metadata> {
   const { id, locale } = params;
   const tool = await prisma.toolCard.findUnique({ where: { id } });
@@ -70,6 +69,18 @@ export default async function ToolDetailPage({ params }: { params: { id: string;
   const description = isEnglish && tool.descEn ? tool.descEn : tool.desc;
   const category = isEnglish && tool.categoryEn ? tool.categoryEn : tool.category;
 
+  const relatedTools = await prisma.toolCard.findMany({
+    where: {
+      status: 1,
+      category: tool.category,
+      id: { not: tool.id },
+    },
+    orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }],
+    take: 4,
+  });
+
+  const lastVerifiedDate = tool.updatedAt.toISOString().slice(0, 10);
+
   // 结构化数据：仅声明真实可确认的字段，不再输出虚构的评分数据，避免触发搜索引擎的富媒体摘要惩罚
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -95,22 +106,24 @@ export default async function ToolDetailPage({ params }: { params: { id: string;
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }}
       />
 
-      <div className="min-h-screen bg-background">
-        <section className="container mx-auto px-4 py-16 max-w-4xl">
-          <nav className="flex items-center gap-2 mb-12 text-sm text-zinc-500">
-            <Link href="/" className="hover:text-zinc-800 transition-colors font-medium">
+      <div className="min-h-screen">
+        <section className="container mx-auto px-4 py-8 md:py-12">
+          <nav className="flex items-center gap-2 mb-6 sm:mb-10 text-xs sm:text-sm text-zinc-500 min-w-0">
+            <Link href="/" className="shrink-0 whitespace-nowrap hover:text-zinc-800 transition-colors font-medium">
               {isEnglish ? 'Home' : '首页'}
             </Link>
-            <span className="text-zinc-400">/</span>
-            <Link href="/tools" className="hover:text-zinc-800 transition-colors font-medium">
+            <span className="shrink-0 text-zinc-400">/</span>
+            <Link href="/tools" className="shrink-0 whitespace-nowrap hover:text-zinc-800 transition-colors font-medium">
               {isEnglish ? 'Tools' : '工具导航'}
             </Link>
-            <span className="text-zinc-400">/</span>
-            <span className="text-zinc-800 font-semibold">{title}</span>
+            <span className="shrink-0 text-zinc-400">/</span>
+            <span className="min-w-0 truncate text-zinc-800 font-semibold" title={title}>
+              {title}
+            </span>
           </nav>
 
-          <div className="flex items-start gap-6 mb-8">
-            <div className="flex-shrink-0 w-20 h-20 rounded-2xl bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center overflow-hidden">
+          <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-6 mb-6 sm:mb-8">
+            <div className="flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center overflow-hidden">
               {tool.logoUrl ? (
                 <Image 
                   src={tool.logoUrl} 
@@ -126,79 +139,129 @@ export default async function ToolDetailPage({ params }: { params: { id: string;
               )}
             </div>
 
-            <div className="flex-1">
-              <h1 className="text-3xl md:text-4xl font-bold text-zinc-900 mb-3">
+            <div className="flex-1 min-w-0">
+              <h1 className="text-2xl md:text-[28px] font-bold tracking-tight leading-[1.35] text-zinc-900 mb-2.5 sm:mb-3">
                 {title}
               </h1>
-              <p className="text-lg text-zinc-600 mb-4">
+              <p className="text-[15px] sm:text-lg text-zinc-600 leading-[1.8] mb-4">
                 {description}
               </p>
               
               {category && (
-                <span className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 rounded-full px-4 py-2">
+                <span className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 rounded-full px-3.5 py-1.5 sm:px-4 sm:py-2">
                   <div className="w-5 h-5 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center">
                     <Tag className="w-3 h-3 text-white" />
                   </div>
-                  <span className="text-sm font-semibold text-blue-600">{category}</span>
+                  <span className="text-xs sm:text-sm font-semibold text-blue-600">{category}</span>
                 </span>
               )}
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-4 mb-12">
+          <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3 sm:gap-4 mb-8 sm:mb-10">
             {tool.url && (
               <a
                 href={tool.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-xl font-semibold hover:from-red-600 hover:to-orange-600 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 sm:px-8 sm:py-3.5 bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-xl font-semibold hover:from-red-600 hover:to-orange-600 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5"
               >
-                <ExternalLink className="w-5 h-5" />
+                <ExternalLink className="w-4 h-4 sm:w-5 sm:h-5" />
                 {isEnglish ? 'Visit Website' : '访问官网'}
               </a>
             )}
             <Link
               href="/tools"
-              className="inline-flex items-center gap-2 px-8 py-4 bg-white border border-gray-200 text-zinc-700 rounded-xl font-semibold hover:bg-gray-50 transition-all"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 sm:px-8 sm:py-3.5 bg-white border border-gray-200 text-zinc-700 rounded-xl font-semibold hover:bg-gray-50 transition-all"
             >
-              <ArrowRight className="w-5 h-5" />
+              <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
               {isEnglish ? 'Back to Tools' : '返回工具列表'}
             </Link>
           </div>
 
-          <div className="bg-white border border-gray-100 rounded-2xl p-8 shadow-sm">
-            <h2 className="text-xl font-bold text-zinc-900 mb-4">
+          <div className="apple-glass-card rounded-2xl p-5 sm:p-8">
+            <h2 className="text-lg sm:text-xl font-bold text-zinc-900 mb-3 sm:mb-4">
               {isEnglish ? 'Tool Details' : '工具详情'}
             </h2>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between py-3 border-b border-gray-100">
-                <span className="text-gray-500">{isEnglish ? 'Name' : '工具名称'}</span>
-                <span className="font-medium text-zinc-900">{title}</span>
+            <div className="divide-y divide-gray-100 text-sm sm:text-base">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-4 py-3.5">
+                <span className="text-xs sm:text-sm text-gray-500 shrink-0">{isEnglish ? 'Name' : '工具名称'}</span>
+                <span className="font-medium text-zinc-900 sm:text-right">{title}</span>
               </div>
-              <div className="flex items-center justify-between py-3 border-b border-gray-100">
-                <span className="text-gray-500">{isEnglish ? 'Category' : '分类'}</span>
-                <span className="font-medium text-zinc-900">{category}</span>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-4 py-3.5">
+                <span className="text-xs sm:text-sm text-gray-500 shrink-0">{isEnglish ? 'Category' : '分类'}</span>
+                <span className="font-medium text-zinc-900 sm:text-right">{category}</span>
               </div>
-              <div className="flex items-center justify-between py-3 border-b border-gray-100">
-                <span className="text-gray-500">{isEnglish ? 'Description' : '描述'}</span>
-                <span className="font-medium text-zinc-900 max-w-xs text-right">{description}</span>
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-1 sm:gap-4 py-3.5">
+                <span className="text-xs sm:text-sm text-gray-500 shrink-0">{isEnglish ? 'Description' : '描述'}</span>
+                <span className="font-medium text-zinc-900 sm:max-w-md sm:text-right leading-[1.75]">{description}</span>
               </div>
               {tool.url && (
-                <div className="flex items-center justify-between py-3">
-                  <span className="text-gray-500">{isEnglish ? 'Website' : '官网链接'}</span>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-4 py-3.5">
+                  <span className="text-xs sm:text-sm text-gray-500 shrink-0">{isEnglish ? 'Website' : '官网链接'}</span>
                   <a
                     href={tool.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="font-medium text-blue-600 hover:text-blue-700 hover:underline flex items-center gap-1"
+                    className="font-medium text-blue-600 hover:text-blue-700 hover:underline inline-flex items-center gap-1 break-all sm:text-right"
                   >
-                    {tool.url}
-                    <ExternalLink className="w-4 h-4" />
+                    <span>{tool.url}</span>
+                    <ExternalLink className="w-4 h-4 shrink-0" />
                   </a>
                 </div>
               )}
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-4 py-3.5">
+                <span className="text-xs sm:text-sm text-gray-500 shrink-0">{isEnglish ? 'Last Reviewed' : '最近核验日期'}</span>
+                <span className="font-medium text-zinc-900 tabular-nums sm:text-right">{lastVerifiedDate}</span>
+              </div>
             </div>
           </div>
+
+          {/* Selection & Privacy Guidance */}
+          <div className="mt-6 sm:mt-8 apple-glass-card rounded-2xl p-5 sm:p-6 md:p-8 space-y-3">
+            <h2 className="text-base sm:text-lg font-bold text-zinc-900">
+              {isEnglish ? 'Review & Privacy Considerations' : '收录说明与使用建议'}
+            </h2>
+            <p className="text-[15px] md:text-base text-zinc-600 leading-[1.85]">
+              {isEnglish
+                ? 'This listing has been manually checked for official URL accuracy and category fit. Pricing plans, free-tier quotas, and data policies on third-party websites can change over time—please verify current terms on the official site before entering sensitive data or subscribing.'
+                : '本条目已由本站人工核实官方链接与分类归属。第三方产品的收费方案、免费额度与隐私政策可能随版本调整，建议在上传敏感文件或付费订阅前先在官网确认最新条款。'}
+            </p>
+            <div className="flex flex-wrap gap-5 pt-1 text-sm">
+              <Link href="/contact" className="font-medium text-zinc-700 hover:text-[#e52129] transition-colors">
+                {isEnglish ? 'Report Outdated Info →' : '反馈失效链接或信息更新 →'}
+              </Link>
+            </div>
+          </div>
+
+          {/* Related Tools in Same Category */}
+          {relatedTools.length > 0 && (
+            <div className="mt-8">
+              <h2 className="text-lg font-bold text-zinc-900 mb-4">
+                {isEnglish ? `More in ${category}` : `同分类更多工具（${category}）`}
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {relatedTools.map((item) => {
+                  const itemName = isEnglish && item.nameEn ? item.nameEn : item.name;
+                  const itemDesc = isEnglish && item.descEn ? item.descEn : item.desc;
+                  return (
+                    <Link
+                      key={item.id}
+                      href={`/tools/${item.id}`}
+                      className="group rounded-xl apple-glass-card p-4"
+                    >
+                      <div className="font-semibold text-zinc-900 group-hover:text-[#e52129] transition-colors">
+                        {itemName}
+                      </div>
+                      <p className="text-xs text-zinc-500 mt-1 line-clamp-2 leading-relaxed">
+                        {itemDesc}
+                      </p>
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </section>
       </div>
     </>

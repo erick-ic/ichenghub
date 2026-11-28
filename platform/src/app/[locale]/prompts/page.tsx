@@ -77,13 +77,15 @@ export default async function PromptsPage({ params }: PageProps) {
   return (
     <>
       <PageViewTracker path={`/${locale}/prompts`} />
-      <section className="container mx-auto px-4 py-12 md:py-16 max-w-6xl">
+      <section className="container mx-auto px-4 py-12 md:py-16">
       <header className="mb-10 text-center">
-        <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-zinc-900 mb-3">
-          {isEnglish ? 'AI Prompt Architect' : 'AI 提示词构建器'}
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-900 mb-3">
+          {isEnglish ? 'AI Prompt Library' : 'AI 提示词库'}
         </h1>
-        <p className="text-base md:text-lg text-zinc-500 max-w-3xl mx-auto lg:whitespace-nowrap">
-          {isEnglish ? 'Turn vague ideas into precise AI instructions with chained logic.' : '将模糊需求解构为精准的 AI 指令。支持逻辑链式拆解，让复杂模型的输出可控且高效。'}
+        <p className="text-base md:text-lg text-zinc-500 mx-auto xl:whitespace-nowrap">
+          {isEnglish
+            ? 'Browse reusable, structured AI prompt templates with copy and customization tips.'
+            : '精选可复用的结构化 AI 提示词模板，支持分类浏览、一键复制与定制参考。'}
         </p>
       </header>
 
@@ -94,7 +96,7 @@ export default async function PromptsPage({ params }: PageProps) {
           <p className="text-zinc-500">{isEnglish ? 'Please check back later' : '敬请期待更多精彩内容'}</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {promptData.map((prompt) => (
             <PromptCard key={prompt.id} data={prompt} />
           ))}

@@ -3,7 +3,7 @@
 import prisma from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
 
-export async function createLink(prevState: any, formData: FormData) {
+export async function createLink(_prevState: any, formData: FormData) {
   const name = formData.get('name') as string
   const nameEn = formData.get('nameEn') as string
   const desc = formData.get('desc') as string
@@ -40,7 +40,7 @@ export async function createLink(prevState: any, formData: FormData) {
   revalidatePath('/')
 }
 
-export async function updateLink(prevState: any, formData: FormData) {
+export async function updateLink(_prevState: any, formData: FormData) {
   const id = formData.get('id') as string
   const name = formData.get('name') as string
   const nameEn = formData.get('nameEn') as string

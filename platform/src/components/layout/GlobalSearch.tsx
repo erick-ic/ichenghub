@@ -34,7 +34,6 @@ export function GlobalSearch({ items, isEnglish }: GlobalSearchProps) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchItem[]>([]);
   const [isOpen, setIsOpen] = useState(false);
-  const [isMobileExpanded, setIsMobileExpanded] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -83,7 +82,6 @@ export function GlobalSearch({ items, isEnglish }: GlobalSearchProps) {
     }
 
     setIsOpen(false);
-    setIsMobileExpanded(false);
     setQuery('');
     setResults([]);
   };
@@ -101,8 +99,7 @@ export function GlobalSearch({ items, isEnglish }: GlobalSearchProps) {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsOpen(false);
-        setIsMobileExpanded(false);
-      }
+          }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
@@ -147,19 +144,19 @@ export function GlobalSearch({ items, isEnglish }: GlobalSearchProps) {
       {/* 移动端：搜索框 + 结果列表 */}
       <div className="md:hidden">
         {/* 搜索框 */}
-        <div className="flex items-center gap-3 px-4 py-3 rounded-full bg-[#f5f5f7]">
-          <Search className="w-4 h-5 text-gray-400" />
+        <div className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-zinc-100/80 border border-zinc-200/80 shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] focus-within:bg-white focus-within:border-zinc-400 focus-within:ring-2 focus-within:ring-zinc-900/5 transition-all">
+          <Search className="w-4 h-4 text-zinc-400 shrink-0" />
           <input
             ref={inputRef}
             type="text"
             value={query}
             onChange={handleChange}
             onKeyDown={handleKeyDown}
-            placeholder={isEnglish ? 'Search...' : '搜索...'}
-            className="flex-1 bg-transparent text-base outline-none placeholder:text-gray-400"
+            placeholder={isEnglish ? 'Search tools, guides, blogs...' : '搜索工具、指南、博客...'}
+            className="flex-1 bg-transparent text-sm text-zinc-900 outline-none placeholder:text-zinc-400"
           />
           {query && (
-            <button onClick={handleClear} className="text-gray-400 hover:text-gray-600">
+            <button onClick={handleClear} className="text-zinc-400 hover:text-zinc-600 p-0.5 rounded-full hover:bg-zinc-200/60 transition-colors">
               <X className="w-4 h-4" />
             </button>
           )}

@@ -1,12 +1,6 @@
 import prisma from '@/lib/prisma';
 import { getBeijingDayKey } from '@/lib/time';
-import { unified } from 'unified';
-import remarkParse from 'remark-parse';
-import remarkGfm from 'remark-gfm';
-import remarkRehype from 'remark-rehype';
-import rehypePrism from 'rehype-prism-plus';
-import { codeHighlightOptions } from '@/lib/markdown-code-blocks';
-import rehypeStringify from 'rehype-stringify';
+import { extractHeadings as extractHeadingsUtil } from '@/lib/headingUtils';
 
 export interface LocalizedString {
   zh: string;
@@ -22,96 +16,6 @@ export interface BlogPost {
   content: string;
   views: number;
   favorites: number;
-}
-
-function generateSlug(text: string): string {
-  return text
-    .toLowerCase()
-    .replace(/[^\p{L}\p{N}\s-]/gu, '')
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-')
-    .trim();
-}
-
-function rehypeHeadingIds() {
-  const idCount: Record<string, number> = {};
-  
-  function getTextContent(node: any): string {
-    if (node.type === 'text') {
-      return node.value || '';
-    }
-    if (node.type === 'element' && node.children) {
-      return node.children.map((child: any) => getTextContent(child)).join('');
-    }
-    return '';
-  }
-  
-  return function (tree: any) {
-    function visit(node: any) {
-      if (node.type === 'element' && ['h2', 'h3'].includes(node.tagName)) {
-        const text = getTextContent(node);
-        
-        let slug = generateSlug(text);
-        if (idCount[slug]) {
-          idCount[slug]++;
-          slug = `${slug}-${idCount[slug]}`;
-        } else {
-          idCount[slug] = 1;
-        }
-        
-        node.properties = node.properties || {};
-        node.properties.id = slug;
-      }
-      
-      if (node.children) {
-        node.children.forEach(visit);
-      }
-    }
-    
-    visit(tree);
-  };
-}
-
-function rehypeCodeBlockDefaultLanguage() {
-  return function (tree: any) {
-    function visit(node: any) {
-      if (node.type === 'element' && node.tagName === 'pre') {
-        const codeChild = node.children.find((child: any) => child.type === 'element' && child.tagName === 'code');
-        if (codeChild) {
-          const className = codeChild.properties?.className || '';
-          if (!className || !className.toString().includes('language-')) {
-            codeChild.properties = codeChild.properties || {};
-            codeChild.properties.className = 'language-text';
-          }
-        }
-      }
-      
-      if (node.children) {
-        node.children.forEach(visit);
-      }
-    }
-    
-    visit(tree);
-  };
-}
-
-async function highlightMarkdown(content: string): Promise<string> {
-  try {
-    const result = await unified()
-      .use(remarkParse)
-      .use(remarkGfm)
-      .use(remarkRehype, { allowDangerousHtml: true })
-      .use(rehypeHeadingIds)
-      .use(rehypeCodeBlockDefaultLanguage)
-      .use(rehypePrism, codeHighlightOptions)
-      .use(rehypeStringify, { allowDangerousHtml: true })
-      .process(content);
-    
-    return result.toString();
-  } catch (error) {
-    console.error('[blog] highlightMarkdown failed:', error);
-    return content;
-  }
 }
 
 /**
@@ -171,8 +75,6 @@ export async function getBlogById(id: string): Promise<BlogPost | null> {
     return null;
   }
 }
-
-import { extractHeadings as extractHeadingsUtil } from '@/lib/headingUtils';
 
 /**
  * 按 id 获取单篇博客的原始内容（用于 react-markdown 渲染）。

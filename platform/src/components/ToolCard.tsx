@@ -22,9 +22,10 @@ interface ToolCardProps {
     displayName?: string;
     displayDesc?: string;
   };
+  priority?: boolean;
 }
 
-export default function ToolCard({ tool }: ToolCardProps) {
+export default function ToolCard({ tool, priority = false }: ToolCardProps) {
   const router = useRouter();
   const pathname = usePathname();
   const locale = useLocale();
@@ -61,14 +62,14 @@ export default function ToolCard({ tool }: ToolCardProps) {
     <>
       <div
         onClick={handleClick}
-        className="group flex flex-col overflow-hidden rounded-2xl border border-zinc-100 bg-white transition-all duration-300 cursor-pointer hover:shadow-lg hover:-translate-y-1"
+        className="group flex flex-col overflow-hidden rounded-2xl apple-glass-card cursor-pointer"
       >
-        <div className="relative aspect-[4/3] w-full overflow-hidden rounded-t-2xl">
+        <div className="relative aspect-[4/3] w-full overflow-hidden">
           <Image
             src={tool.logoUrl}
             alt={title}
             fill
-            priority={tool.id === '1'}
+            priority={priority}
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             className="transition-transform duration-500 group-hover:scale-105"
             style={{
@@ -77,7 +78,7 @@ export default function ToolCard({ tool }: ToolCardProps) {
             }}
             unoptimized={tool.logoUrl?.startsWith('http')}
           />
-          <div className="absolute inset-0 bg-black/5 transition-opacity duration-300 group-hover:opacity-0 rounded-t-2xl" />
+          <div className="absolute inset-0 bg-black/5 transition-opacity duration-300 group-hover:opacity-0" />
         </div>
 
         <div className="flex flex-col p-5">
