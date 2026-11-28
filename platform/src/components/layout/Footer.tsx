@@ -74,13 +74,14 @@ export default function Footer({ onCopyEmail, copied }: FooterProps) {
         </div>
 
         <div className="pt-4 border-t border-gray-200/70 dark:border-gray-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-xs text-gray-400 dark:text-gray-500">
-          <div className="flex flex-wrap items-center justify-center sm:justify-start gap-x-4 gap-y-1">
+          <div className="flex flex-wrap items-center justify-center sm:justify-start gap-x-2.5 gap-y-1">
             <span>{t('copyright', { year })}</span>
+            <span aria-hidden="true" className="hidden sm:inline text-gray-300 dark:text-gray-700">·</span>
             <a
               href="https://beian.miit.gov.cn"
               target="_blank"
               rel="noopener noreferrer"
-              className="hover:text-[#e52129] transition-colors duration-200 no-underline"
+              className="text-[11px] sm:text-xs text-gray-400/85 hover:text-[#e52129] transition-colors duration-200 no-underline"
             >
               {t('icp', { number: ICP_NUMBER })}
             </a>

@@ -34,7 +34,7 @@ function unlockBody() {
   document.body.style.position = savedBodyStyles.position ?? '';
   document.body.style.top = savedBodyStyles.top ?? '';
   document.body.style.width = savedBodyStyles.width ?? '';
-  window.scrollTo(0, scrollY);
+  window.scrollTo({ top: scrollY, left: 0, behavior: 'instant' as ScrollBehavior });
 }
 
 /** Locks the page behind a modal while keeping the modal's own scroller available. */

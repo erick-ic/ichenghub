@@ -104,7 +104,7 @@ export default async function GuideDetailPage({ params }: Props) {
       />
       <PageViewTracker path={`/${locale}/guides/${slug}`} />
       <div className="min-h-screen">
-        <article className="container mx-auto px-4 py-8 md:py-12">
+        <article className="container mx-auto px-6 md:px-4 py-8 md:py-12">
           <nav className="flex items-center gap-2 mb-6 sm:mb-8 text-xs sm:text-sm text-zinc-500 min-w-0">
             <Link href="/" className="shrink-0 whitespace-nowrap hover:text-zinc-900 transition-colors">
               {isEn ? 'Home' : '首页'}

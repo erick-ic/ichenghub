@@ -100,7 +100,13 @@ const Navbar: React.FC<NavbarProps> = ({ locale, isLoggedIn, userImage }) => {
 
   return (
     <>
-    <nav className={`sticky top-0 z-40 h-16 apple-glass-nav flex justify-between items-center px-4 md:px-8 ${scrolled ? 'apple-glass-nav-scrolled' : ''}`}>
+    <nav
+      className={`${
+        mobileMenuOpen
+          ? 'fixed inset-x-0 top-0 z-50 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-xl border-b border-black/[0.06]'
+          : `sticky top-0 z-40 apple-glass-nav ${scrolled ? 'apple-glass-nav-scrolled' : ''}`
+      } h-16 flex justify-between items-center px-4 md:px-8`}
+    >
       {/* 极细滚动进度光条（纯 GPU scaleX） */}
       <div
         aria-hidden="true"
@@ -201,6 +207,7 @@ const Navbar: React.FC<NavbarProps> = ({ locale, isLoggedIn, userImage }) => {
         )}
       </button>
     </nav>
+    {mobileMenuOpen && <div aria-hidden="true" className="h-16 md:hidden" />}
 
       {/* 移动端菜单：与 nav 平级渲染，避免嵌套 backdrop-filter 导致浏览器禁用毛玻璃模糊 */}
       {mobileMenuOpen && (
@@ -266,7 +273,7 @@ const Navbar: React.FC<NavbarProps> = ({ locale, isLoggedIn, userImage }) => {
                         : 'text-zinc-500 hover:text-zinc-800'
                     }`}
                   >
-                    中文
+                    {locale === 'en' ? 'ZH' : '中文'}
                   </Link>
                   <Link
                     href={pathname}

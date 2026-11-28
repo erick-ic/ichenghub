@@ -170,38 +170,31 @@ function TableCell({ children, isHeader }: { children: React.ReactNode; isHeader
 function ImageLightbox({ src, alt, onClose }: { src?: string; alt?: string; onClose: () => void }) {
   useBodyScrollLock(true);
   useEscapeKey(true, onClose);
-  const handleBackdropClick = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget) {
-      onClose();
-    }
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Escape') {
-      onClose();
-    }
-  };
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm animate-fade-in"
-      onClick={handleBackdropClick}
-      onKeyDown={handleKeyDown}
-      tabIndex={0}
+      className="fixed inset-0 z-[120] flex items-center justify-center bg-black/90 backdrop-blur-sm p-4 touch-manipulation animate-fade-in"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
     >
       <button
-        className="absolute top-4 right-4 p-2 text-white/70 hover:text-white transition-colors"
-        onClick={onClose}
+        type="button"
+        className="fixed top-[max(1rem,env(safe-area-inset-top))] right-[max(1rem,env(safe-area-inset-right))] z-20 flex h-11 w-11 items-center justify-center rounded-full bg-black/60 text-white border border-white/15 backdrop-blur-md active:scale-95 hover:bg-black/80 transition-all touch-manipulation"
+        onClick={(e) => {
+          e.stopPropagation();
+          onClose();
+        }}
         aria-label="Close preview"
       >
-        <svg className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
         </svg>
       </button>
       <img
         src={src}
         alt={alt || ''}
-        className="max-w-[90vw] max-h-[90vh] object-contain rounded-lg shadow-2xl"
+        className="max-w-[92vw] max-h-[85dvh] object-contain rounded-lg shadow-2xl cursor-zoom-out"
       />
     </div>
   );

@@ -34,7 +34,7 @@ export default async function TermsPage({ params }: Props) {
 
   return (
     <div className="min-h-screen">
-      <article className="container mx-auto px-4 py-8 md:py-12">
+      <article className="container mx-auto px-6 md:px-4 py-8 md:py-12">
         <header className="mb-8 border-b border-zinc-200/80 pb-6">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-100 text-zinc-700 text-xs font-semibold mb-4">
             <FileText className="w-3.5 h-3.5" />

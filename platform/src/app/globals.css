@@ -1,3 +1,6 @@
+/* Prism.js 代码高亮主题（@import 必须置于其他 CSS 规则之前，避免生产构建被忽略或截断） */
+@import 'prismjs/themes/prism-tomorrow.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -37,9 +40,6 @@ html.has-session-user .profile-session-pending,
 html.has-session-avatar .profile-session-pending {
   display: contents;
 }
-
-/* Prism.js 代码高亮主题 */
-@import 'prismjs/themes/prism-tomorrow.css';
 
 @layer base {
   :root {
@@ -221,6 +221,15 @@ html {
 .dark .apple-glass-card:hover {
   background-color: rgba(32, 32, 38, 0.86);
   border-color: rgba(255, 255, 255, 0.14);
+}
+
+/* 防止 iOS Safari 在表单控件字号小于 16px 时聚焦自动放大页面，同时保持 viewport 可缩放无障碍标准 */
+@media (max-width: 767px) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
 }
 
 /* 隐藏横向滚动胶囊等区域的滚动条外观，保留流畅滑动体验 */

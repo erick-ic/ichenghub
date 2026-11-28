@@ -50,20 +50,24 @@ export default function ColorExtractedImage({ src, alt, className = '', unoptimi
       </div>
 
       {isPreviewOpen && (
-        <div 
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+        <div
+          className="fixed inset-0 z-[120] flex items-center justify-center bg-black/85 backdrop-blur-sm p-4 touch-manipulation animate-fade-in"
           onClick={() => setIsPreviewOpen(false)}
+          role="dialog"
+          aria-modal="true"
         >
-          <button 
-            className="absolute top-4 right-4 p-2 text-white hover:bg-white/20 rounded-full transition-colors"
-            onClick={() => setIsPreviewOpen(false)}
+          <button
+            type="button"
+            aria-label="Close preview"
+            className="fixed top-[max(1rem,env(safe-area-inset-top))] right-[max(1rem,env(safe-area-inset-right))] z-20 flex h-11 w-11 items-center justify-center rounded-full bg-black/60 text-white border border-white/15 backdrop-blur-md active:scale-95 hover:bg-black/80 transition-all touch-manipulation"
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsPreviewOpen(false);
+            }}
           >
-            <X className="w-8 h-8" />
+            <X className="w-6 h-6" />
           </button>
-          <div 
-            className="relative w-full h-full max-w-4xl max-h-[90vh] mx-4"
-            onClick={(e) => e.stopPropagation()}
-          >
+          <div className="relative w-full h-full max-w-4xl max-h-[85dvh] pointer-events-none">
             <Image
               src={src}
               alt={alt}

@@ -153,7 +153,7 @@ export function GlobalSearch({ items, isEnglish }: GlobalSearchProps) {
             onChange={handleChange}
             onKeyDown={handleKeyDown}
             placeholder={isEnglish ? 'Search tools, guides, blogs...' : '搜索工具、指南、博客...'}
-            className="flex-1 bg-transparent text-sm text-zinc-900 outline-none placeholder:text-zinc-400"
+            className="flex-1 min-w-0 bg-transparent text-base text-zinc-900 outline-none placeholder:text-zinc-400"
           />
           {query && (
             <button onClick={handleClear} className="text-zinc-400 hover:text-zinc-600 p-0.5 rounded-full hover:bg-zinc-200/60 transition-colors">

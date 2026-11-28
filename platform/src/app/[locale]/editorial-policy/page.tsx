@@ -49,7 +49,7 @@ export default async function EditorialPolicyPage({ params }: Props) {
 
   return (
     <div className="min-h-screen">
-      <article className="container mx-auto px-4 py-8 md:py-12">
+      <article className="container mx-auto px-6 md:px-4 py-8 md:py-12">
         <header className="mb-8 border-b border-zinc-200/80 pb-6">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-50 text-[#e52129] text-xs font-semibold mb-4">
             <BookOpenCheck className="w-3.5 h-3.5" />

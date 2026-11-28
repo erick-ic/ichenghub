@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback, useRef, memo, startTransition } from 'react';
-import { Upload, Download, Loader2, ZoomIn, ZoomOut, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Upload, Download, Loader2, ZoomIn, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import Image from 'next/image';
 import imageCompression from 'browser-image-compression';
@@ -512,32 +512,41 @@ export default function ImageCompressor({ toolId = null }: ImageCompressorProps)
 
       {previewMode && (
         <div 
-          className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 bg-black/90 backdrop-blur-sm z-[120] flex items-center justify-center p-4 touch-manipulation animate-fade-in"
           onClick={() => setPreviewMode(null)}
+          role="dialog"
+          aria-modal="true"
         >
           <button 
-            onClick={() => setPreviewMode(null)}
-            className="absolute top-4 right-4 text-white hover:text-gray-300"
+            type="button"
+            aria-label="Close preview"
+            onClick={(e) => {
+              e.stopPropagation();
+              setPreviewMode(null);
+            }}
+            className="fixed top-[max(1rem,env(safe-area-inset-top))] right-[max(1rem,env(safe-area-inset-right))] z-20 flex h-11 w-11 items-center justify-center rounded-full bg-black/60 text-white border border-white/15 backdrop-blur-md active:scale-95 hover:bg-black/80 transition-all touch-manipulation"
           >
-            <ZoomOut className="w-8 h-8" />
+            <X className="w-6 h-6" />
           </button>
 
           <button
+            type="button"
             onClick={(e) => {
               e.stopPropagation();
               setPreviewMode(previewMode === 'original' ? 'compressed' : 'original');
             }}
-            className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/10 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-colors"
+            className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 z-20 w-11 h-11 sm:w-12 sm:h-12 bg-black/50 backdrop-blur-md border border-white/15 rounded-full flex items-center justify-center text-white hover:bg-black/75 active:scale-95 transition-all touch-manipulation"
           >
             <ChevronLeft className="w-6 h-6" />
           </button>
 
           <button
+            type="button"
             onClick={(e) => {
               e.stopPropagation();
               setPreviewMode(previewMode === 'original' ? 'compressed' : 'original');
             }}
-            className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/10 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-colors"
+            className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 z-20 w-11 h-11 sm:w-12 sm:h-12 bg-black/50 backdrop-blur-md border border-white/15 rounded-full flex items-center justify-center text-white hover:bg-black/75 active:scale-95 transition-all touch-manipulation"
           >
             <ChevronRight className="w-6 h-6" />
           </button>

@@ -281,7 +281,7 @@
     }
   },
   "footer": {
-    "icp": "ICP License: 2025085990-1",
+    "icp": "ICP {number}-1",
     "copyright": "© {year} iChengHub. All rights reserved.",
     "emailTooltip": "Click to copy email",
     "contact": "Contact Us",

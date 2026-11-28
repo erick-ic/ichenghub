@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
 import { Link } from '@/navigation';
-import { BookOpen, ArrowRight, Clock, Users } from 'lucide-react';
+import { BookOpen, Clock, Users } from 'lucide-react';
 import PageViewTracker from '@/components/PageViewTracker';
 import { getAllGuides } from '@/data/guides';
 
@@ -51,7 +51,7 @@ export default async function GuidesIndexPage({ params }: Props) {
     <>
       <PageViewTracker path={`/${locale}/guides`} />
       <div className="min-h-screen">
-        <section className="container mx-auto px-4 py-8 md:py-12">
+        <section className="container mx-auto px-5 sm:px-6 md:px-4 py-8 md:py-12">
           <header className="mb-8 md:mb-10">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-50 text-[#e52129] text-xs font-semibold mb-4">
               <BookOpen className="w-3.5 h-3.5" />
@@ -69,8 +69,9 @@ export default async function GuidesIndexPage({ params }: Props) {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {guides.map((guide) => (
-              <article
+              <Link
                 key={guide.slug}
+                href={`/guides/${guide.slug}`}
                 className="group flex flex-col justify-between apple-glass-card rounded-2xl p-5 sm:p-6 md:p-7"
               >
                 <div>
@@ -85,7 +86,7 @@ export default async function GuidesIndexPage({ params }: Props) {
                   </div>
 
                   <h2 className="text-lg sm:text-xl font-bold text-zinc-900 group-hover:text-[#e52129] transition-colors mb-3 leading-[1.45]">
-                    <Link href={`/guides/${guide.slug}`}>{guide.title}</Link>
+                    {guide.title}
                   </h2>
 
                   <p className="text-sm sm:text-[15px] text-zinc-600 leading-[1.8] mb-5">
@@ -93,25 +94,16 @@ export default async function GuidesIndexPage({ params }: Props) {
                   </p>
                 </div>
 
-                <div className="pt-4 border-t border-zinc-100 space-y-3">
+                <div className="pt-4 border-t border-zinc-100 space-y-2.5">
                   <div className="flex items-center gap-2 text-xs text-zinc-500">
                     <Users className="w-3.5 h-3.5 shrink-0 text-zinc-400" />
                     <span>{guide.audience}</span>
                   </div>
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-zinc-400">
-                      {isEn ? `Updated ${guide.updatedAt}` : `更新于 ${guide.updatedAt}`}
-                    </span>
-                    <Link
-                      href={`/guides/${guide.slug}`}
-                      className="inline-flex items-center gap-1 font-semibold text-zinc-900 group-hover:text-[#e52129] transition-colors"
-                    >
-                      {isEn ? 'Read Guide' : '阅读全文'}
-                      <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
-                    </Link>
+                  <div className="text-xs text-zinc-400 tabular-nums">
+                    {isEn ? `Updated ${guide.updatedAt}` : `更新于 ${guide.updatedAt}`}
                   </div>
                 </div>
-              </article>
+              </Link>
             ))}
           </div>
         </section>
